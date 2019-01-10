@@ -1,0 +1,8 @@
+Folder names are as follows
+
+[C]oalesced or [D]istributed Flip Flops
+[D]eterministic or [N]on-Deterministic upcoming values
+[D]eterministic or [N]on-Deterministic events
+
+So CDD
+Would be a coalesced counter with deterministic upcoming values and events

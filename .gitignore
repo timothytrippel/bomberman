@@ -1,0 +1,15 @@
+# Ignore MacOS .DS_Store Files
+*.DS_Store
+
+# Ignore Generated VCD Files
+*.vcd
+
+# Ignore TTB Generated Files
+*.dot
+
+# Ignore Compiled Java Files
+*.class
+
+# Ignore Compiled Python Files
+*.pyc
+

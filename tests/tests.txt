@@ -1,0 +1,2 @@
+AES-T500: http://www.trust-hub.org/resources/1056
+RS-232: Taken from the OR1200

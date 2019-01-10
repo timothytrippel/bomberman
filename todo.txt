@@ -1,0 +1,11 @@
+TODOS
+=====
+* Seperate the backend build of tgt-ttb with the actual build of Icarus
+  Verilog. These two _should_ be able to build seperately, though some time
+  will be required to figure out what we actually need.
+
+* Re-Write VCD parse so that we don't have to add the actual signals to the 
+  verilog before simulation. VCD_parse.py should be able to figure that out on
+  its own.
+
+* Factor in the conditional expressions in the always blocks
