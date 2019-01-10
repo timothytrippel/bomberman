@@ -7,9 +7,11 @@
 # Ignore TTB Generated Files
 *.dot
 
-# Ignore Compiled Java Files
+# Ignore Compiled Files
 *.class
-
-# Ignore Compiled Python Files
+*.o
+*.exe
 *.pyc
+*.tgt
+*.conf
 
