@@ -2,6 +2,7 @@ module split_tb;
   reg[1:0]  a;
   reg[1:0]  b;
   wire[1:0] o;
+  
   initial begin
     $dumpfile("split.vcd");
     $dumpvars(0, s);

@@ -6,6 +6,8 @@
 
 # Ignore TTB Generated Files
 *.dot
+*.pdf
+*.vvp
 
 # Ignore Compiled Files
 *.class

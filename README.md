@@ -83,7 +83,7 @@ and works in the following steps
 4. To find coalesced counter registers, we first simulate a circuit. Use 
    Icarus Verilog to create a simulator for your code
 
-   $ iverilog -t vvp [verilog input file(s)] -o [output file]
+   $ iverilog -t vvp -o <output file> <verilog input file(s)>
 
 5. We then run the simulated circuit to create the VCD file.
 
