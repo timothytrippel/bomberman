@@ -15,7 +15,6 @@ class Signal:
 		self.isinput     = False
 		self.conn        = [] 
 		self.tb_covered  = False
-		self.timescale   = None
 		self.hierarchy   = None
 		self.width       = None
 		self.type        = None
@@ -33,12 +32,11 @@ class Signal:
 	def add_conn(self, c):
 		self.conn.append(c)
 
-	def add_vcd_sim(self, vcd_data, timescale):
+	def add_vcd_sim(self, vcd_data):
 		# Load VCD Signal Info
 		self.tb_covered = True
-		self.timescale  = timescale
 		self.hierarchy  = vcd_data['nets'][0]['hier']
-		self.width      = vcd_data['nets'][0]['size']
+		self.width      = int(vcd_data['nets'][0]['size'])
 		self.type       = vcd_data['nets'][0]['type']
 
 		# Load Simulation Time Values
@@ -49,18 +47,18 @@ class Signal:
 			self.time_values[time] = values
 
 		# Check names and widths of match Dot file
-		assert (self.hierarchy + '.' + self.local_name) == self.fullname
+		assert (self.hierarchy + '.' + self.local_name) == self.name
 		assert self.width == (self.msb + 1 - self.lsb)
 
 	def debug_print(self):
-		print "	Signal: %s"              % (self)
-		print "		Full Name:     %s"   % (self.name)
-		print "		Local Name:    %s"   % (self.local_name)
-		print "		Is Flip-Flop:  %s"   % (self.isff)
-		print "		Is Input:      %s"   % (self.isinput)
+		print "	Signal: %s"            % (self)
+		print "		Full Name:     %s" % (self.name)
+		print "		Local Name:    %s" % (self.local_name)
+		print "		Is Flip-Flop:  %s" % (self.isff)
+		print "		Is Input:      %s" % (self.isinput)
+		print "		Is TB Covered: %s" % (self.tb_covered)
 		if self.tb_covered:
 			print "		Is TB Covered: %s"   % (self.tb_covered)
-			print "		Timescale:     %s"   % (self.timescale)
 			print "		Hierarchy:     %s"   % (self.hierarchy)
 			print "		Width:         %d"   % (self.width)
 			print "		Type:          %s"   % (self.type)
@@ -68,9 +66,8 @@ class Signal:
 			for connection in self.conn:
 				print "			%s" % (connection)
 			print "		Time Values.  (%d):" % (len(self.time_values.keys()))
-			for tv in self.time_values.keys():
-				time   = tv[0]
-				values = tv[1]
+			for time in self.time_values.keys():
+				values = self.time_values[time]
 				print "			%d -- %s" % (time, values)
 
 ##
@@ -195,19 +192,19 @@ def generate_distributed_counters(signals):
 	seen = {}
 
 	for sig_name, sig in signals.iteritems():
-		print "Root Signal:"
-		sig.debug_print()
+		# print "Root Signal:"
+		# sig.debug_print()
 
 		# Compute Dependencies
 		ffs = build_deps(sig, sig.msb, sig.lsb, [], {})
 		
-		print "----------------------------------------------------------"
-		print "Dependencies:"
-		print "	%s:" % (sig)
-		for ff in ffs:
-			print "		%s" % (ff)
-		print "=========================================================="
-		print
+		# print "----------------------------------------------------------"
+		# print "Dependencies:"
+		# print "	%s:" % (sig)
+		# for ff in ffs:
+		# 	print "		%s" % (ff)
+		# print "=========================================================="
+		# print
 
 		# No flip-flops found influencing signal
 		if len(ffs) == 0:
@@ -221,6 +218,7 @@ def generate_distributed_counters(signals):
 
 		# Num flip-flops found is greater than 1 --> counter is distributed
 		ffs.sort(key=str) # sort flip-flops alphabetically by name
+
 		# Stringfy list of flip-flop signal names
 		distr = ','.join([str(ff) for ff in ffs])
 		if distr not in seen:

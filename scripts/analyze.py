@@ -7,6 +7,8 @@ from parse_dot import generate_distributed_counters
 
 from Verilog_VCD import parse_vcd
 
+global DEBUG_PRINTS
+
 # Looks for unique values in a list
 #
 # If there is a repeated value we return 0
@@ -61,6 +63,27 @@ def exchange_sym_for_name_vcd(vcd):
 			newvcd[name] = signal
 	return newvcd
 
+def update_signals_with_vcd(signals, vcd):
+	# All simulated signals are possible coalesced counters
+	coal_counters = []
+
+	for vcd_signal in vcd.keys():
+		# Check that VCD signal name in signals dict
+		if vcd_signal not in signals:
+			print signals
+			print vcd_signal
+			print "ERROR: VCD signal not in dot graph."
+			sys.exit(1)
+		else:
+			# Check signal simulation info not already load
+			assert signals[vcd_signal].tb_covered == False
+
+			# Load signal simulation data
+			signals[vcd_signal].add_vcd_sim(vcd[vcd_signal])
+			coal_counters.append(signals[vcd_signal])
+
+	return coal_counters
+
 # Check that all extracted signals in Dot file are also
 # in the VCD file, i.e. they are exercised by the test bench.
 def check_all_sigs_in_vcd(slices, vcd):
@@ -85,6 +108,11 @@ def debug_print_vcd(vcd):
 
 def main():
 	##
+	# Set Program Switches
+	##
+	DEBUG_PRINTS = True
+
+	##
 	# Check argv
 	##
 	if (len(sys.argv) != 3):
@@ -101,38 +129,36 @@ def main():
 	# Parse dot file
 	##
 	print "Parsing Dot File..."
-	signals  = parse_file(sys.argv[1])
-	for signal_name in signals:
-		signals[signal_name].debug_print()
+	signals = parse_file(dot_file)
+	print len(signals)
+	if DEBUG_PRINTS:
+		for signal_name in signals:
+			signals[signal_name].debug_print()
+	print 
 
-	# print "Generating Distributed Counters..."
-	# print
-	# counters = generate_distributed_counters(signals)
-	# print
-	# # print counters
-	# for signal_slice in counters:
-	# 	print "Length of Slice: %d" % len(signal_slice)
-	# 	for signal in signal_slice:
-	# 		print "	%s" % (signal)
-	# # f = open('distributed.txt', 'w')
-	# # for slices in counters:
-	# # 	f.write(str([str(s) for s in slices]) + '\n')
-	# # f.close()
-	# print "Found " + str(len(counters)) + " possible distributed counters"
+	print "Generating Distributed Counters..."
+	dist_counters = generate_distributed_counters(signals)
+	print "Found " + str(len(dist_counters)) + " possible distributed counters:"
+	if DEBUG_PRINTS:
+		for counter in dist_counters:
+			print "	Distributed Counter Size: %d" % len(counter)
+			for signal in counter:
+				print "		%s" % (signal)
+	print
 
 	##
 	# Parse vcd file
 	##
 	print "Parsing VCD File..."
-	vcd = parse_vcd(sys.argv[2], types={"reg", "wire"})
-	print "Found " + str(len(vcd.keys())) + " possible coalesced counters"
+	vcd = parse_vcd(vcd_file, types={"reg", "wire"})
 	vcd = exchange_sym_for_name_vcd(vcd)
+	coal_counters = update_signals_with_vcd(signals, vcd)
+	print "Found " + str(len(coal_counters)) + " possible coalesced counters:"
+	if DEBUG_PRINTS:
+		for counter in coal_counters:
+			print "	Coalesced Counter: %s (Size: %d)" % (counter.name, counter.width)
+			# signals[counter.name].debug_print()
 	print
-	debug_print_vcd(vcd)
-	# f = open('coalesced.txt', 'w')
-	# for name in vcd.keys():
-	# 	f.write(name + '\n')
-	# f.close()
 
 if __name__== "__main__":
 	main()
