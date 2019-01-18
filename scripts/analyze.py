@@ -80,7 +80,7 @@ def update_signals_with_vcd(signals, vcd):
 
 			# Load signal simulation data
 			signals[vcd_signal].add_vcd_sim(vcd[vcd_signal])
-			coal_counters.append(signals[vcd_signal])
+			coal_counters.append(vcd_signal)
 
 	return coal_counters
 
@@ -130,7 +130,6 @@ def main():
 	##
 	print "Parsing Dot File..."
 	signals = parse_file(dot_file)
-	print len(signals)
 	if DEBUG_PRINTS:
 		for signal_name in signals:
 			signals[signal_name].debug_print()
@@ -156,7 +155,7 @@ def main():
 	print "Found " + str(len(coal_counters)) + " possible coalesced counters:"
 	if DEBUG_PRINTS:
 		for counter in coal_counters:
-			print "	Coalesced Counter: %s (Size: %d)" % (counter.name, counter.width)
+			print "	Coalesced Counter: %s (Size: %d)" % (counter, signals[counter].width)
 			# signals[counter.name].debug_print()
 	print
 
