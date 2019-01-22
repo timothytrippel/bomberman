@@ -1,133 +1,10 @@
+# Standard Modules
 import re
 import sys
 
-##
-# Signal
-##
-# Holds all the info for a signal
-class Signal:
-	def __init__(self, name, msb, lsb):
-		self.name        = name
-		self.local_name  = name.split('.')[-1]
-		self.lsb         = lsb
-		self.msb         = msb
-		self.isff        = False
-		self.isinput     = False
-		self.conn        = [] 
-		self.tb_covered  = False
-		self.hierarchy   = None
-		self.width       = None
-		self.type        = None
-		self.time_values = {}
-
-	def __str__(self):
-		return self.name + "[" + str(self.msb) + ":" + str(self.lsb) + "]"
-
-	def fullname(self):
-		return self.name
-
-	def connections(self):
-		return self.conn;
-
-	def add_conn(self, c):
-		self.conn.append(c)
-
-	def add_vcd_sim(self, vcd_data):
-		# Load VCD Signal Info
-		self.tb_covered = True
-		self.hierarchy  = vcd_data['nets'][0]['hier']
-		self.width      = int(vcd_data['nets'][0]['size'])
-		self.type       = vcd_data['nets'][0]['type']
-
-		# Load Simulation Time Values
-		for tv in vcd_data['tv']:
-			time   = tv[0]
-			values = tv[1]
-			assert time not in self.time_values.keys()
-			self.time_values[time] = values
-
-		# Check names and widths of match Dot file
-		assert (self.hierarchy + '.' + self.local_name) == self.name
-		assert self.width == (self.msb + 1 - self.lsb)
-
-	def debug_print(self):
-		print "	Signal: %s"            % (self)
-		print "		Full Name:     %s" % (self.name)
-		print "		Local Name:    %s" % (self.local_name)
-		print "		Is Flip-Flop:  %s" % (self.isff)
-		print "		Is Input:      %s" % (self.isinput)
-		print "		Is TB Covered: %s" % (self.tb_covered)
-		if self.tb_covered:
-			print "		Is TB Covered: %s"   % (self.tb_covered)
-			print "		Hierarchy:     %s"   % (self.hierarchy)
-			print "		Width:         %d"   % (self.width)
-			print "		Type:          %s"   % (self.type)
-			print "		Connections   (%d):" % (len(self.conn))
-			for connection in self.conn:
-				print "			%s" % (connection)
-			print "		Time Values.  (%d):" % (len(self.time_values.keys()))
-			for time in self.time_values.keys():
-				values = self.time_values[time]
-				print "			%d -- %s" % (time, values)
-
-##
-# Connection
-##
-# Holds two signals which are connected. Also, since this connection may
-# occur on slices of the signal, I store additional msb and lsb values
-class Connection:
-	def __init__(self, dep_sig, d_msb, d_lsb, sig, msb, lsb):
-		self.dep_sig = dep_sig
-		self.d_msb = d_msb
-		self.d_lsb = d_lsb
-		self.sig = sig
-		self.msb = msb
-		self.lsb = lsb
-
-	def __str__(self):
-		out = self.dep_sig.fullname() + "[" + str(self.d_msb) + ":" + str(self.d_lsb) + "]"
-		out += " <-- "
-		out += self.sig.fullname() + "[" + str(self.msb) + ":" + str(self.lsb) + "]"
-		return out
-
-	# def debug_print(self):
-
-
-# Builds out the dependencies for each signal passed in
-# @TODO: Currently inefficient, re-computing a lot of things
-def build_deps(sig, msb, lsb, ffs = [], seen = {}):
-	# print "Building Dependencies..."
-	# print "Sig:",  sig
-	# print "MSB:",  msb
-	# print "LSB",   lsb
-	# print "FFs:",  ffs
-	# print "Seen:", seen
-	# print "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-"
-	# sig.debug_print()
-
-	# If we've seen this exact slice before, continue
-	if str(sig) + str(msb) + str(lsb) in seen.keys():
-		# print "SEEN"
-		return ffs
-
-	# Mark this signal as seen
-	seen[str(sig) + str(msb) + str(lsb)] = True
-
-	# If its a FF or input, it is the end
-	if (sig.isff or sig.isinput):
-		# print "END"
-		# Make sure we aren't already inserted
-		for ff in ffs:
-			if str(ff) == str(sig):
-				return ffs
-
-		ffs.append(Signal(sig.fullname(), msb, lsb))
-		return ffs
-
-	for c in sig.conn:
-		build_deps(c.sig, c.msb, c.lsb, ffs, seen)
-
-	return ffs
+# Custom Modules
+from hdl_signal import *
+from connection import *
 
 def parse_file(file_name):
 	with open(file_name, 'r') as f:
@@ -153,7 +30,7 @@ def parse_file(file_name):
 			sys.exit(2)
 
 		lineno += 1
-		s = Signal(m.group(2), int(m.group(3)), int(m.group(4)))
+		s = HDL_Signal(m.group(2), int(m.group(3)), int(m.group(4)))
 
 		if m.group(1) == "none":
 			s.isinput = True
@@ -187,14 +64,40 @@ def parse_file(file_name):
 
 	return signals
 
+# Builds out the dependencies for each signal passed in
+# @TODO: Currently inefficient, re-computing a lot of things
+def build_deps(sig, msb, lsb, ffs = [], seen = {}):
+	# print "Building Dependencies..."
+	# print "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-"
+	# sig.debug_print()
+
+	# If we've seen this exact slice before, continue
+	if str(sig) + str(msb) + str(lsb) in seen.keys():
+		return ffs
+
+	# Mark this signal as seen
+	seen[str(sig) + str(msb) + str(lsb)] = True
+
+	# If its a FF or input, it is the end
+	if (sig.isff or sig.isinput):
+		# Make sure we aren't already inserted
+		for ff in ffs:
+			if str(ff) == str(sig):
+				return ffs
+
+		ffs.append(HDL_Signal(sig.fullname(), msb, lsb))
+		return ffs
+
+	for c in sig.conn:
+		build_deps(c.sig, c.msb, c.lsb, ffs, seen)
+
+	return ffs
+
 def generate_distributed_counters(signals):
 	deps = []
 	seen = {}
 
 	for sig_name, sig in signals.iteritems():
-		# print "Root Signal:"
-		# sig.debug_print()
-
 		# Compute Dependencies
 		ffs = build_deps(sig, sig.msb, sig.lsb, [], {})
 		
@@ -218,6 +121,15 @@ def generate_distributed_counters(signals):
 
 		# Num flip-flops found is greater than 1 --> counter is distributed
 		ffs.sort(key=str) # sort flip-flops alphabetically by name
+
+		# # Create new HDL_Signal object for distributed counter
+		# dist_counter = HDL_Signal("distributed", 0, 0)
+		# dist_counter.lsb   = 0
+		# dist_counter.msb   = 0
+		# dist_counter.width = 0
+		# for hdl_signal in ffs:
+		# 	if 
+		# 	dist_counter.ls
 
 		# Stringfy list of flip-flop signal names
 		distr = ','.join([str(ff) for ff in ffs])

@@ -1,12 +1,17 @@
 #!/usr/bin/env python
-import sys
+# Standard Modules
 import re
+import sys
+import pprint
 
-from parse_dot import parse_file
-from parse_dot import generate_distributed_counters
-
+# Custom Modules
+from hdl_signal  import *
+from connection  import *
+from parse_dot   import parse_file
+from parse_dot   import generate_distributed_counters
 from Verilog_VCD import parse_vcd
 
+# Global Switches
 global DEBUG_PRINTS
 
 # Looks for unique values in a list
@@ -84,12 +89,12 @@ def update_signals_with_vcd(signals, vcd):
 
 	return coal_counters
 
-# Check that all extracted signals in Dot file are also
-# in the VCD file, i.e. they are exercised by the test bench.
-def check_all_sigs_in_vcd(slices, vcd):
-	for s in slices:
-		if s.fullname() not in vcd.keys():
-			print "WARNING: " + s.fullname() + " not in VCD file"
+# Check that all extracted distributed counter signals 
+# in Dot file are also in the VCD file, i.e. they are
+# exercised by the test bench.
+def check_all_counter_sigs_simulated(all_signals, counter_signals):
+	for sig_name in counter_signals:
+		if not all_signals[str(sig_name.fullname())].check_signal_simulated():
 			return False
 	return True
 
@@ -135,6 +140,9 @@ def main():
 			signals[signal_name].debug_print()
 	print 
 
+	##
+	# Generate Distributed Counters
+	##
 	print "Generating Distributed Counters..."
 	dist_counters = generate_distributed_counters(signals)
 	print "Found " + str(len(dist_counters)) + " possible distributed counters:"
@@ -146,7 +154,7 @@ def main():
 	print
 
 	##
-	# Parse vcd file
+	# Parse vcd file / Generate Coalesced Counters
 	##
 	print "Parsing VCD File..."
 	vcd = parse_vcd(vcd_file, types={"reg", "wire"})
@@ -159,106 +167,141 @@ def main():
 			# signals[counter.name].debug_print()
 	print
 
+	##
+	# Analyze Potential Distributed Counters
+	##
+	progress             = 0
+	num                  = 0
+	num_signals          = 0
+	num_malic_signals    = 0
+	num_constant_signals = 0
+	constants            = {}
+	malicious            = {}
+
+	print "Finding Malicious distributed signals..."
+	for dist_counter in dist_counters:
+		for sig in dist_counter:
+			sig.debug_print()
+		print
+		# # Can only evaluate counters that have been simulated
+		# # @TODO-Tim: print warning that possible counter component,
+		# # 			 i.e. flip-flop, has not been simulated.
+		# if not check_all_counter_sigs_simulated(signals, dist_counter):
+		# 	continue
+
+		# value_set = set()
+		# tvs       = []
+
+		# # Figure out width
+		# width        = 0
+		# num_signals += 1
+		# for sig_slice in dist_counter:
+
+		# 	lsb = sig_slice.lsb
+		# 	msb = sig_slice.msb
+		# 	assert msb >= lsb
+
+		# 	slice_data = {
+		# 		'start' : width,
+		# 		'width' : msb - lsb + 1,
+		# 		'tv'    : vcd[sig_slice.fullname()]["tv"],
+		# 		'it'    : 0,
+		# 		'msb'   : msb,
+		# 		'lsb'   : lsb,
+		# 		'actual_lsb' : vcd[sig_slice.fullname()]["lsb"]
+		# 	}
+
+		# 	width += (msb - lsb) + 1
+		# 	print sig_slice.fullname(), "-->", slice_data
+		# 	tvs.append(slice_data)
+
+		# # print tvs
+		# # pprint.pprint(tvs)
+		# print
+		# value = ['x'] * width
+		
+		# while len(tvs) > 0:
+		# 	# Check that slice width is correct
+		# 	assert len(value) == width
+
+		# 	# Set lowest time to INFINITY
+		# 	lowest_time = sys.maxint
+
+		# 	# Create list of time values
+		# 	next_values = []
+
+		# 	# Extract list of time values from
+		# 	for tv in tvs:
+		# 		# Check number of time values != iteration number
+		# 		assert len(tv['tv']) != tv['it']
+
+		# 		# Get current time
+		# 		current_time = tv['tv'][tv['it']][0]
+
+		# 		# Check if current time is LESS-THAN lowest time
+		# 		if current_time < lowest_time:
+		# 			next_values = [tv]
+		# 			lowest_time = current_time
+		# 		# Check if current time EQUALS lowest time
+		# 		elif current_time == lowest_time:
+		# 			next_values.append(tv)
+		# 		# else:
+
+		# 	# for val in next_values:
+		# 	# 	print val
+		# 	# print
+			
+		# 	# Check that at least 1 time value exists --> 
+		# 	# i.e. signal was simulated by test bench are 
+		# 	assert len(next_values) >= 1
+
+		# 	# Match up bit indexes of counter signal slice
+		# 	# print value
+		# 	for tv in next_values:
+		# 		# Check slice bit width
+		# 		assert tv['start'] + tv['width'] <= width
+
+		# 		# Extract slice bit(s) value(s)
+		# 		next_value = tv['tv'][tv['it']][1]
+		# 		next_value = next_value[len(next_value) - tv["msb"] - 1 + tv["actual_lsb"]:len(next_value) - tv["lsb"] + tv["actual_lsb"]]
+
+		# 		# Check slice bit width
+		# 		assert len(next_value) == tv["msb"] - tv["lsb"] + 1
+
+		# 		# Set bit slice values
+		# 		value[tv['start']:tv['start'] + tv['width']] = next_value
+		# 		# print value
+
+		# 		# Increment iteration counter
+		# 		tv['it'] += 1
+		# 	# print
+
+		# 	# Make sure all time value bits have been extracted
+		# 	# and add simulated counter value to set
+		# 	if 'x' not in value:
+		# 		if ''.join(value) in value_set:
+		# 			break
+		# 		value_set.add(''.join(value))
+
+		# 	# Pop TVs from list if all bits extracted
+		# 	tvs[:] = [tv for tv in tvs if len(tv['tv']) > tv['it']]
+
+		# if len(tvs) == 0:
+		# 	name = "{" + ", ".join(str(x) for x in dist_counter) + "}"
+		# 	if len(value_set) == 1 and name not in constants:
+		# 		print "Constant: " + name
+		# 		constants[name] = True
+		# 		num_constant_signals += 1
+		# 	elif name not in malicious:
+		# 		print "Possible Malicious Symbol: " + name
+		# 		malicious[name] = True
+		# 		num_malic_signals += 1
+
+		# num += 1
+
+
 if __name__== "__main__":
 	main()
-
-
-# ##
-# # Check our data is the same as the VCD
-# ##
-
-# ##
-# # Generate unsorted timevalue arrays
-# ##
-# progress             = 0
-# num                  = 0
-# num_signals          = 0
-# num_malic_signals    = 0
-# num_constant_signals = 0
-# constants            = {}
-# malicious            = {}
-
-# print "Finding Malicious distributed signals..."
-# for slices in counters:
-# 	# Can only evaluate counters that have been simulated
-# 	# @TODO-Tim: print warning that possible counter component,
-# 	# 			 i.e. flip-flop, has not been simulated.
-# 	if not check_all_sigs_in_vcd(slices, vcd):
-# 		continue
-
-# 	value_set = set()
-# 	tvs       = []
-
-# 	# Figure out width
-# 	width        = 0
-# 	num_signals += 1
-# 	for s in slices:
-# 		lsb = s.lsb
-# 		msb = s.msb
-# 		assert msb >= lsb
-
-# 		data = {
-# 			'start' : width,
-# 			'width' : msb - lsb + 1,
-# 			'tv'    : vcd[s.fullname()]["tv"],
-# 			'it'    : 0,
-# 			'msb'   : msb,
-# 			'lsb'   : lsb,
-# 			'actual_lsb' : vcd[s.fullname()]["lsb"]
-# 		}
-
-# 		width += (msb - lsb) + 1
-# 		tvs.append(data)
-
-# 	value = ['x'] * width
-	
-# 	while len(tvs) > 0:
-# 		assert len(value) == width
-# 		lowest_time = sys.maxint
-# 		next_values = []
-
-# 		# Find the next signal(s) change in time
-# 		for tv in tvs:
-# 			assert len(tv['tv']) != tv['it']
-# 			if tv['tv'][tv['it']][0] < lowest_time:
-# 				next_values = [tv]
-# 				lowest_time = tv['tv'][tv['it']][0]
-# 			elif tv['tv'][tv['it']][0] == lowest_time:
-# 				next_values.append(tv)
-
-# 		for val in next_values:
-# 			print val
-# 		print
-# 		# Match up bit indexes of FF set
-# 		assert len(next_values) >= 1
-# 		for tv in next_values:
-# 			assert tv['start'] + tv['width'] <= width
-# 			next_value = tv['tv'][tv['it']][1]
-# 			next_value = next_value[len(next_value) - tv["msb"] - 1 + tv["actual_lsb"]:len(next_value) - tv["lsb"] + tv["actual_lsb"]]
-# 			assert len(next_value) == tv["msb"] - tv["lsb"] + 1
-# 			value[tv['start']:tv['start'] + tv['width']] = next_value
-# 			tv['it'] += 1
-
-
-# 		if 'x' not in value:
-# 			if ''.join(value) in value_set:
-# 				break
-# 			value_set.add(''.join(value))
-
-# 		tvs[:] = [tv for tv in tvs if len(tv['tv']) > tv['it']]
-
-# 	if len(tvs) == 0:
-# 		name = "{" + ", ".join(str(x) for x in slices) + "}"
-# 		if len(value_set) == 1 and name not in constants:
-# 			print "Constant: " + name
-# 			constants[name] = True
-# 			num_constant_signals += 1
-# 		elif name not in malicious:
-# 			print "Possible Malicious Symbol: " + name
-# 			malicious[name] = True
-# 			num_malic_signals += 1
-
-# 	num += 1
 
 # print "Finding malicious coalesed signals"
 # for _, data in vcd.iteritems():
