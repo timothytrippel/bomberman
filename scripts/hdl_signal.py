@@ -13,7 +13,7 @@ class HDL_Signal:
 		self.conn        = []
 		self.tb_covered  = False
 		self.hierarchy   = None
-		self.width       = None
+		self.width       = (self.msb + 1 - self.lsb)
 		self.type        = None
 		self.time_values = {}
 
@@ -33,19 +33,19 @@ class HDL_Signal:
 		# Load VCD Signal Info
 		self.tb_covered = True
 		self.hierarchy  = vcd_data['nets'][0]['hier']
-		self.width      = int(vcd_data['nets'][0]['size'])
 		self.type       = vcd_data['nets'][0]['type']
 
 		# Load Simulation Time Values
 		for tv in vcd_data['tv']:
 			time   = tv[0]
-			values = tv[1]
+			values = ''.join(tv[1])
 			assert time not in self.time_values.keys()
 			self.time_values[time] = values
 
-		# Check names and widths of match Dot file
+		# Check names and widths of matching signal in Dot file
 		assert (self.hierarchy + '.' + self.local_name) == self.name
-		assert self.width == (self.msb + 1 - self.lsb)
+		assert self.width == int(vcd_data['nets'][0]['size'])
+		assert vcd_data['lsb'] == self.lsb
 
 	# Check that this signal has been exercised by the test bench
 	def check_signal_simulated(self):
@@ -59,6 +59,7 @@ class HDL_Signal:
 		print "		Local Name:    %s" % (self.local_name)
 		print "		LSB:           %d" % (self.lsb)
 		print "		MSB:           %d" % (self.msb)
+		print "		Width:         %d" % (self.width)
 		print "		Is Flip-Flop:  %s" % (self.isff)
 		print "		Is Input:      %s" % (self.isinput)
 		print "		Is TB Covered: %s" % (self.tb_covered)
@@ -68,7 +69,6 @@ class HDL_Signal:
 		if self.tb_covered:
 			print "		Is TB Covered: %s"   % (self.tb_covered)
 			print "		Hierarchy:     %s"   % (self.hierarchy)
-			print "		Width:         %d"   % (self.width)
 			print "		Type:          %s"   % (self.type)
 			print "		Time Values.  (%d):" % (len(self.time_values.keys()))
 			for time in self.time_values.keys():

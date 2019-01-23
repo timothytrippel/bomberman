@@ -133,6 +133,7 @@ def main():
 	##
 	# Parse dot file
 	##
+	print "-------------------------------------------------"
 	print "Parsing Dot File..."
 	signals = parse_file(dot_file)
 	if DEBUG_PRINTS:
@@ -141,163 +142,190 @@ def main():
 	print 
 
 	##
-	# Generate Distributed Counters
-	##
-	print "Generating Distributed Counters..."
-	dist_counters = generate_distributed_counters(signals)
-	print "Found " + str(len(dist_counters)) + " possible distributed counters:"
-	if DEBUG_PRINTS:
-		for counter in dist_counters:
-			print "	Distributed Counter Size: %d" % len(counter)
-			for signal in counter:
-				print "		%s" % (signal)
-	print
-
-	##
 	# Parse vcd file / Generate Coalesced Counters
 	##
+	print "-------------------------------------------------"
 	print "Parsing VCD File..."
 	vcd = parse_vcd(vcd_file, types={"reg", "wire"})
 	vcd = exchange_sym_for_name_vcd(vcd)
+	print vcd
 	coal_counters = update_signals_with_vcd(signals, vcd)
 	print "Found " + str(len(coal_counters)) + " possible coalesced counters:"
 	if DEBUG_PRINTS:
 		for counter in coal_counters:
 			print "	Coalesced Counter: %s (Size: %d)" % (counter, signals[counter].width)
-			# signals[counter.name].debug_print()
+			signals[counter].debug_print()
+	print
+
+	##
+	# Generate Distributed Counters
+	##
+	print "-------------------------------------------------"
+	print "Generating Distributed Counters..."
+	dist_counter_refs, dist_counters = generate_distributed_counters(signals)
+	print "Found " + str(len(dist_counters)) + " possible distributed counters:"
+	if DEBUG_PRINTS:
+		assert len(dist_counter_refs) == len(dist_counters)
+		i = 0
+		while i < len(dist_counters):
+			dist_counter             = dist_counters[i]
+			dist_counter_ref_signals = dist_counter_refs[i]
+			print "	Distributed Counter Size: %d" % dist_counter.width
+			print "	Reference Signals:"
+			for ref_signal in dist_counter_ref_signals:
+				print "			%s" % (str(ref_signal))
+			print "	Distributed Counter:"
+			dist_counter.debug_print()
+			print "-------------------------------------------------"
+			i += 1
+
 	print
 
 	##
 	# Analyze Potential Distributed Counters
 	##
-	progress             = 0
-	num                  = 0
-	num_signals          = 0
-	num_malic_signals    = 0
-	num_constant_signals = 0
-	constants            = {}
-	malicious            = {}
-
+	constants = {}
+	malicious = {}
 	print "Finding Malicious distributed signals..."
 	for dist_counter in dist_counters:
-		for sig in dist_counter:
-			sig.debug_print()
-		print
-		# # Can only evaluate counters that have been simulated
-		# # @TODO-Tim: print warning that possible counter component,
-		# # 			 i.e. flip-flop, has not been simulated.
-		# if not check_all_counter_sigs_simulated(signals, dist_counter):
-		# 	continue
+		counter_value_set   = set(dist_counter.time_values.values())
+		max_possible_values = 2 ** dist_counter.width
+		if len(counter_value_set) == 1 and dist_counter.name not in constants:
+			print "Constant: " + dist_counter.name
+			constants[dist_counter.name] = True
+		elif len(counter_value_set) < max_possible_values and dist_counter.name not in malicious:
+			print "Possible Malicious Symbol: " + dist_counter.name
+			malicious[dist_counter.name] = True
 
-		# value_set = set()
-		# tvs       = []
+	# progress             = 0
+	# num                  = 0
+	# num_signals          = 0
+	# num_malic_signals    = 0
+	# num_constant_signals = 0
+	# constants            = {}
+	# malicious            = {}
 
-		# # Figure out width
-		# width        = 0
-		# num_signals += 1
-		# for sig_slice in dist_counter:
+	# print "Finding Malicious distributed signals..."
+	# for dist_counter in dist_counter_refs:
+	# 	# for sig in dist_counter:
+	# 	# 	sig.debug_print()
+	# 	# print
+	# 	# Can only evaluate counters that have been simulated
+	# 	# @TODO-Tim: print warning that possible counter component,
+	# 	# 			 i.e. flip-flop, has not been simulated.
+	# 	if not check_all_counter_sigs_simulated(signals, dist_counter):
+	# 		continue
 
-		# 	lsb = sig_slice.lsb
-		# 	msb = sig_slice.msb
-		# 	assert msb >= lsb
+	# 	value_set = set()
+	# 	tvs       = []
 
-		# 	slice_data = {
-		# 		'start' : width,
-		# 		'width' : msb - lsb + 1,
-		# 		'tv'    : vcd[sig_slice.fullname()]["tv"],
-		# 		'it'    : 0,
-		# 		'msb'   : msb,
-		# 		'lsb'   : lsb,
-		# 		'actual_lsb' : vcd[sig_slice.fullname()]["lsb"]
-		# 	}
+	# 	# Figure out width
+	# 	width        = 0
+	# 	num_signals += 1
+	# 	for sig_slice in dist_counter:
 
-		# 	width += (msb - lsb) + 1
-		# 	print sig_slice.fullname(), "-->", slice_data
-		# 	tvs.append(slice_data)
+	# 		lsb = sig_slice.lsb
+	# 		msb = sig_slice.msb
+	# 		assert msb >= lsb
 
-		# # print tvs
-		# # pprint.pprint(tvs)
-		# print
-		# value = ['x'] * width
+	# 		slice_data = {
+	# 			'start' : width,
+	# 			'width' : msb - lsb + 1,
+	# 			'tv'    : vcd[sig_slice.fullname()]["tv"],
+	# 			'it'    : 0,
+	# 			'msb'   : msb,
+	# 			'lsb'   : lsb,
+	# 			'actual_lsb' : vcd[sig_slice.fullname()]["lsb"]
+	# 		}
+
+	# 		width += (msb - lsb) + 1
+	# 		# print sig_slice.fullname(), "-->", slice_data
+	# 		tvs.append(slice_data)
+
+	# 	# print tvs
+	# 	# pprint.pprint(tvs)
+	# 	# print
+	# 	value = ['x'] * width
 		
-		# while len(tvs) > 0:
-		# 	# Check that slice width is correct
-		# 	assert len(value) == width
+	# 	while len(tvs) > 0:
+	# 		# Check that slice width is correct
+	# 		assert len(value) == width
 
-		# 	# Set lowest time to INFINITY
-		# 	lowest_time = sys.maxint
+	# 		# Set lowest time to INFINITY
+	# 		lowest_time = sys.maxint
 
-		# 	# Create list of time values
-		# 	next_values = []
+	# 		# Create list of time values
+	# 		next_values = []
 
-		# 	# Extract list of time values from
-		# 	for tv in tvs:
-		# 		# Check number of time values != iteration number
-		# 		assert len(tv['tv']) != tv['it']
+	# 		# Extract list of time values from
+	# 		for tv in tvs:
+	# 			# Check number of time values != iteration number
+	# 			assert len(tv['tv']) != tv['it']
 
-		# 		# Get current time
-		# 		current_time = tv['tv'][tv['it']][0]
+	# 			# Get current time
+	# 			current_time = tv['tv'][tv['it']][0]
 
-		# 		# Check if current time is LESS-THAN lowest time
-		# 		if current_time < lowest_time:
-		# 			next_values = [tv]
-		# 			lowest_time = current_time
-		# 		# Check if current time EQUALS lowest time
-		# 		elif current_time == lowest_time:
-		# 			next_values.append(tv)
-		# 		# else:
+	# 			# Check if current time is LESS-THAN lowest time
+	# 			if current_time < lowest_time:
+	# 				next_values = [tv]
+	# 				lowest_time = current_time
+	# 			# Check if current time EQUALS lowest time
+	# 			elif current_time == lowest_time:
+	# 				next_values.append(tv)
+	# 			# else:
 
-		# 	# for val in next_values:
-		# 	# 	print val
-		# 	# print
+	# 		# for val in next_values:
+	# 		# 	print val
+	# 		# print
 			
-		# 	# Check that at least 1 time value exists --> 
-		# 	# i.e. signal was simulated by test bench are 
-		# 	assert len(next_values) >= 1
+	# 		# Check that at least 1 time value exists --> 
+	# 		# i.e. signal was simulated by test bench are 
+	# 		assert len(next_values) >= 1
 
-		# 	# Match up bit indexes of counter signal slice
-		# 	# print value
-		# 	for tv in next_values:
-		# 		# Check slice bit width
-		# 		assert tv['start'] + tv['width'] <= width
+	# 		# Match up bit indexes of counter signal slice
+	# 		# print value
+	# 		for tv in next_values:
+	# 			# Check slice bit width
+	# 			assert tv['start'] + tv['width'] <= width
 
-		# 		# Extract slice bit(s) value(s)
-		# 		next_value = tv['tv'][tv['it']][1]
-		# 		next_value = next_value[len(next_value) - tv["msb"] - 1 + tv["actual_lsb"]:len(next_value) - tv["lsb"] + tv["actual_lsb"]]
+	# 			# Extract slice bit(s) value(s)
+	# 			next_value = tv['tv'][tv['it']][1]
+	# 			next_value = next_value[len(next_value) - tv["msb"] - 1 + tv["actual_lsb"]:len(next_value) - tv["lsb"] + tv["actual_lsb"]]
 
-		# 		# Check slice bit width
-		# 		assert len(next_value) == tv["msb"] - tv["lsb"] + 1
+	# 			# Check slice bit width
+	# 			assert len(next_value) == tv["msb"] - tv["lsb"] + 1
 
-		# 		# Set bit slice values
-		# 		value[tv['start']:tv['start'] + tv['width']] = next_value
-		# 		# print value
+	# 			# Set bit slice values
+	# 			value[tv['start']:tv['start'] + tv['width']] = next_value
+	# 			# print value
 
-		# 		# Increment iteration counter
-		# 		tv['it'] += 1
-		# 	# print
+	# 			# Increment iteration counter
+	# 			tv['it'] += 1
+	# 		# print
 
-		# 	# Make sure all time value bits have been extracted
-		# 	# and add simulated counter value to set
-		# 	if 'x' not in value:
-		# 		if ''.join(value) in value_set:
-		# 			break
-		# 		value_set.add(''.join(value))
+	# 		# Make sure all time value bits have been extracted
+	# 		# and add simulated counter value to set
+	# 		if 'x' not in value:
+	# 			if ''.join(value) in value_set:
+	# 				break
+	# 			value_set.add(''.join(value))
 
-		# 	# Pop TVs from list if all bits extracted
-		# 	tvs[:] = [tv for tv in tvs if len(tv['tv']) > tv['it']]
+	# 		# Pop TVs from list if all bits extracted
+	# 		tvs[:] = [tv for tv in tvs if len(tv['tv']) > tv['it']]
 
-		# if len(tvs) == 0:
-		# 	name = "{" + ", ".join(str(x) for x in dist_counter) + "}"
-		# 	if len(value_set) == 1 and name not in constants:
-		# 		print "Constant: " + name
-		# 		constants[name] = True
-		# 		num_constant_signals += 1
-		# 	elif name not in malicious:
-		# 		print "Possible Malicious Symbol: " + name
-		# 		malicious[name] = True
-		# 		num_malic_signals += 1
+	# 	# print value_set
+	# 	if len(tvs) == 0:
+	# 		name = "{" + ", ".join(str(x) for x in dist_counter) + "}"
+	# 		if len(value_set) == 1 and name not in constants:
+	# 			print "Constant: " + name
+	# 			constants[name] = True
+	# 			num_constant_signals += 1
+	# 		elif name not in malicious:
+	# 			print "Possible Malicious Symbol: " + name
+	# 			malicious[name] = True
+	# 			num_malic_signals += 1
 
-		# num += 1
+	# 	num += 1
 
 
 if __name__== "__main__":

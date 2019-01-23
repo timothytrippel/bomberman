@@ -17,3 +17,8 @@ class Connection:
 		out += " <-- "
 		out += self.sig.fullname() + "[" + str(self.msb) + ":" + str(self.lsb) + "]"
 		return out
+
+	@classmethod
+	def from_signals(cls, dep_signal, signal):
+		cls(dep_signal, dep_signal.msb, dep_signal.lsb, signal, signal.msb, signal.lsb)
+		

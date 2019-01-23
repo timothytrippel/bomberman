@@ -96,6 +96,7 @@ def build_deps(sig, msb, lsb, ffs = [], seen = {}):
 def generate_distributed_counters(signals):
 	deps = []
 	seen = {}
+	dist_counters = []
 
 	for sig_name, sig in signals.iteritems():
 		# Compute Dependencies
@@ -120,21 +121,52 @@ def generate_distributed_counters(signals):
 				continue
 
 		# Num flip-flops found is greater than 1 --> counter is distributed
-		ffs.sort(key=str) # sort flip-flops alphabetically by name
+		ffs.sort(key=str) # sort flip-flops alphabetically by name and msb:lsb range
 
-		# # Create new HDL_Signal object for distributed counter
-		# dist_counter = HDL_Signal("distributed", 0, 0)
-		# dist_counter.lsb   = 0
-		# dist_counter.msb   = 0
-		# dist_counter.width = 0
-		# for hdl_signal in ffs:
-		# 	if 
-		# 	dist_counter.ls
+		# Create new HDL_Signal object for distributed counter
+		dist_counter_name      = '{' + ','.join([str(ff) for ff in ffs]) + '}'
+		dist_counter           = HDL_Signal(dist_counter_name, -1, 0)
+		dist_counter_simulated = True
+		
+		# Piece together simulated time values from dist. counter signals
+		# dist_counter.debug_print()
+		for ref_signal in ffs:
+			hdl_signal = signals[ref_signal.fullname()]
+			msb        = ref_signal.msb
+			lsb        = ref_signal.lsb
+			width      = msb - lsb + 1
+			# print "REF Signal:"
+			# print "	NAME:  %s" % (hdl_signal.name)
+			# print "	MSB:   %d" % (msb)
+			# print "	LSB:   %d" % (lsb)
+			# print "	WIDTH: %d" % (width)
 
-		# Stringfy list of flip-flop signal names
-		distr = ','.join([str(ff) for ff in ffs])
-		if distr not in seen:
-			seen[distr] = True
+			# Update counter width and msb
+			dist_counter.width += width
+			dist_counter.msb    = dist_counter.lsb + dist_counter.width - 1
+
+			# Check if signal has been covered (simulated) by TB
+			if not hdl_signal.check_signal_simulated():
+				dist_counter_simulated = False
+				break
+			dist_counter.tb_covered = True
+
+			# Update counter time values
+			for time, values in hdl_signal.time_values.items():
+				if time in dist_counter.time_values:
+					dist_counter.time_values[time] += values[hdl_signal.width - msb - 1: hdl_signal.width - lsb]
+				else:
+					dist_counter.time_values[time]  = values[hdl_signal.width - msb - 1: hdl_signal.width - lsb]
+
+		# Update tb_covered flag
+		dist_counter.tb_covered = dist_counter_simulated
+		
+		# Check that dist_counter has not already been generated
+		if dist_counter_name not in seen:
+			seen[dist_counter_name] = True
+			
+			# Append dist_counter to list
+			dist_counters.append(dist_counter)
 			deps.append(ffs)
 
-	return deps
+	return deps, dist_counters
