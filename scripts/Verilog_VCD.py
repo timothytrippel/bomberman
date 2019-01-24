@@ -151,7 +151,7 @@ def parse_vcd(file, only_sigs=0, types={"reg", "wire"}, use_stdout=0, siglist=[]
 				
 	fh.close()
 
-	return data
+	return exchange_sym_for_name_vcd(data)
 
 
 def calc_mult (statement, opt_timescale=''):
@@ -229,11 +229,46 @@ def calc_mult (statement, opt_timescale=''):
 def get_timescale() :
 	return timescale
 
-
 def get_endtime() :
 	return endtime
 
+def exchange_sym_for_name_vcd(vcd):
+	newvcd = {}
+	for symbol, signal in vcd.iteritems():
+		for net in signal["nets"]:
+			name = net["hier"] + "." + net["name"].split("[")[0]
+			signal["lsb"] = 0
 
+			# If larger, extend
+			if len(net["name"].split("[")) != 1:
+				signal["lsb"] = int(net["name"].split("[")[1].split(":")[1].split("]")[0])
+				# Zero Extend any shortened strings
+				for i, _ in enumerate(signal['tv']):
+					value = signal['tv'][i]
+					size = int(net['size'])
+					if (len(value[1]) != size):
+						if (value[1][0] == 'x'):
+							value = (value[0], ['x'] * (size - len(value[1])) + value[1])
+						else:
+							value = (value[0], ['0'] * (size - len(value[1])) + value[1])
+					signal['tv'][i] = value
+					assert len(value[1]) == size
+
+			newvcd[name] = signal
+	return newvcd
+
+def debug_print_vcd(vcd):
+	for signal in vcd.keys():
+		print "Signal: %s" % (signal)
+		print "	LSB:   %s" % (vcd[signal]['lsb'])
+		print "	Nets:  %s" % (vcd[signal]['nets'])
+		print "		Hier: %s" % (vcd[signal]['nets'][0]['hier'])
+		print "		Name: %s" % (vcd[signal]['nets'][0]['name'])
+		print "		Type: %s" % (vcd[signal]['nets'][0]['type'])
+		print "		Size: %d" % (int(vcd[signal]['nets'][0]['size']))
+		print "	Time-Values:"
+		for tv in vcd[signal]['tv']:
+			print "		%3d -- %s" % (tv[0], tv[1])
 
 # =head1 NAME
 # 

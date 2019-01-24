@@ -47,6 +47,11 @@ class HDL_Signal:
 		assert self.width == int(vcd_data['nets'][0]['size'])
 		assert vcd_data['lsb'] == self.lsb
 
+		# Check wire type and isff/isinput match
+		assert self.type == 'reg' or self.type == 'wire'
+		assert (self.type == 'reg'  and self.isff) or \
+			   (self.type == 'wire' and not self.isff)
+
 	# Check that this signal has been exercised by the test bench
 	def check_signal_simulated(self):
 		if not self.tb_covered:
