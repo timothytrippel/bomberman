@@ -32,8 +32,14 @@ def update_signals_with_vcd(signals, vcd):
 		# Load signal simulation data
 		signals[vcd_signal_name].add_vcd_sim(vcd[vcd_signal_name])
 
-def classify_counters(counters, constants, malicious):
+def classify_counters(counters, constants, malicious, skipped):
 	for counter in counters:
+		# Check that counter has been simulated by TB
+		if not counter.tb_covered:
+			print "WARNING: counter (%s) not exercised by test bench... skipping." % (counter.name)
+			skipped[counter.name] = True
+			continue
+
 		# Compute number of simulated unique counter values
 		counter_value_set = set(counter.time_values.values())
 
@@ -48,7 +54,7 @@ def classify_counters(counters, constants, malicious):
 			print "Possible Malicious Symbol: " + counter.name
 			malicious[counter.name] = True
 
-	return constants, malicious
+	return constants, malicious, skipped
 
 def main():
 	##
@@ -144,9 +150,9 @@ def main():
 	##
 	print "-------------------------------------------------"
 	print "Finding malicious distributed signals..."
-	start_time           = time.time()
-	constants, malicious = classify_counters(dist_counters, {}, {})
-	end_time             = time.time()
+	start_time                    = time.time()
+	constants, malicious, skipped = classify_counters(dist_counters, {}, {}, {})
+	end_time                      = time.time()
 	calculate_and_print_time(start_time, end_time)
 	print
 
@@ -155,9 +161,9 @@ def main():
 	##
 	print "-------------------------------------------------"
 	print "Finding malicious coalesced signals..."
-	start_time           = time.time()
-	constants, malicious = classify_counters(coal_counters, constants, malicious)
-	end_time             = time.time()
+	start_time                    = time.time()
+	constants, malicious, skipped = classify_counters(coal_counters, constants, malicious, skipped)
+	end_time                      = time.time()
 	calculate_and_print_time(start_time, end_time)
 	print
 
@@ -166,10 +172,12 @@ def main():
 	##
 	print "-------------------------------------------------"
 	print "Analysis complete."
-	num_malic_signals    = len(malicious.keys())
-	num_constant_signals = len(constants.keys())
-	print "	Malicous  Marked: " + str(num_malic_signals)
-	print "	Constants Marked: " + str(num_constant_signals)
+	num_skipped_signals   = len(skipped.keys())
+	num_malicious_signals = len(malicious.keys())
+	num_constant_signals  = len(constants.keys())
+	print "	# Not Simulated: " + str(num_skipped_signals)
+	print "	# Malicous:      " + str(num_malicious_signals)
+	print "	# Constants:     " + str(num_constant_signals)
 	print
 
 	##
