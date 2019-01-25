@@ -4,6 +4,7 @@
 import re
 import sys
 import time
+import pprint
 
 # Custom Modules
 from hdl_signal          import HDL_Signal
@@ -175,9 +176,9 @@ def main():
 	num_skipped_signals   = len(skipped.keys())
 	num_malicious_signals = len(malicious.keys())
 	num_constant_signals  = len(constants.keys())
-	print "	# Not Simulated: " + str(num_skipped_signals)
-	print "	# Malicous:      " + str(num_malicious_signals)
-	print "	# Constants:     " + str(num_constant_signals)
+	print "	Num. Not Simulated: " + str(num_skipped_signals)
+	print "	Num. Malicous:      " + str(num_malicious_signals)
+	print "	Num. Constants:     " + str(num_constant_signals)
 	print
 
 	##

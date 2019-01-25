@@ -151,8 +151,13 @@ def parse_vcd(file, only_sigs=0, types={"reg", "wire"}, use_stdout=0, siglist=[]
 				
 	fh.close()
 
-	return exchange_sym_for_name_vcd(data)
+	# Swap signal names for symbols
+	data = exchange_sym_for_name_vcd(data)
 
+	# Pad signal time values if vectored
+	data = zero_pad_vectored_signal_tvs(data)
+	
+	return data
 
 def calc_mult (statement, opt_timescale=''):
 	""" 
@@ -225,37 +230,94 @@ def calc_mult (statement, opt_timescale=''):
 
 	return ((mult * scale) / new_scale)
 
-
 def get_timescale() :
 	return timescale
 
 def get_endtime() :
 	return endtime
 
+def is_signal_vectored(signal):
+	if (signal['msb'] - signal['lsb'] + 1) > 1:
+		return True
+	return False
+
+def is_signal_name_vectored(signal_base_name):
+	if len(signal_base_name.split("[")) != 1:
+		return True
+	return False
+
+def get_signal_lsb(signal_base_name):
+	if is_signal_name_vectored(signal_base_name):
+		return int(signal_base_name.split("[")[1].split(":")[1].split("]")[0])
+	return 0
+
+# This is added to format the VCD information. Signal names
+# are swapped with VCD signal symbols, and time values are 
+# padded to ensure they align with the signal widths.
 def exchange_sym_for_name_vcd(vcd):
-	newvcd = {}
-	for symbol, signal in vcd.iteritems():
-		for net in signal["nets"]:
-			name = net["hier"] + "." + net["name"].split("[")[0]
-			signal["lsb"] = 0
+	formatted_vcd = {}
 
-			# If larger, extend
-			if len(net["name"].split("[")) != 1:
-				signal["lsb"] = int(net["name"].split("[")[1].split(":")[1].split("]")[0])
-				# Zero Extend any shortened strings
-				for i, _ in enumerate(signal['tv']):
-					value = signal['tv'][i]
-					size = int(net['size'])
-					if (len(value[1]) != size):
-						if (value[1][0] == 'x'):
-							value = (value[0], ['x'] * (size - len(value[1])) + value[1])
-						else:
-							value = (value[0], ['0'] * (size - len(value[1])) + value[1])
-					signal['tv'][i] = value
-					assert len(value[1]) == size
+	# Iterate through symbol and signal info key-value pairs
+	for symbol, signal in vcd.items():
 
-			newvcd[name] = signal
-	return newvcd
+		# If there are multiple net names take the name that
+		# is the longest (i.e. deepest in heirarchy).
+		signal_name = ''
+		for net in signal['nets']:
+			# Extract signal info
+			signal_lsb            = get_signal_lsb(net['name'])
+			signal_msb            = signal_lsb + int(net['size']) - 1
+			local_signal_name     = net['name'].split('[')[0] # remove MSB/LSB indices
+			hierarchy_signal_name = net['hier']
+
+			# Construct signal full name (without MSB/LSB info)
+			potential_signal_name = hierarchy_signal_name + '.' + local_signal_name
+			
+			# Check if longest signal name
+			if len(potential_signal_name) >= len(signal_name):
+				signal_name   = potential_signal_name
+				signal['lsb'] = signal_lsb
+				signal['msb'] = signal_msb
+
+		# Check signal name is not empty
+		assert signal_name != ''
+
+		formatted_vcd[signal_name] = signal
+
+	return formatted_vcd
+
+def zero_pad_vectored_signal_tvs(vcd):
+	formatted_vcd = {}
+
+	# Iterate through name and signal info key-value pairs
+	for signal_name, signal in vcd.items():
+
+		# Check if signal is vectored
+		if is_signal_vectored(signal):
+			
+			for index, time_value in enumerate(signal['tv']):
+				time  = time_value[0]
+				value = time_value[1]
+				width = (signal['msb'] - signal['lsb'] + 1)
+
+				# Check if padding is necessary
+				if len(value) != width:
+					# Check if value is unkown
+					if value[0] == 'x':
+						value = ['x'] * (width - len(value)) + value
+					else:
+						value = ['0'] * (width - len(value)) + value
+				
+				# Check value is correct width
+				assert len(value) == width
+
+				# Update time value
+				signal['tv'][index] = (time, value)
+			
+		# Update VCD dict
+		formatted_vcd[signal_name] = signal						
+		
+	return formatted_vcd
 
 def debug_print_vcd(vcd):
 	for signal in vcd.keys():

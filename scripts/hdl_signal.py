@@ -30,10 +30,18 @@ class HDL_Signal:
 		self.conn.append(c)
 
 	def add_vcd_sim(self, vcd_data):
+		# Find matching VCD net
+		matching_vcd_net_found = False
+		for net_dict in vcd_data['nets']:
+			if (net_dict['hier'] + '.' + net_dict['name'].split('[')[0]) == self.name:
+				matching_vcd_net_found = True
+				break
+		assert matching_vcd_net_found
+
 		# Load VCD Signal Info
 		self.tb_covered = True
-		self.hierarchy  = vcd_data['nets'][0]['hier']
-		self.type       = vcd_data['nets'][0]['type']
+		self.hierarchy  = net_dict['hier']
+		self.type       = net_dict['type']
 
 		# Load Simulation Time Values
 		for tv in vcd_data['tv']:
@@ -43,10 +51,11 @@ class HDL_Signal:
 			self.time_values[time] = values
 
 		# Check names and widths of matching signal in Dot file
-		assert (self.hierarchy + '.' + self.local_name) == self.name
-		assert self.width == int(vcd_data['nets'][0]['size'])
-		assert vcd_data['lsb'] == self.lsb
+		assert self.lsb == int(vcd_data['lsb'])
+		assert self.msb == int(vcd_data['msb'])
+		assert self.width == int(net_dict['size'])
 
+		self.debug_print()
 		# Check wire type and isff/isinput match
 		assert self.type == 'reg' or self.type == 'wire'
 		assert (self.type == 'reg'  and self.isff) or \
@@ -76,6 +85,6 @@ class HDL_Signal:
 			print "		Hierarchy:     %s"   % (self.hierarchy)
 			print "		Type:          %s"   % (self.type)
 			print "		Time Values.  (%d):" % (len(self.time_values.keys()))
-			for time in self.time_values.keys():
+			for time in sorted(self.time_values.keys(), key=lambda x: int(x)):
 				values = self.time_values[time]
-				print "			%d -- %s" % (time, values)
+				print "			%4d -- %s" % (time, values)
