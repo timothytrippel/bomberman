@@ -14,8 +14,8 @@ There are two sub-directories:
 
 2. analysis_flow/ - This sub-directory contains unit-test for the entiry TTB analysis flow: IVL TTB backend (Dot generator), TVL vvp Verilog test bench simulator (VCD generator), Python VCD parser, Python Dot parser, and Python counter analysis program/scripts. Each directory in this sub-directory contains a makefile that:
 	
-	a. generates a Dot file,
-	b. generates a VCD file, and
-	c. analyzes the Dot and VCD files to find malicious counter based trigger components.
+  * generates a Dot file,
+  * generates a VCD file, and
+  * analyzes the Dot and VCD files to find malicious counter based trigger components.
 
-To operate the makefile type: *make all*, to execute the entire analysis flow, and *make clean*, to delete all generated files.
+  To operate the makefile type: *make all*, to execute the entire analysis flow, and *make clean*, to delete all generated files.
