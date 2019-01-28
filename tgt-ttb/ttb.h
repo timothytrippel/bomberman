@@ -20,21 +20,20 @@ Graphviz .dot file.
 #include  <ivl_target.h>
 
 // TTB Headers
-#include "ttb_signal.h"
 
 using namespace std;
 
 // Debugging Switches
 #define DEBUG_PRINTS 		          false
 
-// // Signal name to object map
-// typedef map<string, TTB_Signal*> sig_map_t;
+// Signal name to object map
+typedef map<string, ivl_signal_t*> sig_map_t;
 
-// // Signal to signal connection pair
-// // (Cannot be pointers since these signals could be slices.)
-// typedef pair<TTB_Signal, TTB_Signal> connection_t;
+// Signal to signal connection pair
+typedef pair<ivl_signal_t*, ivl_signal_t*> connection_t;
 
 // Gets the output file set in ttb.cc
 FILE* out_file();
 
 #endif
+// 
