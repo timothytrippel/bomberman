@@ -6,11 +6,11 @@ There are two sub-directories:
 
 1. **ivl_ttb/** - This sub-directory contains unit-tests for the Icarus Verilog backend target module: tgt-ttb. Additionally their is a makefile for automating the building, and executing of each unit tests. Operate the makefile as follows:
 
-  * To run all unit tests, type: *make all*.
-  * To run an individual unit test, type: *make run-\<unit test\>*.
-  * To only build IVL target module, type: *make build*.
-  * To remove unit test output, type: *make clean*.
-  * To delete unit test output and compiled IVL backend, type: *make cleanall*.
+    * To run all unit tests, type: *make all*.
+    * To run an individual unit test, type: *make run-\<unit test\>*.
+    * To only build IVL target module, type: *make build*.
+    * To remove unit test output, type: *make clean*.
+    * To delete unit test output and compiled IVL backend, type: *make cleanall*.
 
 2. **analysis_flow/** - This sub-directory contains unit-test for the entiry TTB analysis flow: IVL TTB backend (Dot generator), TVL vvp Verilog test bench simulator (VCD generator), Python VCD parser, Python Dot parser, and Python counter analysis program/scripts. Each directory in this sub-directory contains a makefile that:
 	
