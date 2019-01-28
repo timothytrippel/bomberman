@@ -1,5 +1,4 @@
-Example of Using the tools:
-Unit Testing Directory:
+Executing Unit Tests:
 ===========================
 
 There are two sub-directories: 
