@@ -1,25 +1,21 @@
 Example of Using the tools:
+Unit Testing Directory:
 ===========================
 
-1. Create the dependency graph in the form of a dotfile
-   $ iverilog -t ttb -o depend.dot d_ff.v
+There are two sub-directories: 
 
-1.5 (DEBUG step) Open the dot file graphviz and spot check a couple things
-                 to make sure it looks correct
+1. ivl_ttb/ - This sub-directory contains unit-tests for the Icarus Verilog backend target module: tgt-ttb. Additionally their is a makefile for automating the building, and executing of each unit tests. Operate the makefile as follows:
 
-2. Use the parse_dot.py script in the scripts folder to turn the dot file into
-   verilog.
-   $ python ../scripts/parse_dot.py depend.dot > slice.v
+	a. To run all unit tests, type: make all.  
+	b. To run an individual unit test, type: make run-<unit test>. 
+	c. To only build IVL target module, type: make build. 
+	d. To remove unit test output, type: make clean. 
+	e. To delete unit test output and compiled IVL backend, type: make cleanall.
 
-3. Add that verilog to the module you are inspecting
-  CAUTION: Nasty bash command ahead. You might want to just do this by hand
-  $ cat <(head -n $(($(grep -n "endmodule" d_ff.v | cut -f1 -d:)-1)) d_ff.v) slice.v <(tail -n +$(grep -n "endmodule" d_ff.v | cut -f1 -d:) d_ff.v) > d_ff_signals.v
+2. analysis_flow/ - This sub-directory contains unit-test for the entiry TTB analysis flow: IVL TTB backend (Dot generator), TVL vvp Verilog test bench simulator (VCD generator), Python VCD parser, Python Dot parser, and Python counter analysis program/scripts. Each directory in this sub-directory contains a makefile that:
+	
+	a. generates a Dot file,
+	b. generates a VCD file, and
+	c. analyzes the Dot and VCD files to find malicious counter based trigger components.
 
-4. Create the simulator executable
-   $ iverilog -t vvp -o d_ff_tb d_ff_tb.v d_ff_signals.v
-
-5. Run the executable
-   $ vvp d_ff_tb
-
-6. Run the parse script on the vcd file
-   $ python ../scripts/VCD_parse.py d_ff_tb.vcd
+To operate the makefile type: "make all", to execute the entire analysis flow, and "make clean", to delete all generated files.
