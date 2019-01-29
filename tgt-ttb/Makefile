@@ -1,24 +1,41 @@
-BASE_IVERILOG_DIR=/Users/ti27457/Repos/iverilog
-EXEC_DIR=/Users/ti27457/Repos/iverilog/lib/ivl
+# -----------------------------------------------------------------------------
+# File:        Makefile
+# Author:      Timothy Trippel
+# Affiliation: MIT Lincoln Laboratory
+# Description:
 
-INSTALL = /usr/bin/install -c
-INSTALL_PROGRAM = ${INSTALL}
-INSTALL_DATA = ${INSTALL} -m 644
+# This is Makefile to build a custom backend target module for the Icarus 
+# Verilog compiler frontend.
+# -----------------------------------------------------------------------------
 
-IDIR=/Users/ti27457/Repos/iverilog
-CC=g++
-CFLAGS=-I$(IDIR) -fpic -std=gnu++0x -Wall -Wextra -Wshadow -g -O2
+INSTALL         := /usr/bin/install -c
+INSTALL_PROGRAM := ${INSTALL}
+INSTALL_DATA    := ${INSTALL} -m 644
 
-TGT=ttb
-SRCS=$(wildcard *.cc)
-OBJS=$(SRCS:.cc=.o)
+# Directory Structure
+IVL_DIR     := /Users/ti27457/Repos/iverilog
+INCLUDE_DIR := include
+SRC_DIR     := src
+BUILD_DIR   := build
+BIN_DIR     := /Users/ti27457/Repos/iverilog/lib/ivl
 
+# Compiler Configurations
+CC          := g++
+CFLAGS      := -I$(IVL_DIR) -I$(INCLUDE_DIR) -fpic -std=gnu++0x -Wall -Wextra -Wshadow -g -O2
+
+# Source/Target Files
+TGT = ttb
+SRCS := $(shell find $(SRC_DIR) -type f -name *.cc)
+OBJS := $(patsubst $(SRC_DIR)/%,$(BUILD_DIR)/%,$(SRCS:.cc=.o))
+
+# Make Targets
 all: $(TGT) confs install
 
 $(TGT): $(OBJS)
 	$(CC) -undefined suppress -flat_namespace $(CFLAGS) -o $@.tgt $^ 
 
-%.o: %.cc
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.cc
+	@mkdir -p $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 confs: ./generate_tgt_confs.sh
@@ -27,17 +44,17 @@ confs: ./generate_tgt_confs.sh
 .PHONY: install uninstall clean 
 
 install:
-	$(INSTALL_PROGRAM) ./$(TGT).tgt  "$(EXEC_DIR)/$(TGT).tgt"
-	$(INSTALL_DATA)    $(TGT).conf   "$(EXEC_DIR)/$(TGT).conf"
-	$(INSTALL_DATA)    $(TGT)-s.conf "$(EXEC_DIR)/$(TGT)-s.conf"
+	$(INSTALL_PROGRAM) ./$(TGT).tgt  "$(BIN_DIR)/$(TGT).tgt"
+	$(INSTALL_DATA)    $(TGT).conf   "$(BIN_DIR)/$(TGT).conf"
+	$(INSTALL_DATA)    $(TGT)-s.conf "$(BIN_DIR)/$(TGT)-s.conf"
 
 uninstall:
-	rm -f $(EXEC_DIR)/$(TGT).tgt
-	rm -f $(EXEC_DIR)/$(TGT).conf
-	rm -f $(EXEC_DIR)/$(TGT)-s.conf
+	rm -f $(BIN_DIR)/$(TGT).tgt
+	rm -f $(BIN_DIR)/$(TGT).conf
+	rm -f $(BIN_DIR)/$(TGT)-s.conf
 
 clean:
-	rm -f *.o
+	rm -rf $(BUILD_DIR)
 	rm -f *.tgt
 	rm -f *.conf
 

@@ -1,6 +1,3 @@
-#ifndef __TTB_HEADER__
-#define __TTB_HEADER__
-
 /*
 File:        ttb.h
 Author:      Timothy Trippel
@@ -12,19 +9,21 @@ dependency graph for a given circuit design. The output format is a
 Graphviz .dot file.
 */
 
+#ifndef __TTB_HEADER__
+#define __TTB_HEADER__
+
 // Standard Headers
-#include <map>
 #include <string>
+#include <vector>
+#include <map>
+
+using namespace std;
 
 // IVL API Header
 #include  <ivl_target.h>
 
-// TTB Headers
-
-using namespace std;
-
 // Debugging Switches
-#define DEBUG_PRINTS 		          false
+#define DEBUG_PRINTS false
 
 // Signal name to object map
 typedef map<string, ivl_signal_t*> sig_map_t;
@@ -32,8 +31,6 @@ typedef map<string, ivl_signal_t*> sig_map_t;
 // Signal to signal connection pair
 typedef pair<ivl_signal_t*, ivl_signal_t*> connection_t;
 
-// Gets the output file set in ttb.cc
-FILE* out_file();
+ivl_net_const_t is_const_local_sig(ivl_signal_t sig);
 
 #endif
-// 
