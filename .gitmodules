@@ -1,0 +1,3 @@
+[submodule "tgt-ttb/lib/googletest"]
+	path = tgt-ttb/lib/googletest
+	url = https://github.com/google/googletest.git
