@@ -25,6 +25,10 @@ using namespace std;
 // Debugging Switches
 #define DEBUG_PRINTS false
 
+// Progress Messages
+#define LAUNCH_MESSAGE          "Entering TTB Target Module..."
+#define SCOPE_EXPANSION_MESSAGE "Identifying top-level modules..."
+
 // Signal name to object map
 typedef map<string, ivl_signal_t*> sig_map_t;
 

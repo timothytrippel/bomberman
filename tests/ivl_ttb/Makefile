@@ -12,7 +12,7 @@ tgt-ttb:
 # TTB Test
 %.dot: %.v
 	iverilog -o $@ -t ttb $<
-# dot $@ -Tpdf -o $(<:.v=.pdf)
+	dot $@ -Tpdf -o $(<:.v=.pdf)
 
 .PHONY: build cleanall clean
 

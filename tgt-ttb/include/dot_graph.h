@@ -26,10 +26,10 @@ Graphviz .dot file.
 #define INPUT_NODE_SHAPE        "none"
 #define CONST_NODE_SHAPE        "ellipse"
 
-class Dot_Graph {
+class DotGraph {
 	public:
-		Dot_Graph();
-		Dot_Graph(const char* p);
+		DotGraph();
+		DotGraph(const char* p);
 		void 		set_file_path(const char* p);
 		const char* get_file_path();
 		void 		init_graph();
@@ -49,8 +49,8 @@ class Dot_Graph {
 		void 		save_graph();
 		
 	private:
-		const char*   file_path;
-		FILE* 		  file_ptr;
+		const char*   file_path_;
+		FILE* 		  file_ptr_;
 		FILE* 		  get_file_ptr();
 		string 		  get_signal_fullname(ivl_signal_t sig);
 		string 		  get_constant_fullname(ivl_net_const_t con);

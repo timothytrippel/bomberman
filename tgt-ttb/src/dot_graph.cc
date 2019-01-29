@@ -12,44 +12,42 @@ Graphviz .dot file.
 // Standard Headers
 #include <cassert>
 
-using namespace std;
-
 // TTB Headers
 #include "ttb.h"
 #include "dot_graph.h"
 
-Dot_Graph::Dot_Graph(): file_path(NULL), file_ptr(NULL){}
+DotGraph::DotGraph(): file_path_(NULL), file_ptr_(NULL){}
 
-Dot_Graph::Dot_Graph(const char* p): file_ptr(NULL){
+DotGraph::DotGraph(const char* p): file_ptr_(NULL){
 	set_file_path(p);
 }
 
-void Dot_Graph::set_file_path(const char* p){
-	file_path = p;
+void DotGraph::set_file_path(const char* p){
+	file_path_ = p;
 }
 
-const char* Dot_Graph::get_file_path(){
-	return file_path;
+const char* DotGraph::get_file_path(){
+	return file_path_;
 }
 
-FILE* Dot_Graph::get_file_ptr(){
-	return file_ptr;
+FILE* DotGraph::get_file_ptr(){
+	return file_ptr_;
 }
 
-void Dot_Graph::open_file(){
-	file_ptr = fopen(file_path, "w");
-	if (!file_ptr) {
-		printf("ERROR: Could not open file %s\n", file_path ? file_path : "stdout");
+void DotGraph::open_file(){
+	file_ptr_ = fopen(file_path_, "w");
+	if (!file_ptr_) {
+		printf("ERROR: Could not open file %s\n", file_path_ ? file_path_ : "stdout");
 		exit(-4);
 	}
 }
 
-void Dot_Graph::close_file(){
-	fclose(file_ptr);
-	file_ptr = NULL;
+void DotGraph::close_file(){
+	fclose(file_ptr_);
+	file_ptr_ = NULL;
 }
 
-unsigned long Dot_Graph::get_msb(ivl_signal_t sig){
+unsigned long DotGraph::get_msb(ivl_signal_t sig){
 	unsigned num_dimens = ivl_signal_packed_dimensions(sig);
 
 	if (num_dimens == 0) {
@@ -59,7 +57,7 @@ unsigned long Dot_Graph::get_msb(ivl_signal_t sig){
 	}
 }
 
-unsigned long Dot_Graph::get_lsb(ivl_signal_t sig){
+unsigned long DotGraph::get_lsb(ivl_signal_t sig){
 	unsigned num_dimens = ivl_signal_packed_dimensions(sig);
 	
 	if (num_dimens == 0) {
@@ -69,12 +67,12 @@ unsigned long Dot_Graph::get_lsb(ivl_signal_t sig){
 	}
 }
 
-void Dot_Graph::init_graph(){
+void DotGraph::init_graph(){
 	open_file();
-	fprintf(file_ptr, "digraph G {\n");
+	fprintf(file_ptr_, "digraph G {\n");
 }
 
-string Dot_Graph::get_signal_fullname(ivl_signal_t sig){
+string DotGraph::get_signal_fullname(ivl_signal_t sig){
 	string scopename = string(ivl_scope_name(ivl_signal_scope(sig))); 
 	string basename  = string(ivl_signal_basename(sig));
 	string fullname  = string(scopename + string(".") + basename);
@@ -82,7 +80,7 @@ string Dot_Graph::get_signal_fullname(ivl_signal_t sig){
 	return fullname;
 }
 
-string Dot_Graph::get_constant_fullname(ivl_net_const_t con){
+string DotGraph::get_constant_fullname(ivl_net_const_t con){
 	string scopename = string(ivl_scope_name(ivl_const_scope(con))); 
 	string basename  = string(ivl_const_bits(con), (size_t)ivl_const_width(con));
 	reverse(basename.begin(), basename.end());
@@ -91,43 +89,43 @@ string Dot_Graph::get_constant_fullname(ivl_net_const_t con){
 	return fullname;
 }
 
-void Dot_Graph::add_signal_node(ivl_signal_t sig){
+void DotGraph::add_signal_node(ivl_signal_t sig){
 	string fullname = get_signal_fullname(sig);
 
-	fprintf(file_ptr, "\t\"%s\" [shape=%s, label=\"%s[%lu:%lu]\"];\n", 
+	fprintf(file_ptr_, "\t\"%s\" [shape=%s, label=\"%s[%lu:%lu]\"];\n", 
 		fullname.c_str(), SIGNAL_NODE_SHAPE, fullname.c_str(), get_msb(sig), get_lsb(sig));
 }
 
-void Dot_Graph::add_local_signal_node(ivl_signal_t sig){
+void DotGraph::add_local_signal_node(ivl_signal_t sig){
 	string fullname = get_signal_fullname(sig);
 
-	fprintf(file_ptr, "\t\"%s\" [shape=%s, label=\"%s[%lu:%lu]\"];\n", 
+	fprintf(file_ptr_, "\t\"%s\" [shape=%s, label=\"%s[%lu:%lu]\"];\n", 
 		fullname.c_str(), LOCAL_SIGNAL_NODE_SHAPE, fullname.c_str(), get_msb(sig), get_lsb(sig));
 }
 
-void Dot_Graph::add_ff_node(ivl_signal_t sig){
+void DotGraph::add_ff_node(ivl_signal_t sig){
 	string fullname = get_signal_fullname(sig);
 
-	fprintf(file_ptr, "\t\"%s\" [shape=%s, label=\"%s[%lu:%lu]\"];\n", 
+	fprintf(file_ptr_, "\t\"%s\" [shape=%s, label=\"%s[%lu:%lu]\"];\n", 
 		fullname.c_str(), FF_NODE_SHAPE, fullname.c_str(), get_msb(sig), get_lsb(sig));
 }
 
-void Dot_Graph::add_input_node(ivl_signal_t sig){
+void DotGraph::add_input_node(ivl_signal_t sig){
 	string fullname = get_signal_fullname(sig);
 
-	fprintf(file_ptr, "\t\"%s\" [shape=%s, label=\"%s[%lu:%lu]\"];\n", 
+	fprintf(file_ptr_, "\t\"%s\" [shape=%s, label=\"%s[%lu:%lu]\"];\n", 
 		fullname.c_str(), INPUT_NODE_SHAPE, fullname.c_str(), get_msb(sig), get_lsb(sig));
 }
 
-void Dot_Graph::add_const_node(ivl_net_const_t con){
+void DotGraph::add_const_node(ivl_net_const_t con){
 	string fullname = get_constant_fullname(con);
 
-	fprintf(file_ptr, "\t\"%s\" [shape=%s, label=\"%s[%lu:%lu]\"]; /* Constant */\n", 
+	fprintf(file_ptr_, "\t\"%s\" [shape=%s, label=\"%s[%lu:%lu]\"]; /* Constant */\n", 
 		fullname.c_str(), CONST_NODE_SHAPE, fullname.c_str(), (unsigned long) (ivl_const_width(con) - 1), (unsigned long) 0);
 }
 
 
-void Dot_Graph::add_connection(ivl_signal_t aff_sig, ivl_signal_t sig){
+void DotGraph::add_connection(ivl_signal_t aff_sig, ivl_signal_t sig){
 	ivl_net_const_t con;
 
 	// First Signal Name
@@ -146,12 +144,12 @@ void Dot_Graph::add_connection(ivl_signal_t aff_sig, ivl_signal_t sig){
 		add_const_connection(aff_sig, con);
 	} else {
 		// Add connection to .dot file
-		fprintf(file_ptr, "\t\"%s\" -> \"%s\"[label=\"[%lu:%lu]->[%lu:%lu]\"];\n", 
+		fprintf(file_ptr_, "\t\"%s\" -> \"%s\"[label=\"[%lu:%lu]->[%lu:%lu]\"];\n", 
 			fullname_2.c_str(), fullname_1.c_str(), get_msb(sig), get_lsb(sig), get_msb(aff_sig), get_lsb(aff_sig));	
 	}
 }
 
-void Dot_Graph::add_spliced_connection(ivl_signal_t aff_sig, 
+void DotGraph::add_spliced_connection(ivl_signal_t aff_sig, 
 									   unsigned long aff_sig_msb, 
 									   unsigned long aff_sig_lsb, 
 							           ivl_signal_t  sig, 
@@ -171,25 +169,25 @@ void Dot_Graph::add_spliced_connection(ivl_signal_t aff_sig,
 		// connection only
 		assert(false && "ERROR: cannot connect a spliced constant.");
 	} else {
-		fprintf(file_ptr, "\t\"%s\" -> \"%s\"[label=\"[%lu:%lu]->[%lu:%lu]\"];\n", 
+		fprintf(file_ptr_, "\t\"%s\" -> \"%s\"[label=\"[%lu:%lu]->[%lu:%lu]\"];\n", 
 			fullname_2.c_str(), fullname_1.c_str(), sig_msb, sig_lsb, aff_sig_msb, aff_sig_lsb);	
 	}	
 }
 
-void Dot_Graph::add_const_connection(ivl_signal_t aff_sig, ivl_net_const_t con){
+void DotGraph::add_const_connection(ivl_signal_t aff_sig, ivl_net_const_t con){
 	// First Signal Name
 	string fullname_1 = get_signal_fullname(aff_sig);
 	
 	// Second Signal Name
 	string fullname_2 = get_constant_fullname(con);
 
-	fprintf(file_ptr, "\t\"%s\" -> \"%s\"[label=\"[%lu:%lu]->[%lu:%lu]\"];\n", 
+	fprintf(file_ptr_, "\t\"%s\" -> \"%s\"[label=\"[%lu:%lu]->[%lu:%lu]\"];\n", 
 		fullname_2.c_str(), fullname_1.c_str(), 
 		(unsigned long) (ivl_const_width(con) - 1), (unsigned long) 0, 
 		get_msb(aff_sig), get_lsb(aff_sig));
 }
 
-void Dot_Graph::save_graph(){
-	fprintf(file_ptr, "}\n");
+void DotGraph::save_graph(){
+	fprintf(file_ptr_, "}\n");
 	close_file();
 }
