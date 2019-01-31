@@ -9,8 +9,8 @@ dependency graph for a given circuit design. The output format is a
 Graphviz .dot file.
 */
 
-#ifndef __DOT_GRAPH__
-#define __DOT_GRAPH__
+#ifndef __DOT_GRAPH_HEADER__
+#define __DOT_GRAPH_HEADER__
 
 // Standard Headers
 #include <cstdio>

@@ -1,5 +1,5 @@
 /*
-File:        dot_graph.cc
+File:        reporter.cc
 Author:      Timothy Trippel
 Affiliation: MIT Lincoln Laboratory
 Description:
@@ -12,6 +12,8 @@ Graphviz .dot file.
 // Standard Headers
 #include <cassert>
 #include <ctime>
+#include <cstring>
+#include <string>
 
 // TTB Headers
 #include "reporter.h"
@@ -60,20 +62,49 @@ void Reporter::root_scopes(ivl_scope_t* scopes, unsigned int num_scopes){
 	// Print number of scopes
 	fprintf(file_ptr_, "Found %d top-level module(s):\n", num_scopes);
 	
+	string scope_name = "UNKONWN";
+
 	for (unsigned int i = 0; i < num_scopes; i++){	
-		// Check scope is of type "module"
-		assert(ivl_scope_type(scopes[i]) == IVL_SCT_MODULE && "UNSUPPORTED: Verilog scope type.\n");
+		// Get scope name
+		scope_name = ivl_scope_name(scopes[i]);
 
 		// Print scope name
-		fprintf(file_ptr_, "	%s\n", ivl_scope_name(scopes[i]));
+		fprintf(file_ptr_, "	%s\n", scope_name.c_str());
 	}
+
+	// Print new line
+	fprintf(file_ptr_, "\n");
 }
 
-void Reporter::num_signals(vector<ivl_signal_t> signals){
+void Reporter::num_signals(sig_map_t signals){
 	// Check that file has been opened for writing report
 	assert(file_ptr_ != NULL && "ERROR: reporter file ptr is NULL.\n");
 
-	return;
+	// Print number of signals in vector
+	fprintf(file_ptr_, "Number of signals found: %lu\n\n", signals.size());
+}
+
+void Reporter::signal_names(sig_map_t signals){
+	// Check that file has been opened for writing report
+	assert(file_ptr_ != NULL && "ERROR: reporter file ptr is NULL.\n");
+
+	// Print name of all signals in vector
+	fprintf(file_ptr_, "Signal Names:\n");    	
+
+	// Create a signals map iterator
+	sig_map_t::iterator it = signals.begin();
+ 
+	// Iterate over the map using Iterator till end.
+	while (it != signals.end()) { 	
+ 		// Print signal name
+		fprintf(file_ptr_, "	%s\n", ivl_signal_name(it->first));
+ 
+		// Increment the iterator
+		it++;
+	}
+
+	// Print new line
+	fprintf(file_ptr_, "\n");
 }
 
 void Reporter::end(){
@@ -82,7 +113,7 @@ void Reporter::end(){
 
 	// Record current execution time
 	execution_time_ = (clock() - start_time_) / (double) CLOCKS_PER_SEC;
-	fprintf(file_ptr_, "\nExecution Time: %f (s)\n", execution_time_);
+	fprintf(file_ptr_, "Execution Time: %f (s)\n", execution_time_);
 	fprintf(file_ptr_, "-----------------------------\n");
 
 	// Close output file

@@ -44,10 +44,12 @@ void Error::check_scope_types(ivl_scope_t* scopes, unsigned int num_scopes){
 				scope_type_name = "IVL_SCT_FUNCTION";
 				break;
 			case IVL_SCT_TASK:
-				scope_type_name = "IVL_SCT_TASK";
+				scope_type_name      = "IVL_SCT_TASK";
+				// scope_type_supported = true;
 				break;
 			case IVL_SCT_BEGIN:
-				scope_type_name = "IVL_SCT_BEGIN";
+				scope_type_name      = "IVL_SCT_BEGIN";
+				// scope_type_supported = true;
 				break;
 			case IVL_SCT_FORK:
 				scope_type_name = "IVL_SCT_FORK";
@@ -69,7 +71,15 @@ void Error::check_scope_types(ivl_scope_t* scopes, unsigned int num_scopes){
 		// Check if scope type supported 
 		if (!scope_type_supported) {
 			fprintf(stderr, "UNSUPPORTED: verilog scope type: %s", scope_type_name.c_str());
+			fprintf(stderr, "File: %s Line: %d\n", ivl_scope_file(scopes[i]), ivl_scope_lineno(scopes[i]));
 			exit(SCOPE_TYPE_ERROR);
 		}
 	}
 }
+
+void Error::check_signal_exists_in_map(sig_map_t signals, ivl_signal_t sig){
+	if (signals.count(sig) > 0) {
+		fprintf(stderr, "ERROR: signal (%s) already exists in hashmap.\n", ivl_signal_name(sig));
+		exit(DUPLICATE_SIGNALS_FOUND_ERROR);
+	}
+} 

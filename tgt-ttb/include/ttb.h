@@ -29,12 +29,19 @@ using namespace std;
 #define LAUNCH_MESSAGE          "Entering TTB Target Module..."
 #define SCOPE_EXPANSION_MESSAGE "Identifying top-level modules..."
 
-// Signal name to object map
-typedef map<string, ivl_signal_t*> sig_map_t;
+// Signal name to signal object map
+typedef map<ivl_signal_t, string> sig_name_map_t;
+
+// Signal graph adjaceny list
+typedef map<ivl_signal_t, vector<ivl_signal_t>*> sig_map_t;
 
 // Signal to signal connection pair
-typedef pair<ivl_signal_t*, ivl_signal_t*> connection_t;
+// typedef pair<ivl_signal_t*, ivl_signal_t*> connection_t;
 
+// Functions
 ivl_net_const_t is_const_local_sig(ivl_signal_t sig);
+void find_signals(ivl_scope_t scope, sig_name_map_t& signal_to_name, sig_map_t& signals);
+void find_all_signals(ivl_scope_t* scopes, unsigned int num_scopes, sig_name_map_t& signal_to_name, sig_map_t& signals);
+void find_all_connections(sig_map_t& signals);
 
 #endif

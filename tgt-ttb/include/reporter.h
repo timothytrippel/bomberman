@@ -1,5 +1,5 @@
 /*
-File:        report.h
+File:        reporter.h
 Author:      Timothy Trippel
 Affiliation: MIT Lincoln Laboratory
 Description:
@@ -20,6 +20,9 @@ using namespace std;
 // IVL API Header
 #include  <ivl_target.h>
 
+// TTB Headers
+#include "ttb.h"
+
 class Reporter {
 	public:
 		Reporter();
@@ -29,7 +32,8 @@ class Reporter {
 		void 		init(const char* init_message);
 		void 		print_message(const char* message);
 		void 		root_scopes(ivl_scope_t* scopes, unsigned int num_scopes);
-		void 		num_signals(vector<ivl_signal_t> signals);
+		void 		num_signals(sig_map_t signals);
+		void 		signal_names(sig_map_t signals);
 		void 		end();
 		
 	private:
@@ -41,4 +45,5 @@ class Reporter {
 		void 		open_file();
 		void 		close_file();
 };
+
 #endif
