@@ -19,9 +19,12 @@ Graphviz .dot file.
 // IVL API Header
 #include <ivl_target.h>
 
+// TTB Headers
+#include "ttb.h"
+
 // Dot Graph Shapes
 #define SIGNAL_NODE_SHAPE       "ellipse"
-#define LOCAL_SIGNAL_NODE_SHAPE "point"
+#define LOCAL_SIGNAL_NODE_SHAPE "circle"
 #define FF_NODE_SHAPE           "square"
 #define INPUT_NODE_SHAPE        "none"
 #define CONST_NODE_SHAPE        "ellipse"
@@ -47,6 +50,7 @@ class DotGraph {
 										   unsigned long sig_lsb);
 		void 		add_const_connection(ivl_signal_t  aff_sig, ivl_net_const_t con);
 		void 		save_graph();
+		void 		save_graph(sig_map_t signals);
 		
 	private:
 		const char*   file_path_;

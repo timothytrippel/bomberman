@@ -113,7 +113,7 @@ void Reporter::end(){
 
 	// Record current execution time
 	execution_time_ = (clock() - start_time_) / (double) CLOCKS_PER_SEC;
-	fprintf(file_ptr_, "Execution Time: %f (s)\n", execution_time_);
+	fprintf(file_ptr_, "\nExecution Time: %f (s)\n", execution_time_);
 	fprintf(file_ptr_, "-----------------------------\n");
 
 	// Close output file

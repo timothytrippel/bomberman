@@ -70,9 +70,9 @@ void Error::check_scope_types(ivl_scope_t* scopes, unsigned int num_scopes){
 
 		// Check if scope type supported 
 		if (!scope_type_supported) {
-			fprintf(stderr, "UNSUPPORTED: verilog scope type: %s", scope_type_name.c_str());
+			fprintf(stderr, "NOT-SUPPORTED: verilog scope type: %s", scope_type_name.c_str());
 			fprintf(stderr, "File: %s Line: %d\n", ivl_scope_file(scopes[i]), ivl_scope_lineno(scopes[i]));
-			exit(SCOPE_TYPE_ERROR);
+			exit(NOT_SUPPORTED_ERROR);
 		}
 	}
 }
@@ -83,3 +83,22 @@ void Error::check_signal_exists_in_map(sig_map_t signals, ivl_signal_t sig){
 		exit(DUPLICATE_SIGNALS_FOUND_ERROR);
 	}
 } 
+
+void Error::check_signal_not_arrayed(ivl_signal_t signal){
+	// Check if signal is arrayed
+	if (ivl_signal_dimensions(signal) > 0) {
+		fprintf(stderr, "NOT-SUPPORTED: arrayed signal (%s -- %d) encountered.\n", ivl_signal_name(signal), ivl_signal_dimensions(signal));
+		exit(NOT_SUPPORTED_ERROR);
+	} else {
+		// Confirm that ARRAY_BASE is 0 (should be for non-arrayed signals)
+		assert(ivl_signal_array_base(signal) == 0 && "NOT-SUPPORTED: non-arrayed signal with non-zero ARRAY_BASE.");
+
+		// Confirm that ARRAY_COUNT is a (should be for non-arrayed signals)
+		assert(ivl_signal_array_count(signal) == 1 && "NOT-SUPPORTED: non-arrayed signal with ARRAY_COUNT != 1.");
+	}
+}
+
+void Error::unknown_nexus_type_error(ivl_nexus_ptr_t nexus_ptr){
+	fprintf(stderr, "NOT-SUPPORTED: unkown nexus type for nexus.\n");
+	exit(NOT_SUPPORTED_ERROR);
+}

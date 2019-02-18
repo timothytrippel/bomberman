@@ -21,16 +21,21 @@ Graphviz .dot file.
 // Error Codes
 typedef enum ttb_error_type_e {
 	NO_ERROR                      = 0,
-	FILE_ERROR                    = 1,
-	SCOPE_TYPE_ERROR              = 2,
+	NOT_SUPPORTED_ERROR           = 1,
+	FILE_ERROR                    = 2,	
 	DUPLICATE_SIGNALS_FOUND_ERROR = 3,
 } ttb_error_type_t;
 
 class Error {
 	public:
 		Error();
+		// Data Validation Functions
 		static void check_scope_types(ivl_scope_t* scopes, unsigned int num_scopes);
 		static void check_signal_exists_in_map(sig_map_t signals, ivl_signal_t sig);
+		static void check_signal_not_arrayed(ivl_signal_t signal);
+
+		// Error Reporting Functions
+		static void unknown_nexus_type_error(ivl_nexus_ptr_t nexus);
 };
 
 #endif
