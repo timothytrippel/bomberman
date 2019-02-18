@@ -20,7 +20,7 @@ Graphviz .dot file.
 #include <ivl_target.h>
 
 // TTB Headers
-#include "ttb.h"
+#include "ttb_typedefs.h"
 
 // Dot Graph Shapes
 #define SIGNAL_NODE_SHAPE       "ellipse"

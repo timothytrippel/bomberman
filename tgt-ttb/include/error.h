@@ -16,7 +16,7 @@ Graphviz .dot file.
 #include <ivl_target.h>
 
 // TTB Headers
-#include "ttb.h"
+#include "ttb_typedefs.h"
 
 // Error Codes
 typedef enum ttb_error_type_e {

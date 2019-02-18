@@ -12,15 +12,14 @@ Graphviz .dot file.
 #ifndef __TTB_HEADER__
 #define __TTB_HEADER__
 
-// Standard Headers
-#include <string>
-#include <vector>
-#include <map>
-
 using namespace std;
 
 // IVL API Header
 #include  <ivl_target.h>
+
+// TTB Headers
+#include "ttb_typedefs.h"
+#include "dot_graph.h"
 
 // Debugging Switches
 #define DEBUG_PRINTS false
@@ -29,17 +28,11 @@ using namespace std;
 #define LAUNCH_MESSAGE          "Entering TTB Target Module..."
 #define SCOPE_EXPANSION_MESSAGE "Identifying top-level modules..."
 #define SIGNAL_ENUM_MESSAGE     "Enumerating all signals..."
-#define CONNECTION_ENUM_MESSAGE "Enumerating all signals-to-signal connections..."
-
-// Signal name to signal object map
-typedef map<ivl_signal_t, string> sig_name_map_t;
-
-// Signal graph adjaceny list
-typedef map<ivl_signal_t, vector<ivl_signal_t>> sig_map_t;
+#define CONNECTION_ENUM_MESSAGE "Enumerating all signal-to-signal connections..."
 
 // Functions
-void find_signals(ivl_scope_t scope, sig_name_map_t& signal_to_name, sig_map_t& signals);
-void find_all_signals(ivl_scope_t* scopes, unsigned int num_scopes, sig_name_map_t& signal_to_name, sig_map_t& signals);
-void find_all_connections(sig_map_t& signals);
+void find_signals(ivl_scope_t scope, sig_name_map_t& signal_to_name, sig_map_t& signals, DotGraph dg);
+void find_all_signals(ivl_scope_t* scopes, unsigned int num_scopes, sig_name_map_t& signal_to_name, sig_map_t& signals, DotGraph dg);
+void find_all_connections(sig_map_t& signals, DotGraph dg);
 
 #endif

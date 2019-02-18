@@ -21,7 +21,7 @@ using namespace std;
 #include  <ivl_target.h>
 
 // TTB Headers
-#include "ttb.h"
+#include "ttb_typedefs.h"
 
 class Reporter {
 	public:

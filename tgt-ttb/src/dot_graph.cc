@@ -11,6 +11,7 @@ Graphviz .dot file.
 
 // Standard Headers
 #include <cassert>
+#include <string>
 
 // TTB Headers
 #include "dot_graph.h"
