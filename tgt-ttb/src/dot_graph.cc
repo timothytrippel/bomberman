@@ -124,7 +124,6 @@ void DotGraph::add_const_node(ivl_net_const_t con){
 		fullname.c_str(), CONST_NODE_SHAPE, fullname.c_str(), (unsigned long) (ivl_const_width(con) - 1), (unsigned long) 0);
 }
 
-
 void DotGraph::add_connection(ivl_signal_t aff_sig, ivl_signal_t sig){
 	// First Signal Name
 	string fullname_1 = get_signal_fullname(aff_sig);

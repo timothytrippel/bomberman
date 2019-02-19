@@ -84,6 +84,14 @@ void Reporter::num_signals(sig_map_t signals){
 	fprintf(file_ptr_, "Number of signals found: %lu\n\n", signals.size());
 }
 
+void Reporter::num_connections(unsigned long num_connections){
+	// Check that file has been opened for writing report
+	assert(file_ptr_ != NULL && "ERROR: reporter file ptr is NULL.\n");
+
+	// Print number of signals in vector
+	fprintf(file_ptr_, "Number of connections found: %lu\n", num_connections);
+}
+
 void Reporter::signal_names(sig_map_t signals){
 	// Check that file has been opened for writing report
 	assert(file_ptr_ != NULL && "ERROR: reporter file ptr is NULL.\n");

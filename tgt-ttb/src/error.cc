@@ -98,6 +98,22 @@ void Error::check_signal_not_arrayed(ivl_signal_t signal){
 	}
 }
 
+void Error::check_logic_device_pins(ivl_net_logic_t logic_device, ivl_nexus_ptr_t logic_pin_nexus_ptr){
+	// Only support input pins of LOGIC devices connected to SIGNALS
+	if (ivl_nexus_ptr_sig(logic_pin_nexus_ptr) || ivl_nexus_ptr_con(logic_pin_nexus_ptr)) {
+		return;
+	} else if (ivl_nexus_ptr_log(logic_pin_nexus_ptr) != logic_device) {
+		fprintf(stderr, "NOT-SUPPORTED: LOGIC device connected directly to LOGIC device.\n");
+		exit(NOT_SUPPORTED_ERROR);
+	} else if (ivl_nexus_ptr_lpm(logic_pin_nexus_ptr)) {
+		fprintf(stderr, "NOT-SUPPORTED: LOGIC device connected directly to LPM device.\n");
+		exit(NOT_SUPPORTED_ERROR);
+	} else {
+		fprintf(stderr, "NOT-SUPPORTED: LOGIC device connected UNKOWN nexus type.\n");
+		exit(NOT_SUPPORTED_ERROR);
+	}
+}
+
 void Error::unknown_nexus_type_error(ivl_nexus_ptr_t nexus_ptr){
 	fprintf(stderr, "NOT-SUPPORTED: unkown nexus type for nexus.\n");
 	exit(NOT_SUPPORTED_ERROR);

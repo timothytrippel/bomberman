@@ -33,6 +33,7 @@ class Reporter {
 		void 		print_message(const char* message);
 		void 		root_scopes(ivl_scope_t* scopes, unsigned int num_scopes);
 		void 		num_signals(sig_map_t signals);
+		void 		num_connections(unsigned long num_connections);
 		void 		signal_names(sig_map_t signals);
 		void 		end();
 		

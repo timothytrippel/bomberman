@@ -24,15 +24,39 @@ using namespace std;
 // Debugging Switches
 #define DEBUG_PRINTS false
 
-// Progress Messages
-#define LAUNCH_MESSAGE          "Entering TTB Target Module..."
-#define SCOPE_EXPANSION_MESSAGE "Identifying top-level modules..."
-#define SIGNAL_ENUM_MESSAGE     "Enumerating all signals..."
-#define CONNECTION_ENUM_MESSAGE "Enumerating all signal-to-signal connections..."
-
 // Functions
-void find_signals(ivl_scope_t scope, sig_name_map_t& signal_to_name, sig_map_t& signals, DotGraph dg);
-void find_all_signals(ivl_scope_t* scopes, unsigned int num_scopes, sig_name_map_t& signal_to_name, sig_map_t& signals, DotGraph dg);
-void find_all_connections(sig_map_t& signals, DotGraph dg);
+void find_signals(ivl_scope_t     scope, \
+                  sig_name_map_t& signal_to_name, \
+                  sig_map_t&      signals_map, \
+                  DotGraph        dg);
+
+void find_all_signals(ivl_scope_t*    scopes, \
+                      unsigned int    num_scopes, \
+                      sig_name_map_t& signal_to_name, \
+                      sig_map_t&      signals_map, \
+                      DotGraph        dg);
+
+unsigned long find_all_connections(sig_map_t& signals_map, 
+                                   DotGraph   dg);
+
+unsigned long propagate_signal(ivl_signal_t connected_signal, \
+                               ivl_signal_t signal, \
+                               sig_map_t&   signals_map, \
+                               DotGraph     dg);
+
+unsigned long propagate_logic(ivl_net_logic_t logic_device, \
+                              ivl_signal_t    signal, \
+                              sig_map_t&      signals_map, \
+                              DotGraph        dg);
+
+unsigned long propagate_lpm(ivl_lpm_t    lpm_device, \
+                            ivl_signal_t signal, \
+                            sig_map_t&   signals_map, \
+                            DotGraph     dg);
+
+unsigned long propagate_constant(ivl_net_const_t constant, \
+                                 ivl_signal_t    signal, \
+                                 sig_map_t&      signals_map, \
+                                 DotGraph        dg);
 
 #endif

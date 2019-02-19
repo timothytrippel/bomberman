@@ -20,13 +20,13 @@ Graphviz .dot file.
 #include "reporter.h"
 #include "error.h"
 
-void find_signals(ivl_scope_t scope, sig_name_map_t& signals_to_names, sig_map_t& signals, DotGraph dg){
+void find_signals(ivl_scope_t scope, sig_name_map_t& signals_to_names, sig_map_t& signals_map, DotGraph dg){
 	// Current IVL signal
 	ivl_signal_t current_signal;
 
 	// Recurse into sub-modules
 	for (unsigned int i = 0; i < ivl_scope_childs(scope); i++){
-		find_signals(ivl_scope_child(scope, i), signals_to_names, signals, dg);		
+		find_signals(ivl_scope_child(scope, i), signals_to_names, signals_map, dg);		
 	}
 
 	// Scope is a base scope
@@ -36,10 +36,10 @@ void find_signals(ivl_scope_t scope, sig_name_map_t& signals_to_names, sig_map_t
 		current_signal = ivl_scope_sig(scope, i);
 
 		// Check if signal already exists in map
-		Error::check_signal_exists_in_map(signals, current_signal);
+		Error::check_signal_exists_in_map(signals_map, current_signal);
 
 		// Add signal to graph
-		signals[current_signal]          = vector<ivl_signal_t>();
+		signals_map[current_signal]      = vector<ivl_signal_t>();
 		signals_to_names[current_signal] = ivl_signal_name(current_signal);
 
 		// Add node to dot file
@@ -56,17 +56,17 @@ void find_signals(ivl_scope_t scope, sig_name_map_t& signals_to_names, sig_map_t
 void find_all_signals(ivl_scope_t*    scopes, \
 					  unsigned int    num_scopes, \
 					  sig_name_map_t& signals_to_names, \
-					  sig_map_t&      signals, \
+					  sig_map_t&      signals_map, \
 					  DotGraph        dg){
 
 	for (unsigned int i = 0; i < num_scopes; i++){
-		find_signals(scopes[i], signals_to_names, signals, dg);
+		find_signals(scopes[i], signals_to_names, signals_map, dg);
 	}
 }
 
-void find_all_connections(sig_map_t& signals, DotGraph dg){
+unsigned long find_all_connections(sig_map_t& signals_map, DotGraph dg){
 	// Create a signals map iterator
-	sig_map_t::iterator it = signals.begin();
+	sig_map_t::iterator it = signals_map.begin();
 
 	// Nexus Pointer
 	ivl_nexus_ptr_t nexus_ptr;
@@ -76,9 +76,12 @@ void find_all_connections(sig_map_t& signals, DotGraph dg){
 	ivl_net_logic_t connected_logic;
 	ivl_lpm_t       connected_lpm;
 	ivl_net_const_t connected_constant;
+
+	// Track number of connections enumerated
+	unsigned long num_connections = 0;
  
 	// Iterate over all signals in adjacency list
-	while (it != signals.end()) { 	
+	while (it != signals_map.end()) { 	
 		ivl_signal_t signal = it->first;
 
  		// Print signal name -- signal dimensions
@@ -89,7 +92,10 @@ void find_all_connections(sig_map_t& signals, DotGraph dg){
 		// (i.e. signals with more than one nexus)
 		Error::check_signal_not_arrayed(signal);
 
-		// Get Nexus
+		// Get signal nexus
+		// There is exactly one nexus for each WORD of a signal.
+		// Since we only support non-arrayed signals (above), 
+		// each signal only has one nexus.
 		const ivl_nexus_t root_nexus = ivl_signal_nex(signal, 0);
 
 		// Check Nexus IS NOT NULL
@@ -104,23 +110,19 @@ void find_all_connections(sig_map_t& signals, DotGraph dg){
     		if ((connected_signal = ivl_nexus_ptr_sig(nexus_ptr))){
     			// Nexus target object is a SIGNAL
     			fprintf(stdout, "	 -- SIGNAL -- %s\n", ivl_signal_name(connected_signal));	
-
-
+    			num_connections += propagate_signal(connected_signal, signal, signals_map, dg);
     		} else if ((connected_logic = ivl_nexus_ptr_log(nexus_ptr))) {
     			// Nexus target object is a LOG	
-    			fprintf(stdout, "	 -- LOGIC\n");
-
-
+    			fprintf(stdout, "	 -- LOGIC\n");    			
+    			num_connections += propagate_logic(connected_logic, signal, signals_map, dg);	
     		} else if ((connected_lpm = ivl_nexus_ptr_lpm(nexus_ptr))) {
     			// Nexus target object is a LPM
     			fprintf(stdout, "	 -- LPM\n");
-
-
+    			num_connections += propagate_lpm(connected_lpm, signal, signals_map, dg);
     		} else if ((connected_constant = ivl_nexus_ptr_con(nexus_ptr))) {
     			// Nexus target object is a CONSTANT
     			fprintf(stdout, "	 -- CONSTANT\n");
-
-
+    			num_connections += propagate_constant(connected_constant, signal, signals_map, dg);
     		} else {
     			// Nexus target object is UNKNOWN
     			Error::unknown_nexus_type_error(nexus_ptr);
@@ -130,16 +132,19 @@ void find_all_connections(sig_map_t& signals, DotGraph dg){
 		// Increment the iterator
 		it++;
 	}
+
+	return num_connections;
 }
 
 // *** "Main"/Entry Point *** of iverilog target
 int target_design(ivl_design_t des) {
-	ivl_scope_t*   roots     = 0;    // root scopes of the design
-	unsigned       num_roots = 0;    // number of root scopes of the design
-	Reporter       reporter;         // reporter object (prints messages)
-	DotGraph       dg;               // dot graph object
-	sig_name_map_t signals_to_names; // signal graph (adjacency list)
-	sig_map_t      signals;          // signal graph (adjacency list)
+	ivl_scope_t*   roots     = 0;    	// root scopes of the design
+	unsigned       num_roots = 0;    	// number of root scopes of the design
+	unsigned long  num_connections = 0; // number of connections enumerated in design
+	Reporter       reporter;         	// reporter object (prints messages)
+	DotGraph       dg;               	// dot graph object
+	sig_name_map_t signals_to_names; 	// signal graph (adjacency list)
+	sig_map_t      signals_map;         // signal graph (adjacency list)
 
 	// Initialize reporter checking objects
 	reporter = Reporter();
@@ -157,13 +162,14 @@ int target_design(ivl_design_t des) {
 
 	// Find all critical signals and dependencies in the design
 	reporter.print_message(SIGNAL_ENUM_MESSAGE);
-	find_all_signals(roots, num_roots, signals_to_names, signals, dg);
-	reporter.num_signals(signals);
-	reporter.signal_names(signals);
+	find_all_signals(roots, num_roots, signals_to_names, signals_map, dg);
+	reporter.num_signals(signals_map);
+	reporter.signal_names(signals_map);
 
 	// Find signal-to-signal connections
 	reporter.print_message(CONNECTION_ENUM_MESSAGE);
-	find_all_connections(signals, dg);
+	num_connections = find_all_connections(signals_map, dg);
+	reporter.num_connections(num_connections);
 
 	// Save dot graph to file
 	dg.save_graph();
