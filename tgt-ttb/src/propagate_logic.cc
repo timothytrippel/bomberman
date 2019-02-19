@@ -26,9 +26,6 @@ nexus is connected to the INPUT of a LOGIC device.
 unsigned long propagate_logic(ivl_net_logic_t logic_device, ivl_signal_t signal, sig_map_t& signals_map, DotGraph dg) {
 	// Track number of connections enumerated
 	unsigned long num_connections = 0;
-	
-	// Get signal nexus
-	const ivl_nexus_t signal_nexus = ivl_signal_nex(signal, 0);
 
 	// LOGIC device pin nexus
 	ivl_nexus_t pin_nexus = NULL;
@@ -39,6 +36,9 @@ unsigned long propagate_logic(ivl_net_logic_t logic_device, ivl_signal_t signal,
 	ivl_net_logic_t connected_logic     = NULL;
 	ivl_lpm_t       connected_lpm       = NULL;
 	ivl_net_const_t connected_constant  = NULL;
+	
+	// Get signal nexus
+	const ivl_nexus_t signal_nexus = ivl_signal_nex(signal, 0);
 
 	// Get number of pins on LOGIC device.
 	// Each LOGIC device pin is a Nexus.
