@@ -29,8 +29,7 @@ unsigned long propagate_signal(ivl_signal_t connected_signal, ivl_signal_t signa
 	// IGNORE, probably a module hookup
 	// @TODO: investigate this
 	if (connected_signal != signal){
-		signals_map[signal].push_back(connected_signal);
-		dg.add_connection(signal, connected_signal);
+		add_connection(signal, connected_signal, signals_map, dg);
 		num_connections++;
 	}
 

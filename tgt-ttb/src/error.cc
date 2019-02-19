@@ -22,7 +22,7 @@ using namespace std;
 
 Error::Error(){}
 
-void Error::check_scope_types(ivl_scope_t* scopes, unsigned int num_scopes){
+void Error::check_scope_types(ivl_scope_t* scopes, unsigned int num_scopes) {
 	ivl_scope_type_t scope_type           = IVL_SCT_MODULE;
 	string           scope_type_name      = "UNKNOWN";
 	bool             scope_type_supported = false;
@@ -77,14 +77,14 @@ void Error::check_scope_types(ivl_scope_t* scopes, unsigned int num_scopes){
 	}
 }
 
-void Error::check_signal_exists_in_map(sig_map_t signals, ivl_signal_t sig){
+void Error::check_signal_exists_in_map(sig_map_t signals, ivl_signal_t sig) {
 	if (signals.count(sig) > 0) {
 		fprintf(stderr, "ERROR: signal (%s) already exists in hashmap.\n", ivl_signal_name(sig));
 		exit(DUPLICATE_SIGNALS_FOUND_ERROR);
 	}
 } 
 
-void Error::check_signal_not_arrayed(ivl_signal_t signal){
+void Error::check_signal_not_arrayed(ivl_signal_t signal) {
 	// Check if signal is arrayed
 	if (ivl_signal_dimensions(signal) > 0) {
 		fprintf(stderr, "NOT-SUPPORTED: arrayed signal (%s -- %d) encountered.\n", ivl_signal_name(signal), ivl_signal_dimensions(signal));
@@ -98,23 +98,22 @@ void Error::check_signal_not_arrayed(ivl_signal_t signal){
 	}
 }
 
-void Error::check_logic_device_pins(ivl_net_logic_t logic_device, ivl_nexus_ptr_t logic_pin_nexus_ptr){
-	// Only support input pins of LOGIC devices connected to SIGNALS
-	if (ivl_nexus_ptr_sig(logic_pin_nexus_ptr) || ivl_nexus_ptr_con(logic_pin_nexus_ptr)) {
-		return;
-	} else if (ivl_nexus_ptr_log(logic_pin_nexus_ptr) != logic_device) {
-		fprintf(stderr, "NOT-SUPPORTED: LOGIC device connected directly to LOGIC device.\n");
-		exit(NOT_SUPPORTED_ERROR);
-	} else if (ivl_nexus_ptr_lpm(logic_pin_nexus_ptr)) {
-		fprintf(stderr, "NOT-SUPPORTED: LOGIC device connected directly to LPM device.\n");
-		exit(NOT_SUPPORTED_ERROR);
-	} else {
-		fprintf(stderr, "NOT-SUPPORTED: LOGIC device connected UNKOWN nexus type.\n");
-		exit(NOT_SUPPORTED_ERROR);
-	}
+void Error::not_supported_error(const char* message) {
+	fprintf(stderr, "NOT-SUPPORTED: %s\n", message);
+	exit(NOT_SUPPORTED_ERROR);
 }
 
-void Error::unknown_nexus_type_error(ivl_nexus_ptr_t nexus_ptr){
-	fprintf(stderr, "NOT-SUPPORTED: unkown nexus type for nexus.\n");
+void Error::unknown_nexus_type_error(ivl_nexus_ptr_t nexus_ptr) {
+	fprintf(stderr, "NOT-SUPPORTED: unkown nexus type for nexus %x.\n", nexus_ptr);
+	exit(NOT_SUPPORTED_ERROR);
+}
+
+void Error::unknown_logic_nexus_type_error(ivl_nexus_ptr_t nexus_ptr) {
+	fprintf(stderr, "NOT-SUPPORTED: LOGIC device connected UNKOWN nexus type %x.\n", nexus_ptr);
+	exit(NOT_SUPPORTED_ERROR);
+}
+
+void Error::connecting_signal_not_in_graph(ivl_signal_t signal) {
+	fprintf(stderr, "ERROR: attempting to connect signal (%s) not in graph.\n", ivl_signal_name(signal));
 	exit(NOT_SUPPORTED_ERROR);
 }

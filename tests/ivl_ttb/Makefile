@@ -1,7 +1,12 @@
+# Directory Structure
 TGT_TTB_DIR=../../tgt-ttb
+SRC_DIR := verilog
+DOT_DIR := dot
+PDF_DIR := pdf
 
-SRCS=$(wildcard *.v)
-DOTS=$(SRCS:.v=.dot)
+# Source/Target Files
+SRCS := $(shell find $(SRC_DIR) -type f -name *.v)
+DOTS := $(patsubst $(SRC_DIR)/%,$(DOT_DIR)/%,$(SRCS:.v=.dot))
 
 all: tgt-ttb  $(DOTS)
 
@@ -10,9 +15,11 @@ tgt-ttb:
 	$(MAKE) -C $(TGT_TTB_DIR)
 
 # TTB Test
-%.dot: %.v
+$(DOT_DIR)/%.dot: $(SRC_DIR)/%.v
+	mkdir dot
+	mkdir pdf
 	iverilog -o $@ -t ttb $<
-	dot $@ -Tpdf -o $(<:.v=.pdf)
+	dot $@ -Tpdf -o $(patsubst $(SRC_DIR)/%,$(PDF_DIR)/%,$(<:.v=.pdf))
 
 .PHONY: build cleanall clean
 
@@ -22,4 +29,5 @@ cleanall: clean
 	$(MAKE) cleanall -C $(TGT_TTB_DIR)	
 
 clean:
-	rm -f *.dot
+	rm -rf $(DOT_DIR)
+	rm -rf $(PDF_DIR)

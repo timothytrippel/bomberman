@@ -35,9 +35,11 @@ unsigned long propagate_logic(ivl_net_logic_t logic_device, ivl_signal_t signal,
 
 	// Connections
 	ivl_nexus_ptr_t connected_nexus_ptr = NULL;
-	ivl_signal_t    connected_signal;
-	ivl_net_const_t connected_constant;
-	
+	ivl_signal_t    connected_signal    = NULL;
+	ivl_net_logic_t connected_logic     = NULL;
+	ivl_lpm_t       connected_lpm       = NULL;
+	ivl_net_const_t connected_constant  = NULL;
+
 	// Get number of pins on LOGIC device.
 	// Each LOGIC device pin is a Nexus.
 	unsigned int num_pins = ivl_logic_pins(logic_device);
@@ -53,13 +55,28 @@ unsigned long propagate_logic(ivl_net_logic_t logic_device, ivl_signal_t signal,
 			for (unsigned int j = 0; j < ivl_nexus_ptrs(pin_nexus); j++) {
 				connected_nexus_ptr = ivl_nexus_ptr(pin_nexus, j);
 
-				// Only support input pins connected to SIGNAL nexuses
-				Error::check_logic_device_pins(logic_device, connected_nexus_ptr);
+				// Do not process nexus pointer to self (logic device)
+				if (ivl_nexus_ptr_log(connected_nexus_ptr) != logic_device) {
 
-				if ((connected_signal = ivl_nexus_ptr_sig(connected_nexus_ptr))) {
-					fprintf(stdout, "	 		SIGNAL -- %s\n", ivl_signal_name(connected_signal));
-				} else if ((connected_constant = ivl_nexus_ptr_con(connected_nexus_ptr))) {
-					fprintf(stdout, "	 		CONSTANT -- \n");
+					// Only support input pins connected to SIGNAL and CONSTANT nexuses
+					if ((connected_signal = ivl_nexus_ptr_sig(connected_nexus_ptr))) {
+						fprintf(stdout, "	 		SIGNAL -- %s\n", ivl_signal_name(connected_signal));
+						add_connection(signal, connected_signal, signals_map, dg);
+						num_connections++;
+					} else if ((connected_constant = ivl_nexus_ptr_con(connected_nexus_ptr))) {
+						fprintf(stdout, "	 		CONSTANT -- %x\n", connected_constant);
+						Error::not_supported_error("direct CONSTANT to LOGIC connection.");
+					} else if ((connected_logic = ivl_nexus_ptr_log(connected_nexus_ptr))) {
+						// @TODO: Unsupported
+						fprintf(stderr, "	 		LOGIC -- %x\n", connected_logic);
+						Error::not_supported_error("direct LOGIC to LOGIC connection.");
+					} else if ((connected_lpm = ivl_nexus_ptr_lpm(connected_nexus_ptr))) {
+						// @TODO: Unsupported
+						fprintf(stderr, "	 		LPM -- %x\n", connected_lpm);
+						Error::not_supported_error("direct LPM to LOGIC connection.");
+					} else {
+						Error::unknown_logic_nexus_type_error(connected_nexus_ptr);
+					}
 				}
 			}
 		}

@@ -36,6 +36,11 @@ void find_all_signals(ivl_scope_t*    scopes, \
                       sig_map_t&      signals_map, \
                       DotGraph        dg);
 
+void add_connection(ivl_signal_t signal, \
+                    ivl_signal_t connected_signal, \
+                    sig_map_t&   signals_map, \
+                    DotGraph     dg);
+
 unsigned long find_all_connections(sig_map_t& signals_map, 
                                    DotGraph   dg);
 

@@ -33,10 +33,12 @@ class Error {
 		static void check_scope_types(ivl_scope_t* scopes, unsigned int num_scopes);
 		static void check_signal_exists_in_map(sig_map_t signals, ivl_signal_t sig);
 		static void check_signal_not_arrayed(ivl_signal_t signal);
-		static void check_logic_device_pins(ivl_net_logic_t logic_device, ivl_nexus_ptr_t logic_pin_nexus_ptr);
 
 		// Error Reporting Functions
+		static void not_supported_error(const char* message);
 		static void unknown_nexus_type_error(ivl_nexus_ptr_t nexus);
+		static void unknown_logic_nexus_type_error(ivl_nexus_ptr_t nexus_ptr);
+		static void connecting_signal_not_in_graph(ivl_signal_t signal);
 };
 
 #endif
