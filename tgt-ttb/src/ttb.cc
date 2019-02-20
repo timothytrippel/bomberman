@@ -15,10 +15,11 @@ Graphviz .dot file.
 
 // TTB Headers
 #include "ttb_typedefs.h"
-#include "dot_graph.h"
 #include "ttb.h"
+#include "dot_graph.h"
 #include "reporter.h"
 #include "error.h"
+#include "debug.h"
 
 void find_signals(ivl_scope_t scope, sig_name_map_t& signals_to_names, sig_map_t& signals_map, DotGraph dg) {
 	// Current IVL signal
@@ -60,83 +61,101 @@ void find_all_signals(ivl_scope_t*    scopes, \
 	}
 }
 
-void add_connection(ivl_signal_t signal, ivl_signal_t connected_signal, sig_map_t& signals_map, DotGraph dg) {
+void add_connection(ivl_signal_t root_signal, ivl_signal_t connected_signal, sig_map_t& signals_map, DotGraph dg) {
 	// Only add connections to signals already in graph.
-	// Ignore connections to local (IVL generated) signals.
-	if (!ivl_signal_local(connected_signal) && signals_map.count(connected_signal)) {
-		if (signals_map.count(connected_signal)) {
-			signals_map[signal].push_back(connected_signal);
-			dg.add_connection(signal, connected_signal);
+	if (signals_map.count(connected_signal)) {
+		signals_map[root_signal].push_back(connected_signal);
+		dg.add_connection(root_signal, connected_signal);
+	} else {
+		Error::connecting_signal_not_in_graph(connected_signal);
+	}
+}
+
+unsigned long propagate_nexus(ivl_nexus_t nexus, ivl_signal_t root_signal, sig_map_t& signals_map, DotGraph dg) {
+	// Track number of connections enumerated
+	unsigned long num_connections = 0;
+
+	// Nexus Pointer
+	ivl_nexus_ptr_t nexus_ptr = NULL;
+
+	// Connected Objects
+	ivl_nexus_ptr_t connected_nexus_ptr = NULL;
+	ivl_signal_t    connected_signal    = NULL;
+	ivl_net_logic_t connected_logic     = NULL;
+	ivl_lpm_t       connected_lpm       = NULL;
+	ivl_net_const_t connected_constant  = NULL;
+
+	// Iterate over Nexus pointers in Nexus
+	for (unsigned int nexus_ind = 0; nexus_ind < ivl_nexus_ptrs(nexus); nexus_ind++) {
+		nexus_ptr = ivl_nexus_ptr(nexus, nexus_ind);
+		fprintf(stdout, "		Nexus %d", nexus_ind);
+
+		// Determine type of Nexus
+		if ((connected_signal = ivl_nexus_ptr_sig(nexus_ptr))){
+			// Nexus target object is a SIGNAL
+			fprintf(stdout, "	 -- SIGNAL -- %s\n", ivl_signal_name(connected_signal));	
+			// num_connections += propagate_signal(connected_signal, root_signal, signals_map, dg);
+
+			// BASE-CASE:
+			// If connected signal and signal the same, 
+			// IGNORE, probably a module hookup
+			// @TODO: investigate this
+			// Ignore connections to local (IVL generated) signals.
+			if (connected_signal != root_signal && !ivl_signal_local(connected_signal)){
+				add_connection(root_signal, connected_signal, signals_map, dg);
+				num_connections++;
+			}
+		} else if ((connected_logic = ivl_nexus_ptr_log(nexus_ptr))) {
+			// Nexus target object is a LOGIC
+			fprintf(stdout, "	 -- LOGIC -- %x\n", connected_logic);
+			num_connections += propagate_logic(connected_logic, nexus, root_signal, signals_map, dg);
+		} else if ((connected_lpm = ivl_nexus_ptr_lpm(nexus_ptr))) {
+			// Nexus target object is a LPM
+			fprintf(stdout, "	 -- LPM -- %x\n", connected_lpm);
+			num_connections += propagate_lpm(connected_lpm, nexus, root_signal, signals_map, dg);
+		} else if ((connected_constant = ivl_nexus_ptr_con(nexus_ptr))) {
+			// Nexus target object is a CONSTANT
+			fprintf(stdout, "	 -- CONSTANT -- %x\n", connected_constant);
+			// num_connections += propagate_constant(connected_constant);
 		} else {
-			Error::connecting_signal_not_in_graph(connected_signal);
+			// Nexus target object is UNKNOWN
+			Error::unknown_nexus_type_error(nexus_ptr);
 		}
 	}
+
+	return num_connections;
 }
 
 unsigned long find_all_connections(sig_map_t& signals_map, DotGraph dg) {
 	// Create a signals map iterator
 	sig_map_t::iterator it = signals_map.begin();
 
-	// Nexus Pointer
-	ivl_nexus_ptr_t nexus_ptr;
-
-	// Connected Objects
-	ivl_signal_t    connected_signal;
-	ivl_net_logic_t connected_logic;
-	ivl_lpm_t       connected_lpm;
-	ivl_net_const_t connected_constant;
-
 	// Track number of connections enumerated
 	unsigned long num_connections = 0;
  
 	// Iterate over all signals in adjacency list
 	while (it != signals_map.end()) { 	
-		ivl_signal_t signal = it->first;
+		ivl_signal_t root_signal = it->first;
 
  		// Print signal name -- signal dimensions
-		fprintf(stdout, "	%s:\n", ivl_signal_name(signal));
+		fprintf(stdout, "	%s:\n", ivl_signal_name(root_signal));
 
 		// Check if signal is arrayed
 		// @TODO: support arrayed signals 
 		// (i.e. signals with more than one nexus)
-		Error::check_signal_not_arrayed(signal);
+		Error::check_signal_not_arrayed(root_signal);
 
 		// Get signal nexus
 		// There is exactly one nexus for each WORD of a signal.
 		// Since we only support non-arrayed signals (above), 
 		// each signal only has one nexus.
-		const ivl_nexus_t root_nexus = ivl_signal_nex(signal, 0);
+		const ivl_nexus_t root_nexus = ivl_signal_nex(root_signal, 0);
 
 		// Check Nexus IS NOT NULL
-    	assert(root_nexus);
+		assert(root_nexus);
 
-    	// Iterate over Nexus pointers in Nexus
-    	for (unsigned int nexus_ind = 0; nexus_ind < ivl_nexus_ptrs(root_nexus); nexus_ind++) {
-    		nexus_ptr = ivl_nexus_ptr(root_nexus, nexus_ind);
-    		fprintf(stdout, "		Nexus %d", nexus_ind);
-
-    		// Determine type of Nexus
-    		if ((connected_signal = ivl_nexus_ptr_sig(nexus_ptr))){
-    			// Nexus target object is a SIGNAL
-    			fprintf(stdout, "	 -- SIGNAL -- %s\n", ivl_signal_name(connected_signal));	
-    			num_connections += propagate_signal(connected_signal, signal, signals_map, dg);
-    		} else if ((connected_logic = ivl_nexus_ptr_log(nexus_ptr))) {
-    			// Nexus target object is a LOG	
-    			fprintf(stdout, "	 -- LOGIC -- %x\n", connected_logic);    			
-    			num_connections += propagate_logic(connected_logic, signal, signals_map, dg);	
-    		} else if ((connected_lpm = ivl_nexus_ptr_lpm(nexus_ptr))) {
-    			// Nexus target object is a LPM
-    			fprintf(stdout, "	 -- LPM -- %x\n", connected_lpm);
-    			num_connections += propagate_lpm(connected_lpm, signal, signals_map, dg);
-    		} else if ((connected_constant = ivl_nexus_ptr_con(nexus_ptr))) {
-    			// Nexus target object is a CONSTANT
-    			fprintf(stdout, "	 -- CONSTANT -- %x\n", connected_constant);
-    			num_connections += propagate_constant(connected_constant, signal, signals_map, dg);
-    		} else {
-    			// Nexus target object is UNKNOWN
-    			Error::unknown_nexus_type_error(nexus_ptr);
-    		}
-    	}
+		// Propagate the nexus
+		num_connections += propagate_nexus(root_nexus, root_signal, signals_map, dg);
 
 		// Increment the iterator
 		it++;

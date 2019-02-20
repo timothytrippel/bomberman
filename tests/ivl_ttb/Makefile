@@ -16,8 +16,8 @@ tgt-ttb:
 
 # TTB Test
 $(DOT_DIR)/%.dot: $(SRC_DIR)/%.v
-	mkdir dot
-	mkdir pdf
+	mkdir -p dot
+	mkdir -p pdf
 	iverilog -o $@ -t ttb $<
 	dot $@ -Tpdf -o $(patsubst $(SRC_DIR)/%,$(PDF_DIR)/%,$(<:.v=.pdf))
 

@@ -39,6 +39,7 @@ class Error {
 		static void unknown_nexus_type_error(ivl_nexus_ptr_t nexus);
 		static void unknown_logic_nexus_type_error(ivl_nexus_ptr_t nexus_ptr);
 		static void connecting_signal_not_in_graph(ivl_signal_t signal);
+		static void unknown_part_select_lpm_type_error(ivl_lpm_type_t lpm_type);
 };
 
 #endif

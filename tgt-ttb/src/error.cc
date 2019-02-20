@@ -117,3 +117,8 @@ void Error::connecting_signal_not_in_graph(ivl_signal_t signal) {
 	fprintf(stderr, "ERROR: attempting to connect signal (%s) not in graph.\n", ivl_signal_name(signal));
 	exit(NOT_SUPPORTED_ERROR);
 }
+
+void Error::unknown_part_select_lpm_type_error(ivl_lpm_type_t lpm_type) {
+	fprintf(stderr, "ERROR: unkown part select LPM type (%d).\n", lpm_type);
+	exit(NOT_SUPPORTED_ERROR);
+}
