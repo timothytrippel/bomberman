@@ -52,8 +52,11 @@ unsigned long DotGraph::get_msb(ivl_signal_t sig){
 
 	if (num_dimens == 0) {
 		return 0;
-	} else{
+	} else if (num_dimens == 1) {
 		return ivl_signal_packed_msb(sig, 0);
+	} else{
+		printf("NOT-SUPPORTED: arrayed signals  (%s)\n", ivl_signal_name(sig));
+		exit(-4);
 	}
 }
 
@@ -62,8 +65,11 @@ unsigned long DotGraph::get_lsb(ivl_signal_t sig){
 	
 	if (num_dimens == 0) {
 		return 0;
-	} else{
+	} else if (num_dimens == 1) {
 		return ivl_signal_packed_lsb(sig, 0);
+	} else{
+		printf("NOT-SUPPORTED: arrayed signals (%s)\n", ivl_signal_name(sig));
+		exit(-4);
 	}
 }
 
@@ -136,7 +142,7 @@ void DotGraph::add_connection(ivl_signal_t aff_sig, ivl_signal_t sig){
 		fullname_2.c_str(), fullname_1.c_str(), get_msb(sig), get_lsb(sig), get_msb(aff_sig), get_lsb(aff_sig));
 }
 
-void DotGraph::add_spliced_connection(ivl_signal_t aff_sig, 
+void DotGraph::add_sliced_connection(ivl_signal_t aff_sig, 
 									   unsigned long aff_sig_msb, 
 									   unsigned long aff_sig_lsb, 
 							           ivl_signal_t  sig, 

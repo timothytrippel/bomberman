@@ -20,7 +20,6 @@ Graphviz .dot file.
 
 class Debug {
 	public:
-		Debug();
 		static void print_nexus_ptrs(ivl_nexus_t);
 };
 

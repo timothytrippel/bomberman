@@ -20,8 +20,6 @@ Graphviz .dot file.
 
 using namespace std;
 
-Error::Error(){}
-
 void Error::check_scope_types(ivl_scope_t* scopes, unsigned int num_scopes) {
 	ivl_scope_type_t scope_type           = IVL_SCT_MODULE;
 	string           scope_type_name      = "UNKNOWN";

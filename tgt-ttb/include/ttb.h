@@ -28,64 +28,30 @@ using namespace std;
 // Debugging Switches
 #define DEBUG_PRINTS false
 
-// Functions
-// ----------------- Signal Enumeration -----------------
-void find_signals(ivl_scope_t     scope, \
-                  sig_name_map_t& signal_to_name, \
-                  sig_map_t&      signals_map, \
-                  DotGraph        dg);
-
-void find_all_signals(ivl_scope_t*    scopes, \
-                      unsigned int    num_scopes, \
-                      sig_name_map_t& signal_to_name, \
-                      sig_map_t&      signals_map, \
-                      DotGraph        dg);
-
-// --------------- Connection Enumeration ---------------
-void add_connection(ivl_signal_t root_signal, \
-                    ivl_signal_t connected_signal, \
-                    sig_map_t&   signals_map, \
-                    DotGraph     dg);
-
-unsigned long propagate_nexus(ivl_nexus_t  nexus, \
-                              ivl_signal_t root_signal, \
-                              sig_map_t&   signals_map, \
-                              DotGraph     dg);
-
-unsigned long find_all_connections(sig_map_t& signals_map, 
-                                   DotGraph   dg);
-
-// // ----------------- Signal Propagation -----------------
-// unsigned long propagate_signal(ivl_signal_t connected_signal);
-//                                // ivl_signal_t root_signal, \
-//                                // sig_map_t&   signals_map, \
-//                                // DotGraph     dg);
-
-// ----------------- Logic Propagation ------------------
-unsigned long propagate_logic(ivl_net_logic_t logic_device, \
-                              ivl_nexus_t     root_nexus, \
-                              ivl_signal_t    root_signal, \
-                              sig_map_t&      signals_map, \
-                              DotGraph        dg);
-
-// ------------------ LPM Propagation -------------------
-unsigned long process_part_select(ivl_lpm_t lpm, \
-                         ivl_lpm_type_t     lpm_type, \
-                         ivl_nexus_t        root_nexus, \
-                         ivl_signal_t       root_signal, \
-                         sig_map_t&         signals_map, \
-                         DotGraph           dg);
-
-unsigned long propagate_lpm(ivl_lpm_t    lpm, \
-                            ivl_nexus_t  root_nexus, \
-                            ivl_signal_t root_signal, \
-                            sig_map_t&   signals_map, \
-                            DotGraph     dg);
-
-// // ---------------- Constant Propagation ----------------
-// unsigned long propagate_constant(ivl_net_const_t constant);
-//                                  // ivl_signal_t    root_signal, \
-//                                  // sig_map_t&      signals_map, \
-//                                  // DotGraph        dg);
+class SignalGraph {
+	public:
+		SignalGraph();
+		SignalGraph(const char* dot_graph_fname);
+		void find_all_signals(ivl_scope_t* scopes, unsigned int num_scopes);
+		void find_all_connections();
+		unsigned long get_num_connections();
+		unsigned long get_num_signals();
+		vector<const char*> get_signals_names();
+		void save_dot_graph();
+	private:
+		unsigned long       num_connections_; // number of connections enumerated in design
+		vector<const char*> signals_names_;   // signal graph (adjacency list)
+		sig_map_t           signals_map_;     // signal graph (adjacency list)
+		DotGraph            dg_;              // dot graph object
+		vector<SliceInfo>   signal_slices_;
+		void find_signals(ivl_scope_t scope);
+		void add_connection(ivl_signal_t root_signal, ivl_signal_t connected_signal, ivl_nexus_t nexus);
+		void propagate_nexus(ivl_nexus_t nexus, ivl_signal_t root_signal);
+		void propagate_logic(ivl_net_logic_t logic, ivl_nexus_t root_nexus, ivl_signal_t root_signal);
+		const char* get_logic_type_as_string(ivl_net_logic_t logic);
+		void propagate_lpm(ivl_lpm_t lpm, ivl_nexus_t root_nexus, ivl_signal_t root_signal);
+		const char* get_lpm_type_as_string(ivl_lpm_t lpm);
+		void process_lpm_part_select(ivl_lpm_t lpm, ivl_nexus_t root_nexus, ivl_signal_t root_signal);
+};	
 
 #endif

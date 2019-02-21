@@ -14,41 +14,89 @@ nexus is connected to the INPUT of a LOGIC device.
 */
 
 // Standard Headers
-#include <cassert>
-#include <cstdio>
 
 // TTB Headers
-#include "ttb_typedefs.h"
 #include "ttb.h"
-#include "dot_graph.h"
 #include "error.h"
-#include "debug.h"
 
-unsigned long propagate_logic(ivl_net_logic_t logic_device, ivl_nexus_t root_nexus, ivl_signal_t root_signal, sig_map_t& signals_map, DotGraph dg) {
-	// Track number of connections enumerated
-	unsigned long num_connections = 0;
+const char* SignalGraph::get_logic_type_as_string(ivl_net_logic_t logic) {
+	switch (ivl_logic_type(logic)) {
+		case IVL_LO_NONE:
+			return "IVL_LO_NONE";
+		case IVL_LO_AND:
+			return "IVL_LO_AND";
+		case IVL_LO_BUF:
+			return "IVL_LO_BUF";
+		case IVL_LO_BUFIF0:
+			return "IVL_LO_BUFIF0";
+		case IVL_LO_BUFIF1:
+			return "IVL_LO_BUFIF1";
+		case IVL_LO_BUFT:
+			return "IVL_LO_BUFT";
+		case IVL_LO_BUFZ:
+			return "IVL_LO_BUFZ";
+		case IVL_LO_CMOS:
+			return "IVL_LO_CMOS";
+		case IVL_LO_NAND:
+			return "IVL_LO_NAND";
+		case IVL_LO_NMOS:
+			return "IVL_LO_NMOS";
+		case IVL_LO_NOR:
+			return "IVL_LO_NOR";
+		case IVL_LO_NOT:
+			return "IVL_LO_NOT";
+		case IVL_LO_NOTIF0:
+			return "IVL_LO_NOTIF0";
+		case IVL_LO_NOTIF1:
+			return "IVL_LO_NOTIF1";
+		case IVL_LO_OR:
+			return "IVL_LO_OR";
+		case IVL_LO_PMOS:
+			return "IVL_LO_PMOS";
+		case IVL_LO_PULLDOWN:
+			return "IVL_LO_PULLDOWN";
+		case IVL_LO_PULLUP:
+			return "IVL_LO_PULLUP";
+		case IVL_LO_RCMOS:
+			return "IVL_LO_RCMOS";
+		case IVL_LO_RNMOS:
+			return "IVL_LO_RNMOS";
+		case IVL_LO_RPMOS:
+			return "IVL_LO_RPMOS";
+		case IVL_LO_XNOR:
+			return "IVL_LO_XNOR";
+		case IVL_LO_XOR:
+			return "IVL_LO_XOR";
+		case IVL_LO_UDP:
+			return "IVL_LO_UDP";
+		default:
+			return "UNKNOWN";
+	}
+}
+
+void SignalGraph::propagate_logic(ivl_net_logic_t logic, \
+                                  ivl_nexus_t     root_nexus, \
+                                  ivl_signal_t    root_signal) {
 
 	// LOGIC device pin nexus
 	ivl_nexus_t pin_nexus = NULL;
 
 	// Get number of pins on LOGIC device.
 	// Each LOGIC device pin is a Nexus.
-	unsigned int num_pins = ivl_logic_pins(logic_device);
+	unsigned int num_pins = ivl_logic_pins(logic);
 	
 	// Pin 0 is the output. If the (root) nexus, is not the
 	// same as the output nexus, then we do not propagate,
 	// because this root_nexus is an input not an output.
-	if (ivl_logic_pin(logic_device, 0) == root_nexus) {
+	if (ivl_logic_pin(logic, 0) == root_nexus) {
 	
 		// Iterate over all input pins (nexuses) of LOGIC device.
 		// Pin 0 is the output, so start with pin 1.
 		for (unsigned int i = 1; i < num_pins; i++) {
-			pin_nexus = ivl_logic_pin(logic_device, i);
+			pin_nexus = ivl_logic_pin(logic, i);
 
 			// Propagate the nexus
-			num_connections += propagate_nexus(pin_nexus, root_signal, signals_map, dg);
+			propagate_nexus(pin_nexus, root_signal);
 		}
 	}
-
-	return num_connections;
 }

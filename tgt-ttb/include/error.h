@@ -28,7 +28,6 @@ typedef enum ttb_error_type_e {
 
 class Error {
 	public:
-		Error();
 		// Data Validation Functions
 		static void check_scope_types(ivl_scope_t* scopes, unsigned int num_scopes);
 		static void check_signal_exists_in_map(sig_map_t signals, ivl_signal_t sig);

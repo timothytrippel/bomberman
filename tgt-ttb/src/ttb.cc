@@ -14,20 +14,112 @@ Graphviz .dot file.
 #include <cstdio>
 
 // TTB Headers
-#include "ttb_typedefs.h"
 #include "ttb.h"
-#include "dot_graph.h"
 #include "reporter.h"
 #include "error.h"
-#include "debug.h"
 
-void find_signals(ivl_scope_t scope, sig_name_map_t& signals_to_names, sig_map_t& signals_map, DotGraph dg) {
+// ----------------------------------------------------------------------------------
+// ------------------------------- Constructors -------------------------------------
+// ----------------------------------------------------------------------------------
+SignalGraph::SignalGraph(): \
+	num_connections_(0), \
+	signals_names_(), \
+	signals_map_(), \
+	dg_() {}
+
+SignalGraph::SignalGraph(const char* dot_graph_fname) {
+	// Initialize Connection Counter
+	num_connections_ = 0;
+
+	// Initialize DotGraph
+	dg_ = DotGraph(dot_graph_fname);
+	dg_.init_graph();
+}
+
+// ----------------------------------------------------------------------------------
+// ------------------------------- Getters ------------------------------------------
+// ----------------------------------------------------------------------------------
+unsigned long SignalGraph::get_num_connections() {
+	return num_connections_;
+}
+
+unsigned long SignalGraph::get_num_signals() {
+	return signals_map_.size();
+}
+
+vector<const char*> SignalGraph::get_signals_names() {
+	return signals_names_;
+}
+
+// ----------------------------------------------------------------------------------
+// ------------------------------- Dot Graph Management -----------------------------
+// ----------------------------------------------------------------------------------
+void SignalGraph::save_dot_graph() {
+	dg_.save_graph();
+}
+
+void SignalGraph::add_connection(ivl_signal_t root_signal, 
+                                 ivl_signal_t connected_signal, 
+                                 ivl_nexus_t  nexus) {
+
+	// Only add connections to signals already in graph.
+	if (signals_map_.count(connected_signal)) {
+		signals_map_[root_signal].push_back(connected_signal);
+
+		// Check if connection is sliced
+		if (signal_slices_.size()) {
+			SliceInfo signal_slice = signal_slices_.back();
+
+			// Check that slice is to be applied at this nexus
+			if (signal_slice.nexus == nexus) {
+				
+				// add sliced connection
+				if (signal_slice.slice_root) {
+					// sliced root signal
+					dg_.add_sliced_connection(root_signal, \
+											  signal_slice.msb, \
+											  signal_slice.lsb, \
+											  connected_signal, \
+											  ivl_signal_packed_msb(connected_signal, 0), \
+											  ivl_signal_packed_lsb(connected_signal, 0));
+				} else {
+					// sliced connected signal
+					dg_.add_sliced_connection(root_signal, \
+											  ivl_signal_packed_msb(root_signal, 0), \
+											  ivl_signal_packed_lsb(root_signal, 0), \
+											  connected_signal, \
+											  signal_slice.msb, \
+											  signal_slice.lsb);
+				}
+
+				// pop slice info from stack
+				signal_slices_.pop_back();
+			}
+		} else {
+			// full connection
+			dg_.add_connection(root_signal, connected_signal);
+		}
+	} else {
+		Error::connecting_signal_not_in_graph(connected_signal);
+	}
+}
+
+// ----------------------------------------------------------------------------------
+// ------------------------------- Signal Enumeration -------------------------------
+// ----------------------------------------------------------------------------------
+void SignalGraph::find_all_signals(ivl_scope_t* scopes, unsigned int num_scopes) {
+	for (unsigned int i = 0; i < num_scopes; i++){
+		find_signals(scopes[i]);
+	}
+}
+
+void SignalGraph::find_signals(ivl_scope_t scope) {
 	// Current IVL signal
 	ivl_signal_t current_signal;
 
 	// Recurse into sub-modules
 	for (unsigned int i = 0; i < ivl_scope_childs(scope); i++){
-		find_signals(ivl_scope_child(scope, i), signals_to_names, signals_map, dg);		
+		find_signals(ivl_scope_child(scope, i));		
 	}
 
 	// Scope is a base scope
@@ -37,104 +129,28 @@ void find_signals(ivl_scope_t scope, sig_name_map_t& signals_to_names, sig_map_t
 		current_signal = ivl_scope_sig(scope, i);
 
 		// Check if signal already exists in map
-		Error::check_signal_exists_in_map(signals_map, current_signal);
+		Error::check_signal_exists_in_map(signals_map_, current_signal);
 
 		// Add signal to graph
 		// Ignore local (IVL) generated signals.
 		if (!ivl_signal_local(current_signal)) {
 			// signal was defined in HDL
-			signals_map[current_signal]      = vector<ivl_signal_t>();
-			signals_to_names[current_signal] = ivl_signal_name(current_signal);
-			dg.add_signal_node(current_signal);
+			signals_map_[current_signal] = vector<ivl_signal_t>();
+			signals_names_.push_back(ivl_signal_name(current_signal));
+			dg_.add_signal_node(current_signal);
 		}
 	} 
 }
 
-void find_all_signals(ivl_scope_t*    scopes, \
-					  unsigned int    num_scopes, \
-					  sig_name_map_t& signals_to_names, \
-					  sig_map_t&      signals_map, \
-					  DotGraph        dg) {
-
-	for (unsigned int i = 0; i < num_scopes; i++){
-		find_signals(scopes[i], signals_to_names, signals_map, dg);
-	}
-}
-
-void add_connection(ivl_signal_t root_signal, ivl_signal_t connected_signal, sig_map_t& signals_map, DotGraph dg) {
-	// Only add connections to signals already in graph.
-	if (signals_map.count(connected_signal)) {
-		signals_map[root_signal].push_back(connected_signal);
-		dg.add_connection(root_signal, connected_signal);
-	} else {
-		Error::connecting_signal_not_in_graph(connected_signal);
-	}
-}
-
-unsigned long propagate_nexus(ivl_nexus_t nexus, ivl_signal_t root_signal, sig_map_t& signals_map, DotGraph dg) {
-	// Track number of connections enumerated
-	unsigned long num_connections = 0;
-
-	// Nexus Pointer
-	ivl_nexus_ptr_t nexus_ptr = NULL;
-
-	// Connected Objects
-	ivl_nexus_ptr_t connected_nexus_ptr = NULL;
-	ivl_signal_t    connected_signal    = NULL;
-	ivl_net_logic_t connected_logic     = NULL;
-	ivl_lpm_t       connected_lpm       = NULL;
-	ivl_net_const_t connected_constant  = NULL;
-
-	// Iterate over Nexus pointers in Nexus
-	for (unsigned int nexus_ind = 0; nexus_ind < ivl_nexus_ptrs(nexus); nexus_ind++) {
-		nexus_ptr = ivl_nexus_ptr(nexus, nexus_ind);
-		fprintf(stdout, "		Nexus %d", nexus_ind);
-
-		// Determine type of Nexus
-		if ((connected_signal = ivl_nexus_ptr_sig(nexus_ptr))){
-			// Nexus target object is a SIGNAL
-			fprintf(stdout, "	 -- SIGNAL -- %s\n", ivl_signal_name(connected_signal));	
-			// num_connections += propagate_signal(connected_signal, root_signal, signals_map, dg);
-
-			// BASE-CASE:
-			// If connected signal and signal the same, 
-			// IGNORE, probably a module hookup
-			// @TODO: investigate this
-			// Ignore connections to local (IVL generated) signals.
-			if (connected_signal != root_signal && !ivl_signal_local(connected_signal)){
-				add_connection(root_signal, connected_signal, signals_map, dg);
-				num_connections++;
-			}
-		} else if ((connected_logic = ivl_nexus_ptr_log(nexus_ptr))) {
-			// Nexus target object is a LOGIC
-			fprintf(stdout, "	 -- LOGIC -- %x\n", connected_logic);
-			num_connections += propagate_logic(connected_logic, nexus, root_signal, signals_map, dg);
-		} else if ((connected_lpm = ivl_nexus_ptr_lpm(nexus_ptr))) {
-			// Nexus target object is a LPM
-			fprintf(stdout, "	 -- LPM -- %x\n", connected_lpm);
-			num_connections += propagate_lpm(connected_lpm, nexus, root_signal, signals_map, dg);
-		} else if ((connected_constant = ivl_nexus_ptr_con(nexus_ptr))) {
-			// Nexus target object is a CONSTANT
-			fprintf(stdout, "	 -- CONSTANT -- %x\n", connected_constant);
-			// num_connections += propagate_constant(connected_constant);
-		} else {
-			// Nexus target object is UNKNOWN
-			Error::unknown_nexus_type_error(nexus_ptr);
-		}
-	}
-
-	return num_connections;
-}
-
-unsigned long find_all_connections(sig_map_t& signals_map, DotGraph dg) {
+// ----------------------------------------------------------------------------------
+// ------------------------------- Connection Enumeration ---------------------------
+// ----------------------------------------------------------------------------------
+void SignalGraph::find_all_connections() {
 	// Create a signals map iterator
-	sig_map_t::iterator it = signals_map.begin();
-
-	// Track number of connections enumerated
-	unsigned long num_connections = 0;
+	sig_map_t::iterator it = signals_map_.begin();
  
 	// Iterate over all signals in adjacency list
-	while (it != signals_map.end()) { 	
+	while (it != signals_map_.end()) { 	
 		ivl_signal_t root_signal = it->first;
 
  		// Print signal name -- signal dimensions
@@ -155,33 +171,29 @@ unsigned long find_all_connections(sig_map_t& signals_map, DotGraph dg) {
 		assert(root_nexus);
 
 		// Propagate the nexus
-		num_connections += propagate_nexus(root_nexus, root_signal, signals_map, dg);
+		propagate_nexus(root_nexus, root_signal);
 
 		// Increment the iterator
 		it++;
 	}
-
-	return num_connections;
 }
 
-// *** "Main"/Entry Point *** of iverilog target
+// ----------------------------------------------------------------------------------
+// ------------------------ IVL Target Entry Point "main" ---------------------------
+// ----------------------------------------------------------------------------------
 int target_design(ivl_design_t des) {
 	ivl_scope_t*   roots     = 0;    	// root scopes of the design
 	unsigned       num_roots = 0;    	// number of root scopes of the design
-	unsigned long  num_connections = 0; // number of connections enumerated in design
 	Reporter       reporter;         	// reporter object (prints messages)
-	DotGraph       dg;               	// dot graph object
-	sig_name_map_t signals_to_names; 	// signal graph (adjacency list)
-	sig_map_t      signals_map;         // signal graph (adjacency list)
+	SignalGraph    sg;                  // signal graph object
 
 	// Initialize reporter checking objects
 	reporter = Reporter();
 	reporter.init(LAUNCH_MESSAGE);
 
-	// Initialize graphviz dot graph
-	dg = DotGraph(ivl_design_flag(des, "-o"));
-	dg.init_graph();
-
+	// Initialize SignalGraph
+	sg = SignalGraph(ivl_design_flag(des, "-o"));
+	
 	// Get root scopes (top level modules) of design
 	reporter.print_message(SCOPE_EXPANSION_MESSAGE);
 	ivl_design_roots(des, &roots, &num_roots);
@@ -190,17 +202,17 @@ int target_design(ivl_design_t des) {
 
 	// Find all critical signals and dependencies in the design
 	reporter.print_message(SIGNAL_ENUM_MESSAGE);
-	find_all_signals(roots, num_roots, signals_to_names, signals_map, dg);
-	reporter.num_signals(signals_map);
-	reporter.signal_names(signals_map);
+	sg.find_all_signals(roots, num_roots);
+	reporter.num_signals(sg.get_num_signals());
+	reporter.signal_names(sg.get_signals_names());
 
 	// Find signal-to-signal connections
 	reporter.print_message(CONNECTION_ENUM_MESSAGE);
-	num_connections = find_all_connections(signals_map, dg);
-	reporter.num_connections(num_connections);
+	sg.find_all_connections();
+	reporter.num_connections(sg.get_num_connections());
 
 	// Save dot graph to file
-	dg.save_graph();
+	sg.save_dot_graph();
 
 	// Report total execution time
 	reporter.end();

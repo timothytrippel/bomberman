@@ -42,16 +42,15 @@ class DotGraph {
 		void 		add_input_node(ivl_signal_t sig);
 		void 		add_const_node(ivl_net_const_t con);
 		void 		add_connection(ivl_signal_t aff_sig, ivl_signal_t sig);
-		void 		add_spliced_connection(ivl_signal_t  aff_sig, 
-                                           unsigned long aff_sig_msb, 
-                                           unsigned long aff_sig_lsb,
-                                           ivl_signal_t  sig, 
-                                           unsigned long sig_msb, 
-                                           unsigned long sig_lsb);
+		void 		add_sliced_connection(ivl_signal_t  aff_sig, 
+                                          unsigned long aff_sig_msb, 
+                                          unsigned long aff_sig_lsb,
+                                          ivl_signal_t  sig, 
+                                          unsigned long sig_msb, 
+                                          unsigned long sig_lsb);
 		void 		add_const_connection(ivl_signal_t  aff_sig, ivl_net_const_t con);
 		void 		save_graph();
 		void 		save_graph(sig_map_t signals);
-		
 	private:
 		const char*   file_path_;
 		FILE* 		  file_ptr_;

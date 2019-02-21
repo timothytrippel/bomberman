@@ -27,10 +27,16 @@ using namespace std;
 #define SIGNAL_ENUM_MESSAGE     "Enumerating all signals..."
 #define CONNECTION_ENUM_MESSAGE "Enumerating all signal-to-signal connections..."
 
-// Signal name to signal object map
-typedef map<ivl_signal_t, const char*> sig_name_map_t;
-
 // Signal graph adjaceny list
 typedef map<ivl_signal_t, vector<ivl_signal_t>> sig_map_t;
+
+// Struct for holding MSB-LSB pair for tracking 
+// signal vector slices at a given nexus
+struct SliceInfo {
+	unsigned int msb;
+	unsigned int lsb;
+	bool         slice_root;
+	ivl_nexus_t  nexus;
+};
 
 #endif

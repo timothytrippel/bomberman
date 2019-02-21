@@ -76,12 +76,12 @@ void Reporter::root_scopes(ivl_scope_t* scopes, unsigned int num_scopes){
 	fprintf(file_ptr_, "\n");
 }
 
-void Reporter::num_signals(sig_map_t signals){
+void Reporter::num_signals(unsigned long num_signals){
 	// Check that file has been opened for writing report
 	assert(file_ptr_ != NULL && "ERROR: reporter file ptr is NULL.\n");
 
 	// Print number of signals in vector
-	fprintf(file_ptr_, "Number of signals found: %lu\n\n", signals.size());
+	fprintf(file_ptr_, "Number of signals found: %lu\n\n", num_signals);
 }
 
 void Reporter::num_connections(unsigned long num_connections){
@@ -92,7 +92,7 @@ void Reporter::num_connections(unsigned long num_connections){
 	fprintf(file_ptr_, "Number of connections found: %lu\n", num_connections);
 }
 
-void Reporter::signal_names(sig_map_t signals){
+void Reporter::signal_names(vector<const char*> signals_names){
 	// Check that file has been opened for writing report
 	assert(file_ptr_ != NULL && "ERROR: reporter file ptr is NULL.\n");
 
@@ -100,12 +100,12 @@ void Reporter::signal_names(sig_map_t signals){
 	fprintf(file_ptr_, "Signal Names:\n");    	
 
 	// Create a signals map iterator
-	sig_map_t::iterator it = signals.begin();
+	vector<const char*>::iterator it = signals_names.begin();
  
 	// Iterate over the map using Iterator till end.
-	while (it != signals.end()) { 	
+	while (it != signals_names.end()) { 	
  		// Print signal name
-		fprintf(file_ptr_, "	%s\n", ivl_signal_name(it->first));
+		fprintf(file_ptr_, "	%s\n", *it);
  
 		// Increment the iterator
 		it++;
