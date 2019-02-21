@@ -34,9 +34,8 @@ class Reporter {
 		void 		root_scopes(ivl_scope_t* scopes, unsigned int num_scopes);
 		void 		num_signals(unsigned long num_signals);
 		void 		num_connections(unsigned long num_connections);
-		void 		signal_names(vector<const char*> signals_names);
+		void 		signal_names(sig_map_t signals_map);
 		void 		end();
-		
 	private:
 		const char* file_path_;
 		FILE* 		file_ptr_;

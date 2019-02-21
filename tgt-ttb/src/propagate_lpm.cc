@@ -101,9 +101,10 @@ const char* SignalGraph::get_lpm_type_as_string(ivl_lpm_t lpm) {
 	}
 }
 
-void SignalGraph::process_lpm_part_select(ivl_lpm_t    lpm, \
-                                          ivl_nexus_t  root_nexus, \
-                                          ivl_signal_t root_signal) {
+void SignalGraph::process_lpm_part_select(ivl_lpm_t    lpm, 
+                                          ivl_nexus_t  sink_nexus, 
+                                          ivl_signal_t sink_signal, 
+                                          string       ws) {
 
 	// Device Nexuses
 	ivl_nexus_t input_nexus = NULL;
@@ -122,26 +123,34 @@ void SignalGraph::process_lpm_part_select(ivl_lpm_t    lpm, \
 	// Get MSB and LSB of slice
 	unsigned int msb        = ivl_lpm_base(lpm) + ivl_lpm_width(lpm) - 1;
 	unsigned int lsb        = ivl_lpm_base(lpm);
-	SliceInfo    slice_info = {msb, lsb, false, input_nexus};
+	SliceInfo    slice_info = {msb, lsb, SOURCE};
 
 	// Determine LPM type
 	if (ivl_lpm_type(lpm) == IVL_LPM_PART_VP) {
 		// part select: vector to part (VP: part select in rval)
-		slice_info.slice_root = false;
+		slice_info.node = SOURCE;
 	} else if (ivl_lpm_type(lpm) == IVL_LPM_PART_PV) {
 		// part select: part to vector (PV: part select in lval)
-		slice_info.slice_root = true;
+		slice_info.node = SINK;
 	} else {
 		Error::unknown_part_select_lpm_type_error(ivl_lpm_type(lpm));
 	}
 
+	// Make sure slice-info stack is empty
+	// (it should never grow beyond a size of 1)
+	assert(signal_slices_.size() <= 1 && "ERROR: propagating nested (LPM) part selects.\n");
+
+	// push slice info to a stack
 	signal_slices_.push_back(slice_info);
-	propagate_nexus(input_nexus, root_signal);
+
+	// Propagate nexus
+	propagate_nexus(input_nexus, sink_signal, ws + "	");
 }
 
-void SignalGraph::propagate_lpm(ivl_lpm_t lpm, \
-                                ivl_nexus_t root_nexus, \
-                                ivl_signal_t root_signal) {
+void SignalGraph::propagate_lpm(ivl_lpm_t    lpm, 
+                                ivl_nexus_t  sink_nexus, 
+                                ivl_signal_t sink_signal, 
+                                string       ws) {
 
 	// Add connections
 	switch (ivl_lpm_type(lpm)) {
@@ -152,8 +161,8 @@ void SignalGraph::propagate_lpm(ivl_lpm_t lpm, \
 			// output nexus is NOT the same as the root nexus, 
 			// then we do not propagate because this nexus is an 
 			// to input to an LPM, not an output.
-			if (ivl_lpm_q(lpm) == root_nexus) {
-				process_lpm_part_select(lpm, root_nexus, root_signal);
+			if (ivl_lpm_q(lpm) == sink_nexus) {
+				process_lpm_part_select(lpm, sink_nexus, sink_signal, ws);
 			}
 			break;
 		// case IVL_LPM_CONCAT:

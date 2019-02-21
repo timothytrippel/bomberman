@@ -30,13 +30,18 @@ using namespace std;
 // Signal graph adjaceny list
 typedef map<ivl_signal_t, vector<ivl_signal_t>> sig_map_t;
 
+// Node that is sliced (either SINK or SOURCE)
+typedef enum SLICE_NODE {
+      SINK   = 0,
+      SOURCE = 1
+} slice_node_t;
+
 // Struct for holding MSB-LSB pair for tracking 
 // signal vector slices at a given nexus
 struct SliceInfo {
 	unsigned int msb;
 	unsigned int lsb;
-	bool         slice_root;
-	ivl_nexus_t  nexus;
+	slice_node_t node;
 };
 
 #endif

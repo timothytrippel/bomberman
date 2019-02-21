@@ -16,6 +16,7 @@ Graphviz .dot file.
 #include <string>
 
 // TTB Headers
+#include "ttb.h"
 #include "error.h"
 
 using namespace std;
@@ -77,7 +78,7 @@ void Error::check_scope_types(ivl_scope_t* scopes, unsigned int num_scopes) {
 
 void Error::check_signal_exists_in_map(sig_map_t signals, ivl_signal_t sig) {
 	if (signals.count(sig) > 0) {
-		fprintf(stderr, "ERROR: signal (%s) already exists in hashmap.\n", ivl_signal_name(sig));
+		fprintf(stderr, "ERROR: signal (%s) already exists in hashmap.\n", SignalGraph::get_signal_fullname(sig).c_str());
 		exit(DUPLICATE_SIGNALS_FOUND_ERROR);
 	}
 } 
@@ -85,7 +86,7 @@ void Error::check_signal_exists_in_map(sig_map_t signals, ivl_signal_t sig) {
 void Error::check_signal_not_arrayed(ivl_signal_t signal) {
 	// Check if signal is arrayed
 	if (ivl_signal_dimensions(signal) > 0) {
-		fprintf(stderr, "NOT-SUPPORTED: arrayed signal (%s -- %d) encountered.\n", ivl_signal_name(signal), ivl_signal_dimensions(signal));
+		fprintf(stderr, "NOT-SUPPORTED: arrayed signal (%s -- %d) encountered.\n", SignalGraph::get_signal_fullname(signal).c_str(), ivl_signal_dimensions(signal));
 		exit(NOT_SUPPORTED_ERROR);
 	} else {
 		// Confirm that ARRAY_BASE is 0 (should be for non-arrayed signals)
@@ -93,6 +94,14 @@ void Error::check_signal_not_arrayed(ivl_signal_t signal) {
 
 		// Confirm that ARRAY_COUNT is a (should be for non-arrayed signals)
 		assert(ivl_signal_array_count(signal) == 1 && "NOT-SUPPORTED: non-arrayed signal with ARRAY_COUNT != 1.");
+	}
+}
+
+void Error::check_signal_not_multidimensional(ivl_signal_t signal) {
+	// Check if signal is multidimensional
+	if (ivl_signal_packed_dimensions(signal) > 1) {
+		fprintf(stderr, "NOT-SUPPORTED: multidimensional signal (%s -- %d) encountered.\n", SignalGraph::get_signal_fullname(signal).c_str(), ivl_signal_packed_dimensions(signal));
+		exit(NOT_SUPPORTED_ERROR);
 	}
 }
 
@@ -106,13 +115,8 @@ void Error::unknown_nexus_type_error(ivl_nexus_ptr_t nexus_ptr) {
 	exit(NOT_SUPPORTED_ERROR);
 }
 
-void Error::unknown_logic_nexus_type_error(ivl_nexus_ptr_t nexus_ptr) {
-	fprintf(stderr, "NOT-SUPPORTED: LOGIC device connected UNKOWN nexus type %x.\n", nexus_ptr);
-	exit(NOT_SUPPORTED_ERROR);
-}
-
 void Error::connecting_signal_not_in_graph(ivl_signal_t signal) {
-	fprintf(stderr, "ERROR: attempting to connect signal (%s) not in graph.\n", ivl_signal_name(signal));
+	fprintf(stderr, "ERROR: attempting to connect signal (%s) not in graph.\n", SignalGraph::get_signal_fullname(signal).c_str());
 	exit(NOT_SUPPORTED_ERROR);
 }
 

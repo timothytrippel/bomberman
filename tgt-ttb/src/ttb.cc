@@ -12,6 +12,7 @@ Graphviz .dot file.
 // Standard Headers
 #include <cassert>
 #include <cstdio>
+#include <sstream>
 
 // TTB Headers
 #include "ttb.h"
@@ -21,11 +22,11 @@ Graphviz .dot file.
 // ----------------------------------------------------------------------------------
 // ------------------------------- Constructors -------------------------------------
 // ----------------------------------------------------------------------------------
-SignalGraph::SignalGraph(): \
-	num_connections_(0), \
-	signals_names_(), \
-	signals_map_(), \
-	dg_() {}
+SignalGraph::SignalGraph():
+	num_connections_(0),
+	signals_map_(),
+	dg_(),
+	signal_slices_() {}
 
 SignalGraph::SignalGraph(const char* dot_graph_fname) {
 	// Initialize Connection Counter
@@ -47,8 +48,117 @@ unsigned long SignalGraph::get_num_signals() {
 	return signals_map_.size();
 }
 
-vector<const char*> SignalGraph::get_signals_names() {
-	return signals_names_;
+sig_map_t SignalGraph::get_signals_map() {
+	return signals_map_;
+}
+
+// ----------------------------------------------------------------------------------
+// ------------------------------- Helper Functions ---------------------------------
+// ----------------------------------------------------------------------------------
+string SignalGraph::get_signal_fullname(ivl_signal_t signal){
+	string scopename = string(ivl_scope_name(ivl_signal_scope(signal))); 
+	string basename  = string(ivl_signal_basename(signal));
+	string fullname  = string(scopename + string(".") + basename);
+
+	return fullname;
+}
+
+string SignalGraph::get_constant_fullname(ivl_net_const_t constant){
+	string scopename = string(ivl_scope_name(ivl_const_scope(constant))); 
+	string basename  = string(ivl_const_bits(constant), (size_t)ivl_const_width(constant));
+	reverse(basename.begin(), basename.end());
+	string fullname  = string(scopename + string(".const_") + basename);
+
+	return fullname;
+}
+
+unsigned int SignalGraph::get_signal_msb(ivl_signal_t signal) {
+	if (ivl_signal_packed_dimensions(signal) > 0) {
+		// Check LSB is not negative
+		assert((ivl_signal_packed_msb(signal, 0) >= 0) && "NOT-SUPPORTED: negative MSB index.\n");
+		
+		return ivl_signal_packed_msb(signal, 0);
+	} else {
+		return 0;
+	}
+}
+
+unsigned int SignalGraph::get_signal_lsb(ivl_signal_t signal) {
+	if (ivl_signal_packed_dimensions(signal) > 0) {
+		// Check LSB is not negative
+		// assert((ivl_signal_packed_lsb(signal, 0) >= 0) && "NOT-SUPPORTED: negative LSB index.\n");
+
+		return ivl_signal_packed_lsb(signal, 0);
+	} else {
+		return 0;
+	}
+}
+
+string SignalGraph::get_signal_node_label(ivl_signal_t signal) {
+	stringstream ss;
+
+	ss << "[";
+	ss << get_signal_msb(signal);
+	ss << ":";
+	ss << get_signal_lsb(signal);
+	ss << "]";
+
+	return ss.str();
+}
+
+string SignalGraph::get_signal_connection_label(ivl_signal_t source_signal, ivl_signal_t sink_signal) {
+	unsigned int sink_msb   = get_signal_msb(sink_signal);
+	unsigned int sink_lsb   = get_signal_lsb(sink_signal);
+	unsigned int source_msb = get_signal_msb(source_signal);
+	unsigned int source_lsb = get_signal_lsb(source_signal);
+	stringstream ss;
+	
+	ss << "[";
+	ss << source_msb;
+	ss << ":";
+	ss << source_lsb;
+	ss << "]->[";
+	ss << sink_msb;
+	ss << ":";
+	ss << sink_lsb;
+	ss << "]";
+
+	return ss.str();
+}
+
+string SignalGraph::get_signal_connection_label(ivl_signal_t source_signal, ivl_signal_t sink_signal, SliceInfo signal_slice) {
+	unsigned int sink_msb;
+	unsigned int sink_lsb;
+	unsigned int source_msb;
+	unsigned int source_lsb;
+	stringstream ss;
+
+	if (signal_slice.node == SINK) {
+		// sliced sink node (signal)
+		sink_msb = signal_slice.msb;
+		sink_lsb = signal_slice.lsb;
+		source_msb = get_signal_msb(source_signal);
+		source_lsb = get_signal_lsb(source_signal);
+	} else {
+		// sliced source node (signal)
+		sink_msb = get_signal_msb(sink_signal);
+		sink_lsb = get_signal_lsb(sink_signal);
+		source_msb = signal_slice.msb;
+		source_lsb = signal_slice.lsb;
+	}
+	
+	
+	ss << "[";
+	ss << source_msb;
+	ss << ":";
+	ss << source_lsb;
+	ss << "]->[";
+	ss << sink_msb;
+	ss << ":";
+	ss << sink_lsb;
+	ss << "]";
+
+	return ss.str();
 }
 
 // ----------------------------------------------------------------------------------
@@ -56,52 +166,6 @@ vector<const char*> SignalGraph::get_signals_names() {
 // ----------------------------------------------------------------------------------
 void SignalGraph::save_dot_graph() {
 	dg_.save_graph();
-}
-
-void SignalGraph::add_connection(ivl_signal_t root_signal, 
-                                 ivl_signal_t connected_signal, 
-                                 ivl_nexus_t  nexus) {
-
-	// Only add connections to signals already in graph.
-	if (signals_map_.count(connected_signal)) {
-		signals_map_[root_signal].push_back(connected_signal);
-
-		// Check if connection is sliced
-		if (signal_slices_.size()) {
-			SliceInfo signal_slice = signal_slices_.back();
-
-			// Check that slice is to be applied at this nexus
-			if (signal_slice.nexus == nexus) {
-				
-				// add sliced connection
-				if (signal_slice.slice_root) {
-					// sliced root signal
-					dg_.add_sliced_connection(root_signal, \
-											  signal_slice.msb, \
-											  signal_slice.lsb, \
-											  connected_signal, \
-											  ivl_signal_packed_msb(connected_signal, 0), \
-											  ivl_signal_packed_lsb(connected_signal, 0));
-				} else {
-					// sliced connected signal
-					dg_.add_sliced_connection(root_signal, \
-											  ivl_signal_packed_msb(root_signal, 0), \
-											  ivl_signal_packed_lsb(root_signal, 0), \
-											  connected_signal, \
-											  signal_slice.msb, \
-											  signal_slice.lsb);
-				}
-
-				// pop slice info from stack
-				signal_slices_.pop_back();
-			}
-		} else {
-			// full connection
-			dg_.add_connection(root_signal, connected_signal);
-		}
-	} else {
-		Error::connecting_signal_not_in_graph(connected_signal);
-	}
 }
 
 // ----------------------------------------------------------------------------------
@@ -128,6 +192,16 @@ void SignalGraph::find_signals(ivl_scope_t scope) {
 		// Get current signal
 		current_signal = ivl_scope_sig(scope, i);
 
+		// Check if signal is arrayed
+		// @TODO: support arrayed signals 
+		// (i.e. signals with more than one nexus)
+		Error::check_signal_not_arrayed(current_signal);
+
+		// Check if signal is multi-dimensional
+		// @TODO: support multi-dimensional signals 
+		// (i.e. signals packed dimensions like memories)
+		Error::check_signal_not_multidimensional(current_signal);
+
 		// Check if signal already exists in map
 		Error::check_signal_exists_in_map(signals_map_, current_signal);
 
@@ -136,8 +210,9 @@ void SignalGraph::find_signals(ivl_scope_t scope) {
 		if (!ivl_signal_local(current_signal)) {
 			// signal was defined in HDL
 			signals_map_[current_signal] = vector<ivl_signal_t>();
-			signals_names_.push_back(ivl_signal_name(current_signal));
-			dg_.add_signal_node(current_signal);
+			dg_.add_node(get_signal_fullname(current_signal), 
+						 get_signal_node_label(current_signal), 
+						 SIGNAL_NODE_SHAPE);
 		}
 	} 
 }
@@ -145,33 +220,76 @@ void SignalGraph::find_signals(ivl_scope_t scope) {
 // ----------------------------------------------------------------------------------
 // ------------------------------- Connection Enumeration ---------------------------
 // ----------------------------------------------------------------------------------
+void SignalGraph::add_connection(ivl_signal_t sink_signal, 
+                                 ivl_signal_t source_signal, 
+                                 ivl_nexus_t  nexus,
+                                 string       ws) {
+
+	string source_signal_name;
+	string sink_signal_name;
+	string connection_label;
+
+	// Only add connections to signals already in graph.
+	// Thus, ignoring local IVL generated signals as these
+	// are not added to the graph when it is initialized.
+	if (signals_map_.count(source_signal)) {
+
+		signals_map_[sink_signal].push_back(source_signal);
+
+		fprintf(stdout, "			%sADDING CONNECTION from %s to %s\n", ws.c_str(), get_signal_fullname(source_signal).c_str(), get_signal_fullname(sink_signal).c_str());
+		
+		// Get signal names
+		source_signal_name = get_signal_fullname(source_signal);
+		sink_signal_name   = get_signal_fullname(sink_signal);
+
+		// Check if connection is sliced
+		if (signal_slices_.size()) {
+			// SLICED connection
+
+			// Get signal slice info
+			SliceInfo signal_slice = signal_slices_.back();
+
+			// Get connection label
+			connection_label = get_signal_connection_label(source_signal, sink_signal, signal_slice);
+
+			// pop slice info from stack
+			signal_slices_.pop_back();
+		} else {
+			// FULL connection
+
+			// Get connection label
+			connection_label = get_signal_connection_label(source_signal, sink_signal);
+		}
+
+		// Add connection to dot graph
+		dg_.add_connection(source_signal_name, sink_signal_name, connection_label);
+	} else if (!ivl_signal_local(source_signal)) {
+		Error::connecting_signal_not_in_graph(source_signal);
+	}
+}
+
 void SignalGraph::find_all_connections() {
 	// Create a signals map iterator
 	sig_map_t::iterator it = signals_map_.begin();
  
 	// Iterate over all signals in adjacency list
 	while (it != signals_map_.end()) { 	
-		ivl_signal_t root_signal = it->first;
+		ivl_signal_t sink_signal = it->first;
 
  		// Print signal name -- signal dimensions
-		fprintf(stdout, "	%s:\n", ivl_signal_name(root_signal));
-
-		// Check if signal is arrayed
-		// @TODO: support arrayed signals 
-		// (i.e. signals with more than one nexus)
-		Error::check_signal_not_arrayed(root_signal);
+		fprintf(stdout, "	%s:\n", get_signal_fullname(sink_signal).c_str());
 
 		// Get signal nexus
 		// There is exactly one nexus for each WORD of a signal.
 		// Since we only support non-arrayed signals (above), 
 		// each signal only has one nexus.
-		const ivl_nexus_t root_nexus = ivl_signal_nex(root_signal, 0);
+		const ivl_nexus_t sink_nexus = ivl_signal_nex(sink_signal, 0);
 
 		// Check Nexus IS NOT NULL
-		assert(root_nexus);
+		assert(sink_nexus);
 
 		// Propagate the nexus
-		propagate_nexus(root_nexus, root_signal);
+		propagate_nexus(sink_nexus, sink_signal, "");
 
 		// Increment the iterator
 		it++;
@@ -204,7 +322,7 @@ int target_design(ivl_design_t des) {
 	reporter.print_message(SIGNAL_ENUM_MESSAGE);
 	sg.find_all_signals(roots, num_roots);
 	reporter.num_signals(sg.get_num_signals());
-	reporter.signal_names(sg.get_signals_names());
+	reporter.signal_names(sg.get_signals_map());
 
 	// Find signal-to-signal connections
 	reporter.print_message(CONNECTION_ENUM_MESSAGE);

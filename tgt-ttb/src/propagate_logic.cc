@@ -74,9 +74,10 @@ const char* SignalGraph::get_logic_type_as_string(ivl_net_logic_t logic) {
 	}
 }
 
-void SignalGraph::propagate_logic(ivl_net_logic_t logic, \
-                                  ivl_nexus_t     root_nexus, \
-                                  ivl_signal_t    root_signal) {
+void SignalGraph::propagate_logic(ivl_net_logic_t logic, 
+                                  ivl_nexus_t     sink_nexus, 
+                                  ivl_signal_t    sink_signal,
+                                  string          ws) {
 
 	// LOGIC device pin nexus
 	ivl_nexus_t pin_nexus = NULL;
@@ -87,8 +88,8 @@ void SignalGraph::propagate_logic(ivl_net_logic_t logic, \
 	
 	// Pin 0 is the output. If the (root) nexus, is not the
 	// same as the output nexus, then we do not propagate,
-	// because this root_nexus is an input not an output.
-	if (ivl_logic_pin(logic, 0) == root_nexus) {
+	// because this sink_nexus is an input not an output.
+	if (ivl_logic_pin(logic, 0) == sink_nexus) {
 	
 		// Iterate over all input pins (nexuses) of LOGIC device.
 		// Pin 0 is the output, so start with pin 1.
@@ -96,7 +97,7 @@ void SignalGraph::propagate_logic(ivl_net_logic_t logic, \
 			pin_nexus = ivl_logic_pin(logic, i);
 
 			// Propagate the nexus
-			propagate_nexus(pin_nexus, root_signal);
+			propagate_nexus(pin_nexus, sink_signal, ws + "	");
 		}
 	}
 }

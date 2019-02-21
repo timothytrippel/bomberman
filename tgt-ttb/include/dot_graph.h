@@ -36,29 +36,16 @@ class DotGraph {
 		void 		set_file_path(const char* p);
 		const char* get_file_path();
 		void 		init_graph();
-		void 		add_signal_node(ivl_signal_t sig);
-		void 		add_local_signal_node(ivl_signal_t sig);
-		void 		add_ff_node(ivl_signal_t sig);
-		void 		add_input_node(ivl_signal_t sig);
-		void 		add_const_node(ivl_net_const_t con);
-		void 		add_connection(ivl_signal_t aff_sig, ivl_signal_t sig);
-		void 		add_sliced_connection(ivl_signal_t  aff_sig, 
-                                          unsigned long aff_sig_msb, 
-                                          unsigned long aff_sig_lsb,
-                                          ivl_signal_t  sig, 
-                                          unsigned long sig_msb, 
-                                          unsigned long sig_lsb);
-		void 		add_const_connection(ivl_signal_t  aff_sig, ivl_net_const_t con);
+		void 		add_node(string name, string label, string shape);
+		void 		add_connection(string source_node_name,
+                                   string sink_node_name, 
+                                   string connection_label);
 		void 		save_graph();
-		void 		save_graph(sig_map_t signals);
+		// void 		save_graph(sig_map_t signals);
 	private:
 		const char*   file_path_;
 		FILE* 		  file_ptr_;
 		FILE* 		  get_file_ptr();
-		string 		  get_signal_fullname(ivl_signal_t sig);
-		string 		  get_constant_fullname(ivl_net_const_t con);
-		unsigned long get_msb(ivl_signal_t sig);
-		unsigned long get_lsb(ivl_signal_t sig);
 		void 		  open_file();
 		void 		  close_file();
 };

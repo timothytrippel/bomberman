@@ -16,6 +16,7 @@ Graphviz .dot file.
 #include <string>
 
 // TTB Headers
+#include "ttb.h"
 #include "reporter.h"
 
 Reporter::Reporter(): file_path_(NULL), file_ptr_(NULL){}
@@ -92,7 +93,7 @@ void Reporter::num_connections(unsigned long num_connections){
 	fprintf(file_ptr_, "Number of connections found: %lu\n", num_connections);
 }
 
-void Reporter::signal_names(vector<const char*> signals_names){
+void Reporter::signal_names(sig_map_t signals_map){
 	// Check that file has been opened for writing report
 	assert(file_ptr_ != NULL && "ERROR: reporter file ptr is NULL.\n");
 
@@ -100,12 +101,12 @@ void Reporter::signal_names(vector<const char*> signals_names){
 	fprintf(file_ptr_, "Signal Names:\n");    	
 
 	// Create a signals map iterator
-	vector<const char*>::iterator it = signals_names.begin();
+	sig_map_t::iterator it = signals_map.begin();
  
 	// Iterate over the map using Iterator till end.
-	while (it != signals_names.end()) { 	
+	while (it != signals_map.end()) { 	
  		// Print signal name
-		fprintf(file_ptr_, "	%s\n", *it);
+		fprintf(file_ptr_, "	%s\n", SignalGraph::get_signal_fullname(it->first).c_str());
  
 		// Increment the iterator
 		it++;
