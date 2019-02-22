@@ -22,13 +22,6 @@ Graphviz .dot file.
 #include "ttb_typedefs.h"
 #include "dot_graph.h"
 
-// Define Indexes
-#define LPM_PART_SELECT_INPUT_NEXUS_INDEX 0
-#define LPM_PART_SELECT_BASE_NEXUS_INDEX  1
-
-// Debugging Switches
-#define DEBUG_PRINTS false
-
 using namespace std;
 
 class SignalGraph {
@@ -74,6 +67,10 @@ class SignalGraph {
         void find_signals(ivl_scope_t scope);
 
         // Connection Enumeration
+        void add_constant_connection(ivl_signal_t    sink_signal, 
+                                     ivl_net_const_t source_constant,
+                                     string          ws);
+        
         void add_connection(ivl_signal_t sink_signal, 
                             ivl_signal_t source_signal,  
                             string       ws);
@@ -112,9 +109,20 @@ class SignalGraph {
                                ivl_signal_t sink_signal, 
                                string       ws);
 
+        void propagate_constant(ivl_net_const_t constant,
+                                ivl_nexus_t  sink_nexus, 
+                                ivl_signal_t sink_signal, 
+                                string       ws);
+
+        // void process_constant(ivl_net_const_t constant,
+        //                            ivl_nexus_t  sink_nexus, 
+        //                            ivl_signal_t sink_signal, 
+        //                            string       ws);
+
         // Helper Functions
         const char* get_lpm_type_as_string(ivl_lpm_t lpm);
         const char* get_logic_type_as_string(ivl_net_logic_t logic);
+        const char* get_const_type_as_string(ivl_net_const_t constant);
 };  
 
 #endif

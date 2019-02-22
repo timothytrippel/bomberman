@@ -27,6 +27,14 @@ using namespace std;
 #define SIGNAL_ENUM_MESSAGE     "Enumerating all signals..."
 #define CONNECTION_ENUM_MESSAGE "Enumerating all signal-to-signal connections..."
 
+// Define Indexes
+#define LOGIC_OUTPUT_PIN_NEXUS_INDEX      0
+#define LPM_PART_SELECT_INPUT_NEXUS_INDEX 0
+#define LPM_PART_SELECT_BASE_NEXUS_INDEX  1
+
+// Debugging Switches
+#define DEBUG_PRINTS false
+
 // Signal graph adjaceny list
 typedef map<ivl_signal_t, vector<ivl_signal_t>> sig_map_t;
 

@@ -19,6 +19,9 @@ nexus is connected to the INPUT of a LOGIC device.
 #include "ttb.h"
 #include "error.h"
 
+// ----------------------------------------------------------------------------------
+// ------------------------------- Helper Functions ---------------------------------
+// ----------------------------------------------------------------------------------
 const char* SignalGraph::get_logic_type_as_string(ivl_net_logic_t logic) {
     switch (ivl_logic_type(logic)) {
         case IVL_LO_NONE:
@@ -74,6 +77,9 @@ const char* SignalGraph::get_logic_type_as_string(ivl_net_logic_t logic) {
     }
 }
 
+// ----------------------------------------------------------------------------------
+// --------------------------- Main LOGIC Progation ---------------------------------
+// ----------------------------------------------------------------------------------
 void SignalGraph::propagate_logic(ivl_net_logic_t logic, 
                                   ivl_nexus_t     sink_nexus, 
                                   ivl_signal_t    sink_signal,
@@ -89,7 +95,7 @@ void SignalGraph::propagate_logic(ivl_net_logic_t logic,
     // Pin 0 is the output. If the (root) nexus, is not the
     // same as the output nexus, then we do not propagate,
     // because this sink_nexus is an input not an output.
-    if (ivl_logic_pin(logic, 0) == sink_nexus) {
+    if (ivl_logic_pin(logic, LOGIC_OUTPUT_PIN_NEXUS_INDEX) == sink_nexus) {
     
         // Iterate over all input pins (nexuses) of LOGIC device.
         // Pin 0 is the output, so start with pin 1.

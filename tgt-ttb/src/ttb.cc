@@ -107,21 +107,11 @@ string SignalGraph::get_signal_node_label(ivl_signal_t signal) {
 }
 
 string SignalGraph::get_signal_connection_label(ivl_signal_t source_signal, ivl_signal_t sink_signal) {
-    unsigned int sink_msb   = get_signal_msb(sink_signal);
-    unsigned int sink_lsb   = get_signal_lsb(sink_signal);
-    unsigned int source_msb = get_signal_msb(source_signal);
-    unsigned int source_lsb = get_signal_lsb(source_signal);
     stringstream ss;
     
-    ss << "[";
-    ss << source_msb;
-    ss << ":";
-    ss << source_lsb;
-    ss << "]->[";
-    ss << sink_msb;
-    ss << ":";
-    ss << sink_lsb;
-    ss << "]";
+    ss << get_signal_node_label(source_signal);
+    ss << "->";
+    ss << get_signal_node_label(sink_signal);
 
     return ss.str();
 }
@@ -220,6 +210,48 @@ void SignalGraph::find_signals(ivl_scope_t scope) {
 // ----------------------------------------------------------------------------------
 // ------------------------------- Connection Enumeration ---------------------------
 // ----------------------------------------------------------------------------------
+void SignalGraph::add_constant_connection(ivl_signal_t    sink_signal, 
+                                          ivl_net_const_t source_constant,
+                                          string          ws) {
+    string       source_signal_name;
+    string       sink_signal_name;
+    stringstream const_width_label;
+    stringstream connection_label;
+
+    // Get constant bit string
+    string const_bit_string = ivl_const_bits(source_constant);
+
+    // Reverse constant bit string as it is stored LSB->MSB.
+    // Thus, correcting the string to display MSB->LSB.
+    reverse(const_bit_string.begin(), const_bit_string.end());
+
+    // Get constant width
+    unsigned int const_msb = ivl_const_width(source_constant) - 1;
+    unsigned int const_lsb = 0;
+    
+    // Get sink signal names
+    sink_signal_name = get_signal_fullname(sink_signal);
+
+    // Compute CONSTANT width label
+    const_width_label << "[";
+    const_width_label << const_msb;
+    const_width_label << ":";
+    const_width_label << const_lsb;
+    const_width_label << "]";
+
+    // Compute connection label
+    connection_label << "[";
+    connection_label << const_bit_string;
+    connection_label << "]->";
+    connection_label << get_signal_node_label(sink_signal);
+
+    // Add CONSTANT node to dot graph
+    dg_.add_node(const_bit_string, const_width_label.str(), CONST_NODE_SHAPE);
+
+    // Add connection to dot graph
+    dg_.add_connection(const_bit_string, sink_signal_name, connection_label.str());
+}
+
 void SignalGraph::add_connection(ivl_signal_t sink_signal, 
                                  ivl_signal_t source_signal, 
                                  string       ws) {

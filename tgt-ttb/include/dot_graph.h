@@ -26,7 +26,7 @@ Graphviz .dot file.
 #define LOCAL_SIGNAL_NODE_SHAPE "circle"
 #define FF_NODE_SHAPE           "square"
 #define INPUT_NODE_SHAPE        "none"
-#define CONST_NODE_SHAPE        "ellipse"
+#define CONST_NODE_SHAPE        "rectangle"
 
 class DotGraph {
     public:
