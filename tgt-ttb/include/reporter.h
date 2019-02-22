@@ -24,26 +24,26 @@ using namespace std;
 #include "ttb_typedefs.h"
 
 class Reporter {
-	public:
-		Reporter();
-		Reporter(const char* p);
-		void 		set_file_path(const char* p);
-		const char* get_file_path();
-		void 		init(const char* init_message);
-		void 		print_message(const char* message);
-		void 		root_scopes(ivl_scope_t* scopes, unsigned int num_scopes);
-		void 		num_signals(unsigned long num_signals);
-		void 		num_connections(unsigned long num_connections);
-		void 		signal_names(sig_map_t signals_map);
-		void 		end();
-	private:
-		const char* file_path_;
-		FILE* 		file_ptr_;
-		clock_t 	start_time_;
-		double 	    execution_time_;
-		FILE* 		get_file_ptr();
-		void 		open_file();
-		void 		close_file();
+    public:
+        Reporter();
+        Reporter(const char* p);
+        void        set_file_path(const char* p);
+        const char* get_file_path();
+        void        init(const char* init_message);
+        void        print_message(const char* message);
+        void        root_scopes(ivl_scope_t* scopes, unsigned int num_scopes);
+        void        num_signals(unsigned long num_signals);
+        void        num_connections(unsigned long num_connections);
+        void        signal_names(sig_map_t signals_map);
+        void        end();
+    private:
+        const char* file_path_;
+        FILE*       file_ptr_;
+        clock_t     start_time_;
+        double      execution_time_;
+        FILE*       get_file_ptr();
+        void        open_file();
+        void        close_file();
 };
 
 #endif

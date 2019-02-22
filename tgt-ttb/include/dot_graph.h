@@ -14,7 +14,6 @@ Graphviz .dot file.
 
 // Standard Headers
 #include <cstdio>
-// #include <cstdlib>
 
 // IVL API Header
 #include <ivl_target.h>
@@ -30,24 +29,24 @@ Graphviz .dot file.
 #define CONST_NODE_SHAPE        "ellipse"
 
 class DotGraph {
-	public:
-		DotGraph();
-		DotGraph(const char* p);
-		void 		set_file_path(const char* p);
-		const char* get_file_path();
-		void 		init_graph();
-		void 		add_node(string name, string label, string shape);
-		void 		add_connection(string source_node_name,
+    public:
+        DotGraph();
+        DotGraph(const char* p);
+        void        set_file_path(const char* p);
+        const char* get_file_path();
+        void        init_graph();
+        void        add_node(string name, string label, string shape);
+        void        add_connection(string source_node_name,
                                    string sink_node_name, 
                                    string connection_label);
-		void 		save_graph();
-		// void 		save_graph(sig_map_t signals);
-	private:
-		const char*   file_path_;
-		FILE* 		  file_ptr_;
-		FILE* 		  get_file_ptr();
-		void 		  open_file();
-		void 		  close_file();
+        void        save_graph();
+        // void         save_graph(sig_map_t signals);
+    private:
+        const char*   file_path_;
+        FILE*         file_ptr_;
+        FILE*         get_file_ptr();
+        void          open_file();
+        void          close_file();
 };
 
 #endif
