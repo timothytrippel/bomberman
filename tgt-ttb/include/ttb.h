@@ -104,6 +104,10 @@ class SignalGraph {
                                 ivl_signal_t sink_signal, 
                                 string       ws);
 
+        void process_lpm_mux(ivl_lpm_t    lpm, 
+                             ivl_signal_t sink_signal, 
+                             string       ws);
+
         // Helper Functions
         const char* get_lpm_type_as_string(ivl_lpm_t lpm);
         const char* get_logic_type_as_string(ivl_net_logic_t logic);
