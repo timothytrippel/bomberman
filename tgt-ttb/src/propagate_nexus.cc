@@ -62,6 +62,7 @@ void SignalGraph::propagate_nexus(ivl_nexus_t nexus, ivl_signal_t sink_signal, s
         } else if ((source_constant = ivl_nexus_ptr_con(nexus_ptr))) {
             // Nexus target object is a CONSTANT
             fprintf(stdout, " -- CONSTANT --\n");
+            Error::unknown_nexus_type_error();
             // propagate_constant(source_constant);
         } else {
             // Nexus target object is UNKNOWN

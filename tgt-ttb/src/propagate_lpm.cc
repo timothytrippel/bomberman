@@ -123,6 +123,25 @@ void SignalGraph::track_lpm_connection_slice(unsigned int      msb,
 // ----------------------------------------------------------------------------------
 // ------------------------------- LPM Device Types ---------------------------------
 // ----------------------------------------------------------------------------------
+void SignalGraph::process_lpm_basic(ivl_lpm_t    lpm, 
+                                    ivl_signal_t sink_signal, 
+                                    string       ws) {
+
+    // Device Input Nexus
+    ivl_nexus_t input_nexus = NULL;
+
+    // Propagate input(s)
+    // Iterate over data input nexi
+    for (unsigned int i = 0; i < ivl_lpm_size(lpm); i++) {
+
+        // Get data input nexus
+        input_nexus = ivl_lpm_data(lpm, i);
+
+        // Propagate data input nexus
+        propagate_nexus(input_nexus, sink_signal, ws + "    ");
+    }    
+}
+
 void SignalGraph::process_lpm_part_select(ivl_lpm_t    lpm, 
                                           ivl_signal_t sink_signal, 
                                           string       ws) {
@@ -187,9 +206,10 @@ void SignalGraph::process_lpm_concat(ivl_lpm_t    lpm,
 
         // Each input nexus should only have 2 nexus pointers:
         // 1) one to the LPM device and 2) a (non-local) signal.
-        assert(ivl_nexus_ptrs(input_nexus) == 2 && 
-            "NOT-SUPPORTED: LPM-CONCAT device input \
-            nexus with more than 2 nexus pointers.\n");
+        printf("%sNum nexus ptrs: %d\n", ws.c_str(), ivl_nexus_ptrs(input_nexus));
+        // assert(ivl_nexus_ptrs(input_nexus) == 2 && 
+            // "NOT-SUPPORTED: LPM-CONCAT device input \
+            // nexus with more than 2 nexus pointers.\n");
 
         // Find input nexus ptr to a signal object
         for (unsigned int j = 0; j < ivl_nexus_ptrs(input_nexus); j++) {
@@ -232,15 +252,7 @@ void SignalGraph::process_lpm_mux(ivl_lpm_t    lpm,
     propagate_nexus(input_nexus, sink_signal, ws + "    ");
 
     // Propagate DATA input(s)
-    // Iterate over data input nexi
-    for (unsigned int i = 0; i < ivl_lpm_size(lpm); i++) {
-
-        // Get data input nexus
-        input_nexus = ivl_lpm_data(lpm, i);
-
-        // Propagate data input nexus
-        propagate_nexus(input_nexus, sink_signal, ws + "    ");
-    }    
+    process_lpm_basic(lpm, sink_signal, ws);
 }
 
 // ----------------------------------------------------------------------------------
@@ -253,78 +265,24 @@ void SignalGraph::propagate_lpm(ivl_lpm_t    lpm,
 
     // Add connections
     switch (ivl_lpm_type(lpm)) {
-        case IVL_LPM_ABS:
-            Error::not_supported_error("LPM device type (IVL_LPM_ABS)");
-            break;
-        case IVL_LPM_ADD:
-            Error::not_supported_error("LPM device type (IVL_LPM_ADD)");
-            break;
-        case IVL_LPM_ARRAY:
-            Error::not_supported_error("LPM device type (IVL_LPM_ARRAY)");
-            break;
-        case IVL_LPM_CAST_INT:
-            Error::not_supported_error("LPM device type (IVL_LPM_CAST_INT)");
-            break;
-        case IVL_LPM_CAST_INT2:
-            Error::not_supported_error("LPM device type (IVL_LPM_CAST_INT2)");
-            break;
-        case IVL_LPM_CAST_REAL:
-            Error::not_supported_error("LPM device type (IVL_LPM_CAST_REAL)");
-            break;
         case IVL_LPM_CONCAT:
         case IVL_LPM_CONCATZ:
-
             // ivl_lpm_q() returns the output nexus. If the 
             // output nexus is NOT the same as the root nexus, 
             // then we do not propagate because this nexus is an 
             // to input to an LPM, not an output.
+
             if (ivl_lpm_q(lpm) == sink_nexus) {
                 process_lpm_concat(lpm, sink_signal, ws);
             }
 
             break;
-        case IVL_LPM_CMP_EEQ:
-            Error::not_supported_error("LPM device type (IVL_LPM_CMP_EEQ)");
-            break;
-        case IVL_LPM_CMP_EQX:
-            Error::not_supported_error("LPM device type (IVL_LPM_CMP_EQX)");
-            break;
-        case IVL_LPM_CMP_EQZ:
-            Error::not_supported_error("LPM device type (IVL_LPM_CMP_EQZ)");
-            break;
-        case IVL_LPM_CMP_EQ:
-            Error::not_supported_error("LPM device type (IVL_LPM_CMP_EQ)");
-            break;
-        case IVL_LPM_CMP_GE:
-            Error::not_supported_error("LPM device type (IVL_LPM_CMP_GE)");
-            break;
-        case IVL_LPM_CMP_GT:
-            Error::not_supported_error("LPM device type (IVL_LPM_CMP_GT)");
-            break;
-        case IVL_LPM_CMP_NE:
-            Error::not_supported_error("LPM device type (IVL_LPM_CMP_NE)");
-            break;
-        case IVL_LPM_CMP_NEE:
-            Error::not_supported_error("LPM device type (IVL_LPM_CMP_NEE)");
-            break;
-        case IVL_LPM_DIVIDE:
-            Error::not_supported_error("LPM device type (IVL_LPM_DIVIDE)");
-            break;
-        case IVL_LPM_FF:
-            Error::not_supported_error("LPM device type (IVL_LPM_FF)");
-            break;
-        case IVL_LPM_MOD:
-            Error::not_supported_error("LPM device type (IVL_LPM_MOD)");
-            break;
-        case IVL_LPM_MULT:
-            Error::not_supported_error("LPM device type (IVL_LPM_MULT)");
-            break;
         case IVL_LPM_MUX:
-            
             // ivl_lpm_q() returns the output nexus. If the 
             // output nexus is NOT the same as the root nexus, 
             // then we do not propagate because this nexus is an 
             // to input to an LPM, not an output.
+
             if (ivl_lpm_q(lpm) == sink_nexus) {
                 process_lpm_mux(lpm, sink_signal, ws);
             }
@@ -342,26 +300,57 @@ void SignalGraph::propagate_lpm(ivl_lpm_t    lpm,
             }
 
             break;
+        case IVL_LPM_ADD:
+        case IVL_LPM_CMP_EEQ:
+        case IVL_LPM_CMP_EQX:
+        case IVL_LPM_CMP_EQZ:
+        case IVL_LPM_CMP_EQ:
+        case IVL_LPM_CMP_GE:
+        case IVL_LPM_CMP_GT:
+        case IVL_LPM_CMP_NE:
+        case IVL_LPM_CMP_NEE:
+        case IVL_LPM_DIVIDE:
+        case IVL_LPM_MULT:
         case IVL_LPM_POW:
-            Error::not_supported_error("LPM device type (IVL_LPM_POW)");
-            break;
         case IVL_LPM_RE_AND:
-            Error::not_supported_error("LPM device type (IVL_LPM_RE_AND)");
-            break;
         case IVL_LPM_RE_NAND:
-            Error::not_supported_error("LPM device type (IVL_LPM_RE_NAND)");
-            break;
         case IVL_LPM_RE_NOR:
-            Error::not_supported_error("LPM device type (IVL_LPM_RE_NOR)");
-            break;
         case IVL_LPM_RE_OR:
-            Error::not_supported_error("LPM device type (IVL_LPM_RE_OR)");
-            break;
         case IVL_LPM_RE_XNOR:
-            Error::not_supported_error("LPM device type (IVL_LPM_RE_XNOR)");
-            break;
         case IVL_LPM_RE_XOR:
-            Error::not_supported_error("LPM device type (IVL_LPM_RE_XOR)");
+        case IVL_LPM_SHIFTL:
+        case IVL_LPM_SHIFTR:
+        case IVL_LPM_SUB:
+            // ivl_lpm_q() returns the output nexus. If the 
+            // output nexus is NOT the same as the root nexus, 
+            // then we do not propagate because this nexus is an 
+            // to input to an LPM, not an output.
+
+            if (ivl_lpm_q(lpm) == sink_nexus) {
+                process_lpm_basic(lpm, sink_signal, ws);
+            }
+
+            break;
+        case IVL_LPM_ABS:
+            Error::not_supported_error("LPM device type (IVL_LPM_ABS)");
+            break;
+        case IVL_LPM_ARRAY:
+            Error::not_supported_error("LPM device type (IVL_LPM_ARRAY)");
+            break;
+        case IVL_LPM_CAST_INT:
+            Error::not_supported_error("LPM device type (IVL_LPM_CAST_INT)");
+            break;
+        case IVL_LPM_CAST_INT2:
+            Error::not_supported_error("LPM device type (IVL_LPM_CAST_INT2)");
+            break;
+        case IVL_LPM_CAST_REAL:
+            Error::not_supported_error("LPM device type (IVL_LPM_CAST_REAL)");
+            break;
+        case IVL_LPM_FF:
+            Error::not_supported_error("LPM device type (IVL_LPM_FF)");
+            break;
+        case IVL_LPM_MOD:
+            Error::not_supported_error("LPM device type (IVL_LPM_MOD)");
             break;
         case IVL_LPM_REPEAT:
             Error::not_supported_error("LPM device type (IVL_LPM_REPEAT)");
@@ -369,17 +358,8 @@ void SignalGraph::propagate_lpm(ivl_lpm_t    lpm,
         case IVL_LPM_SFUNC:
             Error::not_supported_error("LPM device type (IVL_LPM_SFUNC)");
             break;
-        case IVL_LPM_SHIFTL:
-            Error::not_supported_error("LPM device type (IVL_LPM_SHIFTL)");
-            break;
-        case IVL_LPM_SHIFTR:
-            Error::not_supported_error("LPM device type (IVL_LPM_SHIFTR)");
-            break;
         case IVL_LPM_SIGN_EXT:
             Error::not_supported_error("LPM device type (IVL_LPM_SIGN_EXT)");
-            break;
-        case IVL_LPM_SUB:
-            Error::not_supported_error("LPM device type (IVL_LPM_SUB)");
             break;
         case IVL_LPM_SUBSTITUTE:
             Error::not_supported_error("LPM device type (IVL_LPM_SUBSTITUTE)");
