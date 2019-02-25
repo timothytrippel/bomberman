@@ -45,17 +45,21 @@ class SignalGraph {
         // Helper Functions
         static string       get_signal_fullname(ivl_signal_t signal);
         static string       get_constant_fullname(ivl_net_const_t constant);
-        static string       get_connection_label();
         static unsigned int get_signal_msb(ivl_signal_t signal);
         static unsigned int get_signal_lsb(ivl_signal_t signal);
+        static unsigned int get_const_msb(ivl_net_const_t constant);
         static string       get_signal_node_label(ivl_signal_t signal);
+        static string       get_const_node_label(ivl_net_const_t constant);
 
         static string       get_signal_connection_label(ivl_signal_t source_signal, 
                                                         ivl_signal_t sink_signal);
 
-        static string       get_signal_connection_label(ivl_signal_t source_signal, 
-                                                        ivl_signal_t sink_signal, 
-                                                        SliceInfo    signal_slice);
+        static string       get_sliced_signal_connection_label(ivl_signal_t source_signal, 
+                                                               ivl_signal_t sink_signal, 
+                                                               SliceInfo    signal_slice);
+
+        static string       get_const_connection_label(ivl_net_const_t source_constant, 
+                                                       ivl_signal_t    sink_signal);
     private:
         // (Private) Member Variables
         unsigned long     num_connections_; // number of connections enumerated in design
@@ -70,7 +74,7 @@ class SignalGraph {
         void add_constant_connection(ivl_signal_t    sink_signal, 
                                      ivl_net_const_t source_constant,
                                      string          ws);
-        
+
         void add_connection(ivl_signal_t sink_signal, 
                             ivl_signal_t source_signal,  
                             string       ws);
@@ -110,14 +114,8 @@ class SignalGraph {
                                string       ws);
 
         void propagate_constant(ivl_net_const_t constant,
-                                ivl_nexus_t  sink_nexus, 
                                 ivl_signal_t sink_signal, 
                                 string       ws);
-
-        // void process_constant(ivl_net_const_t constant,
-        //                            ivl_nexus_t  sink_nexus, 
-        //                            ivl_signal_t sink_signal, 
-        //                            string       ws);
 
         // Helper Functions
         const char* get_lpm_type_as_string(ivl_lpm_t lpm);

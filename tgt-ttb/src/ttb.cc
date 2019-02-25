@@ -53,29 +53,30 @@ sig_map_t SignalGraph::get_signals_map() {
 }
 
 // ----------------------------------------------------------------------------------
-// ------------------------------- Helper Functions ---------------------------------
+// --------------------------- Static Helper Functions ------------------------------
 // ----------------------------------------------------------------------------------
 string SignalGraph::get_signal_fullname(ivl_signal_t signal){
-    string scopename = string(ivl_scope_name(ivl_signal_scope(signal))); 
-    string basename  = string(ivl_signal_basename(signal));
-    string fullname  = string(scopename + string(".") + basename);
+    string scopename = ivl_scope_name(ivl_signal_scope(signal)); 
+    string basename  = ivl_signal_basename(signal);
+    string fullname  = scopename + string(".") + basename;
 
     return fullname;
 }
 
 string SignalGraph::get_constant_fullname(ivl_net_const_t constant){
-    string scopename = string(ivl_scope_name(ivl_const_scope(constant))); 
+    string scopename = ivl_scope_name(ivl_const_scope(constant)); 
     string basename  = string(ivl_const_bits(constant), (size_t)ivl_const_width(constant));
     reverse(basename.begin(), basename.end());
-    string fullname  = string(scopename + string(".const_") + basename);
+    string fullname  = scopename + string(".const_") + basename;
 
     return fullname;
 }
 
 unsigned int SignalGraph::get_signal_msb(ivl_signal_t signal) {
     if (ivl_signal_packed_dimensions(signal) > 0) {
-        // Check LSB is not negative
-        assert((ivl_signal_packed_msb(signal, 0) >= 0) && "NOT-SUPPORTED: negative MSB index.\n");
+        // Check MSB is not negative
+        assert((ivl_signal_packed_msb(signal, 0) >= 0) && \
+            "NOT-SUPPORTED: negative MSB index.\n");
         
         return ivl_signal_packed_msb(signal, 0);
     } else {
@@ -86,12 +87,17 @@ unsigned int SignalGraph::get_signal_msb(ivl_signal_t signal) {
 unsigned int SignalGraph::get_signal_lsb(ivl_signal_t signal) {
     if (ivl_signal_packed_dimensions(signal) > 0) {
         // Check LSB is not negative
-        // assert((ivl_signal_packed_lsb(signal, 0) >= 0) && "NOT-SUPPORTED: negative LSB index.\n");
+        assert((ivl_signal_packed_lsb(signal, 0) >= 0) && \
+            "NOT-SUPPORTED: negative LSB index.\n");
 
         return ivl_signal_packed_lsb(signal, 0);
     } else {
         return 0;
     }
+}
+
+unsigned int SignalGraph::get_const_msb(ivl_net_const_t constant) {
+    return ivl_const_width(constant) - 1;
 }
 
 string SignalGraph::get_signal_node_label(ivl_signal_t signal) {
@@ -106,7 +112,18 @@ string SignalGraph::get_signal_node_label(ivl_signal_t signal) {
     return ss.str();
 }
 
-string SignalGraph::get_signal_connection_label(ivl_signal_t source_signal, ivl_signal_t sink_signal) {
+string SignalGraph::get_const_node_label(ivl_net_const_t constant) {
+    stringstream ss;
+
+    ss << "[";
+    ss << get_const_msb(constant);
+    ss << ":0]";
+
+    return ss.str();
+}
+
+string SignalGraph::get_signal_connection_label(ivl_signal_t source_signal, 
+                                                ivl_signal_t sink_signal) {
     stringstream ss;
     
     ss << get_signal_node_label(source_signal);
@@ -116,7 +133,21 @@ string SignalGraph::get_signal_connection_label(ivl_signal_t source_signal, ivl_
     return ss.str();
 }
 
-string SignalGraph::get_signal_connection_label(ivl_signal_t source_signal, ivl_signal_t sink_signal, SliceInfo signal_slice) {
+string SignalGraph::get_const_connection_label(ivl_net_const_t source_constant, 
+                                               ivl_signal_t    sink_signal) {
+
+    stringstream ss;
+    
+    ss << get_const_node_label(source_constant);
+    ss << "->";
+    ss << get_signal_node_label(sink_signal);
+
+    return ss.str();
+}
+
+string SignalGraph::get_sliced_signal_connection_label(ivl_signal_t source_signal, 
+                                                       ivl_signal_t sink_signal, 
+                                                       SliceInfo    signal_slice) {
     unsigned int sink_msb;
     unsigned int sink_lsb;
     unsigned int source_msb;
@@ -213,43 +244,38 @@ void SignalGraph::find_signals(ivl_scope_t scope) {
 void SignalGraph::add_constant_connection(ivl_signal_t    sink_signal, 
                                           ivl_net_const_t source_constant,
                                           string          ws) {
-    string       source_signal_name;
-    string       sink_signal_name;
-    stringstream const_width_label;
-    stringstream connection_label;
+    
+    string source_constant_name;
+    string source_constant_label;
+    string sink_signal_name;
+    string connection_label;
 
-    // Get constant bit string
-    string const_bit_string = ivl_const_bits(source_constant);
-
-    // Reverse constant bit string as it is stored LSB->MSB.
-    // Thus, correcting the string to display MSB->LSB.
-    reverse(const_bit_string.begin(), const_bit_string.end());
-
-    // Get constant width
-    unsigned int const_msb = ivl_const_width(source_constant) - 1;
-    unsigned int const_lsb = 0;
+    // Get constant node name and label
+    source_constant_name  = get_constant_fullname(source_constant);
+    source_constant_label = get_const_node_label(source_constant);
     
     // Get sink signal names
     sink_signal_name = get_signal_fullname(sink_signal);
 
-    // Compute CONSTANT width label
-    const_width_label << "[";
-    const_width_label << const_msb;
-    const_width_label << ":";
-    const_width_label << const_lsb;
-    const_width_label << "]";
+    // Get connection label
+    connection_label = get_const_connection_label(source_constant, sink_signal);
 
-    // Compute connection label
-    connection_label << "[";
-    connection_label << const_bit_string;
-    connection_label << "]->";
-    connection_label << get_signal_node_label(sink_signal);
+    // Debug Print
+    fprintf(stdout, "%sADDING CONSTANT NODE (%s)\n", 
+        ws.c_str(), 
+        source_constant_name.c_str());
 
     // Add CONSTANT node to dot graph
-    dg_.add_node(const_bit_string, const_width_label.str(), CONST_NODE_SHAPE);
+    dg_.add_node(source_constant_name, source_constant_label, CONST_NODE_SHAPE);
+
+    // Debug Print
+    fprintf(stdout, "%sADDING CONNECTION from %s to %s\n", 
+        ws.c_str(), 
+        source_constant_name.c_str(), 
+        sink_signal_name.c_str());
 
     // Add connection to dot graph
-    dg_.add_connection(const_bit_string, sink_signal_name, connection_label.str());
+    dg_.add_connection(source_constant_name, sink_signal_name, connection_label);
 }
 
 void SignalGraph::add_connection(ivl_signal_t sink_signal, 
@@ -267,7 +293,11 @@ void SignalGraph::add_connection(ivl_signal_t sink_signal,
 
         signals_map_[sink_signal].push_back(source_signal);
 
-        fprintf(stdout, "%sADDING CONNECTION from %s to %s\n", ws.c_str(), get_signal_fullname(source_signal).c_str(), get_signal_fullname(sink_signal).c_str());
+        // Debug Print
+        fprintf(stdout, "%sADDING CONNECTION from %s to %s\n", 
+            ws.c_str(), 
+            get_signal_fullname(source_signal).c_str(), 
+            get_signal_fullname(sink_signal).c_str());
         
         // Get signal names
         source_signal_name = get_signal_fullname(source_signal);
@@ -281,7 +311,9 @@ void SignalGraph::add_connection(ivl_signal_t sink_signal,
             SliceInfo signal_slice = signal_slices_.back();
 
             // Get connection label
-            connection_label = get_signal_connection_label(source_signal, sink_signal, signal_slice);
+            connection_label = get_sliced_signal_connection_label(source_signal, 
+                                                                  sink_signal, 
+                                                                  signal_slice);
 
             // pop slice info from stack
             signal_slices_.pop_back();
