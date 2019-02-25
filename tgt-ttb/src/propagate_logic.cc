@@ -22,7 +22,7 @@ nexus is connected to the INPUT of a LOGIC device.
 // ----------------------------------------------------------------------------------
 // ------------------------------- Helper Functions ---------------------------------
 // ----------------------------------------------------------------------------------
-const char* SignalGraph::get_logic_type_as_string(ivl_net_logic_t logic) {
+const char* get_logic_type_as_string(ivl_net_logic_t logic) {
     switch (ivl_logic_type(logic)) {
         case IVL_LO_NONE:
             return "IVL_LO_NONE";
@@ -80,10 +80,11 @@ const char* SignalGraph::get_logic_type_as_string(ivl_net_logic_t logic) {
 // ----------------------------------------------------------------------------------
 // --------------------------- Main LOGIC Progation ---------------------------------
 // ----------------------------------------------------------------------------------
-void SignalGraph::propagate_logic(ivl_net_logic_t logic, 
-                                  ivl_nexus_t     sink_nexus, 
-                                  ivl_signal_t    sink_signal,
-                                  string          ws) {
+void propagate_logic(ivl_net_logic_t logic, 
+                     ivl_nexus_t     sink_nexus,
+                     ivl_signal_t    sink_signal,
+                     SignalGraph*    sg,
+                     string          ws) {
 
     // LOGIC device pin nexus
     ivl_nexus_t pin_nexus = NULL;
@@ -103,7 +104,7 @@ void SignalGraph::propagate_logic(ivl_net_logic_t logic,
             pin_nexus = ivl_logic_pin(logic, i);
 
             // Propagate the nexus
-            propagate_nexus(pin_nexus, sink_signal, ws + "  ");
+            propagate_nexus(pin_nexus, sink_signal, sg, ws + "  ");
         }
     }
 }

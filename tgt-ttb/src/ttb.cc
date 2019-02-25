@@ -20,42 +20,9 @@ Graphviz .dot file.
 #include "error.h"
 
 // ----------------------------------------------------------------------------------
-// ------------------------------- Constructors -------------------------------------
+// ------------------------------- Helper Functions ---------------------------------
 // ----------------------------------------------------------------------------------
-SignalGraph::SignalGraph():
-    num_connections_(0),
-    signals_map_(),
-    dg_(),
-    signal_slices_() {}
-
-SignalGraph::SignalGraph(const char* dot_graph_fname) {
-    // Initialize Connection Counter
-    num_connections_ = 0;
-
-    // Initialize DotGraph
-    dg_ = DotGraph(dot_graph_fname);
-    dg_.init_graph();
-}
-
-// ----------------------------------------------------------------------------------
-// ------------------------------- Getters ------------------------------------------
-// ----------------------------------------------------------------------------------
-unsigned long SignalGraph::get_num_connections() {
-    return num_connections_;
-}
-
-unsigned long SignalGraph::get_num_signals() {
-    return signals_map_.size();
-}
-
-sig_map_t SignalGraph::get_signals_map() {
-    return signals_map_;
-}
-
-// ----------------------------------------------------------------------------------
-// --------------------------- Static Helper Functions ------------------------------
-// ----------------------------------------------------------------------------------
-string SignalGraph::get_signal_fullname(ivl_signal_t signal){
+string get_signal_fullname(ivl_signal_t signal) {
     string scopename = ivl_scope_name(ivl_signal_scope(signal)); 
     string basename  = ivl_signal_basename(signal);
     string fullname  = scopename + string(".") + basename;
@@ -63,7 +30,7 @@ string SignalGraph::get_signal_fullname(ivl_signal_t signal){
     return fullname;
 }
 
-string SignalGraph::get_constant_fullname(ivl_net_const_t constant){
+string get_constant_fullname(ivl_net_const_t constant) {
     string scopename = ivl_scope_name(ivl_const_scope(constant)); 
     string basename  = string(ivl_const_bits(constant), (size_t)ivl_const_width(constant));
     reverse(basename.begin(), basename.end());
@@ -72,7 +39,7 @@ string SignalGraph::get_constant_fullname(ivl_net_const_t constant){
     return fullname;
 }
 
-unsigned int SignalGraph::get_signal_msb(ivl_signal_t signal) {
+unsigned int get_signal_msb(ivl_signal_t signal) {
     if (ivl_signal_packed_dimensions(signal) > 0) {
         // Check MSB is not negative
         assert((ivl_signal_packed_msb(signal, 0) >= 0) && \
@@ -84,7 +51,7 @@ unsigned int SignalGraph::get_signal_msb(ivl_signal_t signal) {
     }
 }
 
-unsigned int SignalGraph::get_signal_lsb(ivl_signal_t signal) {
+unsigned int get_signal_lsb(ivl_signal_t signal) {
     if (ivl_signal_packed_dimensions(signal) > 0) {
         // Check LSB is not negative
         assert((ivl_signal_packed_lsb(signal, 0) >= 0) && \
@@ -96,11 +63,14 @@ unsigned int SignalGraph::get_signal_lsb(ivl_signal_t signal) {
     }
 }
 
-unsigned int SignalGraph::get_const_msb(ivl_net_const_t constant) {
+unsigned int get_const_msb(ivl_net_const_t constant) {
     return ivl_const_width(constant) - 1;
 }
 
-string SignalGraph::get_signal_node_label(ivl_signal_t signal) {
+// ----------------------------------------------------------------------------------
+// ------------------------ Dot Graph Helper Functions ------------------------------
+// ----------------------------------------------------------------------------------
+string get_signal_node_label(ivl_signal_t signal) {
     stringstream ss;
 
     ss << "[";
@@ -112,7 +82,7 @@ string SignalGraph::get_signal_node_label(ivl_signal_t signal) {
     return ss.str();
 }
 
-string SignalGraph::get_const_node_label(ivl_net_const_t constant) {
+string get_const_node_label(ivl_net_const_t constant) {
     stringstream ss;
 
     ss << "[";
@@ -122,7 +92,7 @@ string SignalGraph::get_const_node_label(ivl_net_const_t constant) {
     return ss.str();
 }
 
-string SignalGraph::get_signal_connection_label(ivl_signal_t source_signal, 
+string get_signal_connection_label(ivl_signal_t source_signal, 
                                                 ivl_signal_t sink_signal) {
     stringstream ss;
     
@@ -133,8 +103,8 @@ string SignalGraph::get_signal_connection_label(ivl_signal_t source_signal,
     return ss.str();
 }
 
-string SignalGraph::get_const_connection_label(ivl_net_const_t source_constant, 
-                                               ivl_signal_t    sink_signal) {
+string get_const_connection_label(ivl_net_const_t source_constant, 
+                                  ivl_signal_t    sink_signal) {
 
     stringstream ss;
     
@@ -145,9 +115,9 @@ string SignalGraph::get_const_connection_label(ivl_net_const_t source_constant,
     return ss.str();
 }
 
-string SignalGraph::get_sliced_signal_connection_label(ivl_signal_t source_signal, 
-                                                       ivl_signal_t sink_signal, 
-                                                       SliceInfo    signal_slice) {
+string get_sliced_signal_connection_label(ivl_signal_t source_signal, 
+                                          ivl_signal_t sink_signal, 
+                                          SliceInfo    signal_slice) {
     unsigned int sink_msb;
     unsigned int sink_lsb;
     unsigned int source_msb;
@@ -182,161 +152,15 @@ string SignalGraph::get_sliced_signal_connection_label(ivl_signal_t source_signa
     return ss.str();
 }
 
-// ----------------------------------------------------------------------------------
-// ------------------------------- Dot Graph Management -----------------------------
-// ----------------------------------------------------------------------------------
-void SignalGraph::save_dot_graph() {
-    dg_.save_graph();
-}
+void find_combinational_connections(SignalGraph* sg) {
+    // Get signals adjacency list
+    sig_map_t signals_map = sg->get_signals_map();
 
-// ----------------------------------------------------------------------------------
-// ------------------------------- Signal Enumeration -------------------------------
-// ----------------------------------------------------------------------------------
-void SignalGraph::find_all_signals(ivl_scope_t* scopes, unsigned int num_scopes) {
-    for (unsigned int i = 0; i < num_scopes; i++){
-        find_signals(scopes[i]);
-    }
-}
-
-void SignalGraph::find_signals(ivl_scope_t scope) {
-    // Current IVL signal
-    ivl_signal_t current_signal;
-
-    // Recurse into sub-modules
-    for (unsigned int i = 0; i < ivl_scope_childs(scope); i++){
-        find_signals(ivl_scope_child(scope, i));        
-    }
-
-    // Scope is a base scope
-    unsigned int num_signals = ivl_scope_sigs(scope);
-    for (unsigned int i = 0; i < num_signals; i++){
-        // Get current signal
-        current_signal = ivl_scope_sig(scope, i);
-
-        // Check if signal is arrayed
-        // @TODO: support arrayed signals 
-        // (i.e. signals with more than one nexus)
-        Error::check_signal_not_arrayed(current_signal);
-
-        // Check if signal is multi-dimensional
-        // @TODO: support multi-dimensional signals 
-        // (i.e. signals packed dimensions like memories)
-        Error::check_signal_not_multidimensional(current_signal);
-
-        // Check if signal already exists in map
-        Error::check_signal_exists_in_map(signals_map_, current_signal);
-
-        // Add signal to graph
-        // Ignore local (IVL) generated signals.
-        if (!ivl_signal_local(current_signal)) {
-            // signal was defined in HDL
-            signals_map_[current_signal] = vector<ivl_signal_t>();
-            dg_.add_node(get_signal_fullname(current_signal), 
-                         get_signal_node_label(current_signal), 
-                         SIGNAL_NODE_SHAPE);
-        }
-    } 
-}
-
-// ----------------------------------------------------------------------------------
-// ------------------------------- Connection Enumeration ---------------------------
-// ----------------------------------------------------------------------------------
-void SignalGraph::add_constant_connection(ivl_signal_t    sink_signal, 
-                                          ivl_net_const_t source_constant,
-                                          string          ws) {
-    
-    string source_constant_name;
-    string source_constant_label;
-    string sink_signal_name;
-    string connection_label;
-
-    // Get constant node name and label
-    source_constant_name  = get_constant_fullname(source_constant);
-    source_constant_label = get_const_node_label(source_constant);
-    
-    // Get sink signal names
-    sink_signal_name = get_signal_fullname(sink_signal);
-
-    // Get connection label
-    connection_label = get_const_connection_label(source_constant, sink_signal);
-
-    // Debug Print
-    fprintf(stdout, "%sADDING CONSTANT NODE (%s)\n", 
-        ws.c_str(), 
-        source_constant_name.c_str());
-
-    // Add CONSTANT node to dot graph
-    dg_.add_node(source_constant_name, source_constant_label, CONST_NODE_SHAPE);
-
-    // Debug Print
-    fprintf(stdout, "%sADDING CONNECTION from %s to %s\n", 
-        ws.c_str(), 
-        source_constant_name.c_str(), 
-        sink_signal_name.c_str());
-
-    // Add connection to dot graph
-    dg_.add_connection(source_constant_name, sink_signal_name, connection_label);
-}
-
-void SignalGraph::add_connection(ivl_signal_t sink_signal, 
-                                 ivl_signal_t source_signal, 
-                                 string       ws) {
-
-    string source_signal_name;
-    string sink_signal_name;
-    string connection_label;
-
-    // Only add connections to signals already in graph.
-    // Thus, ignoring local IVL generated signals as these
-    // are not added to the graph when it is initialized.
-    if (signals_map_.count(source_signal)) {
-
-        signals_map_[sink_signal].push_back(source_signal);
-
-        // Debug Print
-        fprintf(stdout, "%sADDING CONNECTION from %s to %s\n", 
-            ws.c_str(), 
-            get_signal_fullname(source_signal).c_str(), 
-            get_signal_fullname(sink_signal).c_str());
-        
-        // Get signal names
-        source_signal_name = get_signal_fullname(source_signal);
-        sink_signal_name   = get_signal_fullname(sink_signal);
-
-        // Check if connection is sliced
-        if (signal_slices_.size()) {
-            // SLICED connection
-
-            // Get signal slice info
-            SliceInfo signal_slice = signal_slices_.back();
-
-            // Get connection label
-            connection_label = get_sliced_signal_connection_label(source_signal, 
-                                                                  sink_signal, 
-                                                                  signal_slice);
-
-            // pop slice info from stack
-            signal_slices_.pop_back();
-        } else {
-            // FULL connection
-
-            // Get connection label
-            connection_label = get_signal_connection_label(source_signal, sink_signal);
-        }
-
-        // Add connection to dot graph
-        dg_.add_connection(source_signal_name, sink_signal_name, connection_label);
-    } else if (!ivl_signal_local(source_signal)) {
-        Error::connecting_signal_not_in_graph(source_signal);
-    }
-}
-
-void SignalGraph::find_all_connections() {
     // Create a signals map iterator
-    sig_map_t::iterator it = signals_map_.begin();
+    sig_map_t::iterator it = signals_map.begin();
  
     // Iterate over all signals in adjacency list
-    while (it != signals_map_.end()) {  
+    while (it != signals_map.end()) {  
         ivl_signal_t sink_signal = it->first;
 
         // Print signal name -- signal dimensions
@@ -352,7 +176,7 @@ void SignalGraph::find_all_connections() {
         assert(sink_nexus);
 
         // Propagate the nexus
-        propagate_nexus(sink_nexus, sink_signal, "  ");
+        propagate_nexus(sink_nexus, sink_signal, sg, "  ");
 
         // Increment the iterator
         it++;
@@ -362,22 +186,22 @@ void SignalGraph::find_all_connections() {
 // ----------------------------------------------------------------------------------
 // ------------------------ IVL Target Entry Point "main" ---------------------------
 // ----------------------------------------------------------------------------------
-int target_design(ivl_design_t des) {
-    ivl_scope_t*   roots     = 0;       // root scopes of the design
-    unsigned       num_roots = 0;       // number of root scopes of the design
-    Reporter       reporter;            // reporter object (prints messages)
-    SignalGraph    sg;                  // signal graph object
+int target_design(ivl_design_t design) {
+    ivl_scope_t*   roots     = 0; // root scopes of the design
+    unsigned       num_roots = 0; // number of root scopes of the design
+    Reporter       reporter;      // reporter object (prints messages)
+    SignalGraph    sg;            // signal graph object
 
     // Initialize reporter checking objects
     reporter = Reporter();
     reporter.init(LAUNCH_MESSAGE);
 
     // Initialize SignalGraph
-    sg = SignalGraph(ivl_design_flag(des, "-o"));
+    sg = SignalGraph(ivl_design_flag(design, "-o"));
     
     // Get root scopes (top level modules) of design
     reporter.print_message(SCOPE_EXPANSION_MESSAGE);
-    ivl_design_roots(des, &roots, &num_roots);
+    ivl_design_roots(design, &roots, &num_roots);
     Error::check_scope_types(roots, num_roots);
     reporter.root_scopes(roots, num_roots);
 
@@ -388,8 +212,10 @@ int target_design(ivl_design_t des) {
     reporter.signal_names(sg.get_signals_map());
 
     // Find signal-to-signal connections
-    reporter.print_message(CONNECTION_ENUM_MESSAGE);
-    sg.find_all_connections();
+    reporter.print_message(COMB_CONNECTION_ENUM_MESSAGE);
+    find_combinational_connections(&sg);      // Process COMBINATIONAL logic connections
+    reporter.print_message(BEHAVE_CONNECTION_ENUM_MESSAGE);
+    find_behavioral_connections(design, &sg); // Process BEHAVIORAL logic connections
     reporter.num_connections(sg.get_num_connections());
 
     // Save dot graph to file

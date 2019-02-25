@@ -78,7 +78,7 @@ void Error::check_scope_types(ivl_scope_t* scopes, unsigned int num_scopes) {
 
 void Error::check_signal_exists_in_map(sig_map_t signals, ivl_signal_t sig) {
     if (signals.count(sig) > 0) {
-        fprintf(stderr, "ERROR: signal (%s) already exists in hashmap.\n", SignalGraph::get_signal_fullname(sig).c_str());
+        fprintf(stderr, "ERROR: signal (%s) already exists in hashmap.\n", get_signal_fullname(sig).c_str());
         exit(DUPLICATE_SIGNALS_FOUND_ERROR);
     }
 } 
@@ -86,7 +86,7 @@ void Error::check_signal_exists_in_map(sig_map_t signals, ivl_signal_t sig) {
 void Error::check_signal_not_arrayed(ivl_signal_t signal) {
     // Check if signal is arrayed
     if (ivl_signal_dimensions(signal) > 0) {
-        fprintf(stderr, "NOT-SUPPORTED: arrayed signal (%s -- %d) encountered.\n", SignalGraph::get_signal_fullname(signal).c_str(), ivl_signal_dimensions(signal));
+        fprintf(stderr, "NOT-SUPPORTED: arrayed signal (%s -- %d) encountered.\n", get_signal_fullname(signal).c_str(), ivl_signal_dimensions(signal));
         exit(NOT_SUPPORTED_ERROR);
     } else {
         // Confirm that ARRAY_BASE is 0 (should be for non-arrayed signals)
@@ -100,7 +100,7 @@ void Error::check_signal_not_arrayed(ivl_signal_t signal) {
 void Error::check_signal_not_multidimensional(ivl_signal_t signal) {
     // Check if signal is multidimensional
     if (ivl_signal_packed_dimensions(signal) > 1) {
-        fprintf(stderr, "NOT-SUPPORTED: multidimensional signal (%s -- %d) encountered.\n", SignalGraph::get_signal_fullname(signal).c_str(), ivl_signal_packed_dimensions(signal));
+        fprintf(stderr, "NOT-SUPPORTED: multidimensional signal (%s -- %d) encountered.\n", get_signal_fullname(signal).c_str(), ivl_signal_packed_dimensions(signal));
         exit(NOT_SUPPORTED_ERROR);
     }
 }
@@ -116,11 +116,21 @@ void Error::unknown_nexus_type_error() {
 }
 
 void Error::connecting_signal_not_in_graph(ivl_signal_t signal) {
-    fprintf(stderr, "ERROR: attempting to connect signal (%s) not in graph.\n", SignalGraph::get_signal_fullname(signal).c_str());
+    fprintf(stderr, "ERROR: attempting to connect signal (%s) not in graph.\n", get_signal_fullname(signal).c_str());
     exit(NOT_SUPPORTED_ERROR);
 }
 
 void Error::unknown_part_select_lpm_type_error(ivl_lpm_type_t lpm_type) {
     fprintf(stderr, "ERROR: unkown part select LPM type (%d).\n", lpm_type);
     exit(NOT_SUPPORTED_ERROR);
+}
+
+void Error::processing_behavioral_connections() {
+    fprintf(stderr, "ERROR: processing behavioral logic connections.\n");
+    exit(BEHAVIORAL_CONNECTIONS_ERROR);
+}
+
+void Error::unknown_statement_type(unsigned int statement_type) {
+    fprintf(stderr, "ERROR: uknown statment type (%d).\n", statement_type);
+    exit(BEHAVIORAL_CONNECTIONS_ERROR);
 }

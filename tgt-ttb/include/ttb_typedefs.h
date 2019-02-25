@@ -22,10 +22,11 @@ using namespace std;
 #include  <ivl_target.h>
 
 // Progress Messages
-#define LAUNCH_MESSAGE          "Entering TTB Target Module..."
-#define SCOPE_EXPANSION_MESSAGE "Identifying top-level modules..."
-#define SIGNAL_ENUM_MESSAGE     "Enumerating all signals..."
-#define CONNECTION_ENUM_MESSAGE "Enumerating all signal-to-signal connections..."
+#define LAUNCH_MESSAGE                 "Entering TTB Target Module..."
+#define SCOPE_EXPANSION_MESSAGE        "Identifying top-level modules..."
+#define SIGNAL_ENUM_MESSAGE            "Enumerating all signals..."
+#define COMB_CONNECTION_ENUM_MESSAGE   "Enumerating all combinational logic connections..."
+#define BEHAVE_CONNECTION_ENUM_MESSAGE "Enumerating all behavioral logic connections..."
 
 // Define Indexes
 #define LOGIC_OUTPUT_PIN_NEXUS_INDEX      0

@@ -19,108 +19,105 @@ Graphviz .dot file.
 #include  <ivl_target.h>
 
 // TTB Headers
-#include "ttb_typedefs.h"
-#include "dot_graph.h"
+#include "signal_graph.h"
 
 using namespace std;
 
-class SignalGraph {
-    public:
-        // Constructors
-        SignalGraph();
-        SignalGraph(const char* dot_graph_fname);
+// ----------------------------------------------------------------------------------
+// ------------------------------- Helper Functions ---------------------------------
+// ----------------------------------------------------------------------------------
+string       get_signal_fullname(ivl_signal_t signal);
+string       get_constant_fullname(ivl_net_const_t constant);
+unsigned int get_signal_msb(ivl_signal_t signal);
+unsigned int get_signal_lsb(ivl_signal_t signal);
+unsigned int get_const_msb(ivl_net_const_t constant);
 
-        // Signal Enumeration
-        void find_all_signals(ivl_scope_t* scopes, unsigned int num_scopes);
+// ----------------------------------------------------------------------------------
+// ------------------------ Dot Graph Helper Functions ------------------------------
+// ----------------------------------------------------------------------------------
+string get_signal_node_label(ivl_signal_t signal);
+string get_const_node_label(ivl_net_const_t constant);
 
-        // Connection Enumeration
-        void find_all_connections();
+string get_signal_connection_label(ivl_signal_t source_signal, 
+                                   ivl_signal_t sink_signal);
 
-        // Getters
-        unsigned long get_num_connections();
-        unsigned long get_num_signals();
-        sig_map_t get_signals_map();
-        void save_dot_graph();
+string get_sliced_signal_connection_label(ivl_signal_t source_signal, 
+                                          ivl_signal_t sink_signal, 
+                                          SliceInfo    signal_slice);
 
-        // Helper Functions
-        static string       get_signal_fullname(ivl_signal_t signal);
-        static string       get_constant_fullname(ivl_net_const_t constant);
-        static unsigned int get_signal_msb(ivl_signal_t signal);
-        static unsigned int get_signal_lsb(ivl_signal_t signal);
-        static unsigned int get_const_msb(ivl_net_const_t constant);
-        static string       get_signal_node_label(ivl_signal_t signal);
-        static string       get_const_node_label(ivl_net_const_t constant);
+string get_const_connection_label(ivl_net_const_t source_constant, 
+                                  ivl_signal_t    sink_signal);
 
-        static string       get_signal_connection_label(ivl_signal_t source_signal, 
-                                                        ivl_signal_t sink_signal);
+// ----------------------------------------------------------------------------------
+// --------------------- Combinational Logic Processing -----------------------------
+// ----------------------------------------------------------------------------------
+void find_combinational_connections();
 
-        static string       get_sliced_signal_connection_label(ivl_signal_t source_signal, 
-                                                               ivl_signal_t sink_signal, 
-                                                               SliceInfo    signal_slice);
+// Nexus
+void propagate_nexus(ivl_nexus_t  nexus,
+                     ivl_signal_t sink_signal,
+                     SignalGraph* sg,
+                     string       ws);
 
-        static string       get_const_connection_label(ivl_net_const_t source_constant, 
-                                                       ivl_signal_t    sink_signal);
-    private:
-        // (Private) Member Variables
-        unsigned long     num_connections_; // number of connections enumerated in design
-        sig_map_t         signals_map_;     // signal graph (adjacency list)
-        DotGraph          dg_;              // dot graph object
-        vector<SliceInfo> signal_slices_;   // signal slice information stack
-        
-        // Signal Enumeration
-        void find_signals(ivl_scope_t scope);
+// Logic
+void propagate_logic(ivl_net_logic_t logic,
+                     ivl_nexus_t     sink_nexus,
+                     ivl_signal_t    sink_signal,
+                     SignalGraph*    sg,
+                     string          ws);
 
-        // Connection Enumeration
-        void add_constant_connection(ivl_signal_t    sink_signal, 
-                                     ivl_net_const_t source_constant,
-                                     string          ws);
+const char* get_logic_type_as_string(ivl_net_logic_t logic);
 
-        void add_connection(ivl_signal_t sink_signal, 
-                            ivl_signal_t source_signal,  
-                            string       ws);
+// LPM
+void propagate_lpm(ivl_lpm_t    lpm,
+                   ivl_nexus_t  sink_nexus,
+                   ivl_signal_t sink_signal,
+                   SignalGraph* sg,
+                   string       ws);
 
-        void track_lpm_connection_slice(unsigned int      msb, 
-                                        unsigned int      lsb,
-                                        slice_node_type_t node_type);
-
-        void propagate_nexus(ivl_nexus_t  nexus, 
-                             ivl_signal_t sink_signal, 
+void process_lpm_part_select(ivl_lpm_t    lpm, 
+                             ivl_signal_t sink_signal,
+                             SignalGraph* sg,
                              string       ws);
 
-        void propagate_logic(ivl_net_logic_t logic, 
-                             ivl_nexus_t     sink_nexus, 
-                             ivl_signal_t    sink_signal, 
-                             string          ws);
+void process_lpm_concat(ivl_lpm_t    lpm,
+                        ivl_signal_t sink_signal,
+                        SignalGraph* sg,
+                        string       ws);
 
-        void propagate_lpm(ivl_lpm_t    lpm, 
-                           ivl_nexus_t  sink_nexus, 
-                           ivl_signal_t sink_signal, 
-                           string       ws);
+void process_lpm_mux(ivl_lpm_t    lpm,
+                     ivl_signal_t sink_signal,
+                     SignalGraph* sg,
+                     string       ws);
 
-        void process_lpm_part_select(ivl_lpm_t    lpm, 
-                                     ivl_signal_t sink_signal, 
-                                     string       ws);
+void process_lpm_basic(ivl_lpm_t    lpm,
+                       ivl_signal_t sink_signal,
+                       SignalGraph* sg,
+                       string       ws);
 
-        void process_lpm_concat(ivl_lpm_t    lpm, 
-                                ivl_signal_t sink_signal, 
-                                string       ws);
+const char* get_lpm_type_as_string(ivl_lpm_t lpm);
 
-        void process_lpm_mux(ivl_lpm_t    lpm, 
-                             ivl_signal_t sink_signal, 
-                             string       ws);
+// Constant
+void propagate_constant(ivl_net_const_t constant,
+                        ivl_signal_t sink_signal, 
+                        SignalGraph* sg,
+                        string       ws);
 
-        void process_lpm_basic(ivl_lpm_t    lpm, 
-                               ivl_signal_t sink_signal, 
-                               string       ws);
+const char* get_const_type_as_string(ivl_net_const_t constant);
 
-        void propagate_constant(ivl_net_const_t constant,
-                                ivl_signal_t sink_signal, 
-                                string       ws);
 
-        // Helper Functions
-        const char* get_lpm_type_as_string(ivl_lpm_t lpm);
-        const char* get_logic_type_as_string(ivl_net_logic_t logic);
-        const char* get_const_type_as_string(ivl_net_const_t constant);
-};  
+// ----------------------------------------------------------------------------------
+// ------------------------ Behavioral Logic Processing -----------------------------
+// ----------------------------------------------------------------------------------
+void find_behavioral_connections(ivl_design_t design, SignalGraph* sg);
+
+// Process
+int propagate_process(ivl_process_t process, void* data);
+
+int process_always_statement(ivl_statement_t statement, 
+                             SignalGraph* sg, 
+                             string ws);
+
+const char* get_process_type_as_string(ivl_process_t process);
 
 #endif

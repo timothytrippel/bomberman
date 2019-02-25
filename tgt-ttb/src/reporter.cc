@@ -106,7 +106,7 @@ void Reporter::signal_names(sig_map_t signals_map){
     // Iterate over the map using Iterator till end.
     while (it != signals_map.end()) {   
         // Print signal name
-        fprintf(file_ptr_, "    %s\n", SignalGraph::get_signal_fullname(it->first).c_str());
+        fprintf(file_ptr_, "    %s\n", get_signal_fullname(it->first).c_str());
  
         // Increment the iterator
         it++;
