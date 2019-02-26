@@ -83,11 +83,13 @@ void process_expression_signal(ivl_expr_t expression, SignalGraph* sg, string ws
     // Check if signal is arrayed
     Error::check_signal_not_arrayed(ivl_expr_signal(expression));
 
-    fprintf(stdout, "%sadding source signal (%s) to queue\n", 
-        ws.c_str(), get_signal_fullname(ivl_expr_signal(expression)).c_str());
-
     // Push signal to source signals queue
-    sg->push_to_source_signals_queue(ivl_expr_signal(expression));
+    sg->push_to_source_signals_queue(ivl_expr_signal(expression), ws);
+}
+
+void process_expression_number(ivl_expr_t expression, SignalGraph* sg, string ws) {
+    fprintf(stdout, "%sconstant encountered: %s\n", 
+        ws.c_str(), ivl_expr_bits(expression));
 }
 
 // ----------------------------------------------------------------------------------
@@ -133,7 +135,7 @@ void process_expression(ivl_expr_t expression, SignalGraph* sg, string ws) {
             Error::not_supported_error("expression type (IVL_EX_NULL).");
             break;
         case IVL_EX_NUMBER:
-            Error::not_supported_error("expression type (IVL_EX_NUMBER).");
+            process_expression_number(expression, sg, ws + "  ");
             break;
         case IVL_EX_ARRAY_PATTERN:
             Error::not_supported_error("expression type (IVL_EX_ARRAY_PATTERN).");
@@ -157,7 +159,7 @@ void process_expression(ivl_expr_t expression, SignalGraph* sg, string ws) {
             Error::not_supported_error("expression type (IVL_EX_SHALLOWCOPY).");
             break;
         case IVL_EX_SIGNAL:
-            process_expression_signal(expression, sg, ws + "    ");
+            process_expression_signal(expression, sg, ws + "  ");
             break;
         case IVL_EX_STRING:
             Error::not_supported_error("expression type (IVL_EX_STRING).");

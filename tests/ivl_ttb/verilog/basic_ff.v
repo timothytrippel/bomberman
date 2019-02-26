@@ -1,4 +1,4 @@
-module ff(input clk, input rst, input d, input en, output reg q);
+module basic_ff(input clk, input rst, input d, input en, output reg q);
 
 	wire next_q;
 

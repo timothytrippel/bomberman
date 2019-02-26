@@ -56,7 +56,7 @@ class SignalGraph {
         ivl_signal_t  pop_from_source_signals_queue();
 
         // Setters
-        void push_to_source_signals_queue(ivl_signal_t source_signal);
+        void push_to_source_signals_queue(ivl_signal_t source_signal, string ws);
 
         // Dot Graph Management
         void save_dot_graph();

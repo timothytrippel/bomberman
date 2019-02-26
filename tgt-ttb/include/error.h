@@ -34,6 +34,9 @@ class Error {
         static void check_signal_exists_in_map(sig_map_t signals, ivl_signal_t sig);
         static void check_signal_not_arrayed(ivl_signal_t signal);
         static void check_signal_not_multidimensional(ivl_signal_t signal);
+        static void check_event_nexus(ivl_nexus_t nexus, ivl_statement_t statement);
+        static void check_lvals_not_concatenated(unsigned int num_lvals, ivl_statement_t statement);
+        static void check_lval_not_nested(ivl_lval_t lval, ivl_statement_t statement);
 
         // Error Reporting Functions
         static void not_supported_error(const char* message);

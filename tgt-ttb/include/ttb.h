@@ -118,6 +118,7 @@ const char* get_process_type_as_string(ivl_process_t process);
 // Expression
 void process_expression(ivl_expr_t expression, SignalGraph* sg, string ws);
 void process_expression_signal(ivl_expr_t expression, SignalGraph* sg, string ws);
+void process_expression_number(ivl_expr_t expression, SignalGraph* sg, string ws);
 const char* get_expr_type_as_string(ivl_expr_t expression);
 
 // Statement
@@ -127,6 +128,7 @@ void process_statement(ivl_statement_t statement,
 
 void process_statement_wait(ivl_statement_t statement, SignalGraph* sg, string ws);
 void process_statement_condit(ivl_statement_t statement, SignalGraph* sg, string ws);
+void process_statement_assign(ivl_statement_t statement, SignalGraph* sg, string ws);
 const char* get_statement_type_as_string(ivl_statement_t statement);
 
 #endif

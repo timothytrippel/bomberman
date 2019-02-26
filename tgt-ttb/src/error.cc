@@ -78,7 +78,8 @@ void Error::check_scope_types(ivl_scope_t* scopes, unsigned int num_scopes) {
 
 void Error::check_signal_exists_in_map(sig_map_t signals, ivl_signal_t sig) {
     if (signals.count(sig) > 0) {
-        fprintf(stderr, "ERROR: signal (%s) already exists in hashmap.\n", get_signal_fullname(sig).c_str());
+        fprintf(stderr, "ERROR: signal (%s) already exists in hashmap.\n", 
+            get_signal_fullname(sig).c_str());
         exit(DUPLICATE_SIGNALS_FOUND_ERROR);
     }
 } 
@@ -86,7 +87,8 @@ void Error::check_signal_exists_in_map(sig_map_t signals, ivl_signal_t sig) {
 void Error::check_signal_not_arrayed(ivl_signal_t signal) {
     // Check if signal is arrayed
     if (ivl_signal_dimensions(signal) > 0) {
-        fprintf(stderr, "NOT-SUPPORTED: arrayed signal (%s -- %d) encountered.\n", get_signal_fullname(signal).c_str(), ivl_signal_dimensions(signal));
+        fprintf(stderr, "NOT-SUPPORTED: arrayed signal (%s -- %d) encountered.\n", 
+            get_signal_fullname(signal).c_str(), ivl_signal_dimensions(signal));
         exit(NOT_SUPPORTED_ERROR);
     } else {
         // Confirm that ARRAY_BASE is 0 (should be for non-arrayed signals)
@@ -101,6 +103,42 @@ void Error::check_signal_not_multidimensional(ivl_signal_t signal) {
     // Check if signal is multidimensional
     if (ivl_signal_packed_dimensions(signal) > 1) {
         fprintf(stderr, "NOT-SUPPORTED: multidimensional signal (%s -- %d) encountered.\n", get_signal_fullname(signal).c_str(), ivl_signal_packed_dimensions(signal));
+        exit(NOT_SUPPORTED_ERROR);
+    }
+}
+
+void Error::check_event_nexus(ivl_nexus_t nexus, ivl_statement_t statement) {
+    // Check event nexus is only of size 1
+    if (ivl_nexus_ptrs(nexus) != 1) {
+        fprintf(stderr, "NOT-SUPPORTED: multiple (%d) nexus pointers for event nexus. \
+            \n(File: %s -- Line: %d).\n", 
+            ivl_nexus_ptrs(nexus), ivl_stmt_file(statement), ivl_stmt_lineno(statement));
+        exit(NOT_SUPPORTED_ERROR);
+    }
+
+    // Check event nexus points only to a signal object
+    if (!ivl_nexus_ptr_sig(ivl_nexus_ptr(nexus, 0))) {
+        fprintf(stderr, "NOT-SUPPORTED: non-signal event nexus pointer. \
+            \n(File: %s -- Line: %d).\n", 
+            ivl_stmt_file(statement), ivl_stmt_lineno(statement));
+        exit(NOT_SUPPORTED_ERROR);
+    }
+}
+
+void Error::check_lvals_not_concatenated(unsigned int num_lvals, ivl_statement_t statement) {
+    // Check for concatenated lvals
+    if (num_lvals > 1) {
+        fprintf(stderr, "NOT-SUPPORTED: concatenated lvals (File: %s -- Line: %d).\n", 
+            ivl_stmt_file(statement), ivl_stmt_lineno(statement));
+        exit(NOT_SUPPORTED_ERROR);
+    }
+}
+
+void Error::check_lval_not_nested(ivl_lval_t lval, ivl_statement_t statement) {
+    // Check if lval is nested
+    if (ivl_lval_nest(lval)) {
+        fprintf(stderr, "NOT-SUPPORTED: nested lvals (File: %s -- Line: %d).\n", 
+            ivl_stmt_file(statement), ivl_stmt_lineno(statement));
         exit(NOT_SUPPORTED_ERROR);
     }
 }

@@ -80,7 +80,10 @@ ivl_signal_t SignalGraph::pop_from_source_signals_queue() {
 // ----------------------------------------------------------------------------------
 // ------------------------------- Setters ------------------------------------------
 // ----------------------------------------------------------------------------------
-void SignalGraph::push_to_source_signals_queue(ivl_signal_t source_signal) {
+void SignalGraph::push_to_source_signals_queue(ivl_signal_t source_signal, string ws) {
+	fprintf(stdout, "%sadding source signal (%s) to queue\n", 
+        ws.c_str(), get_signal_fullname(source_signal).c_str());
+
 	source_signals_.push_back(source_signal);
 }
 
