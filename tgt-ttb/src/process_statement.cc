@@ -234,9 +234,6 @@ void process_statement(ivl_statement_t statement, SignalGraph* sg, string ws) {
         ws.c_str(), get_statement_type_as_string(statement));
 
     switch (ivl_statement_type(statement)) {
-        case IVL_ST_NONE:
-            break;
-
         case IVL_ST_NOOP:
             // DO NOTHING
             break;
@@ -270,6 +267,7 @@ void process_statement(ivl_statement_t statement, SignalGraph* sg, string ws) {
             process_statement_wait(statement, sg, ws + "  ");
             break;
 
+        case IVL_ST_NONE:
         case IVL_ST_ALLOC:
         case IVL_ST_CONTRIB:
         case IVL_ST_DEASSIGN:
@@ -288,7 +286,7 @@ void process_statement(ivl_statement_t statement, SignalGraph* sg, string ws) {
         case IVL_ST_UTASK:
         case IVL_ST_WHILE:
         default:
-            Error::unknown_statement_type((unsigned int) ivl_statement_type(statement));
+            Error::unknown_statement_type(ivl_statement_type(statement));
             break;
     }
 } 

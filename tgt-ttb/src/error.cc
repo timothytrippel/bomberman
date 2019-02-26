@@ -168,12 +168,12 @@ void Error::processing_behavioral_connections() {
     exit(BEHAVIORAL_CONNECTIONS_ERROR);
 }
 
-void Error::unknown_statement_type(unsigned int statement_type) {
-    fprintf(stderr, "ERROR: uknown statment type (%d).\n", statement_type);
+void Error::unknown_statement_type(ivl_statement_type_t statement_type) {
+    fprintf(stderr, "ERROR: uknown statement type (%d).\n", (int) statement_type);
     exit(BEHAVIORAL_CONNECTIONS_ERROR);
 }
 
-void Error::unknown_expression_type(unsigned int expression_type) {
-    fprintf(stderr, "ERROR: uknown statment type (%d).\n", expression_type);
+void Error::unknown_expression_type(ivl_expr_type_t expression_type) {
+    fprintf(stderr, "ERROR: uknown expression type (%d).\n", (int) expression_type);
     exit(BEHAVIORAL_CONNECTIONS_ERROR);
 }
