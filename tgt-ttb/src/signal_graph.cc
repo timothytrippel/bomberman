@@ -26,7 +26,8 @@ SignalGraph::SignalGraph():
     num_connections_(0),
     signals_map_(),
     dg_(),
-    signal_slices_() {}
+    signal_slices_(),
+    source_signals_() {} 
 
 SignalGraph::SignalGraph(const char* dot_graph_fname) {
     // Initialize Connection Counter
@@ -48,8 +49,39 @@ unsigned long SignalGraph::get_num_signals() {
     return signals_map_.size();
 }
 
+unsigned long SignalGraph::get_num_source_signals() {
+    return source_signals_.size();
+}
+
 sig_map_t SignalGraph::get_signals_map() {
     return signals_map_;
+}
+
+sig_q_t SignalGraph::get_source_signals_queue() {
+	return source_signals_;	
+}
+
+ivl_signal_t SignalGraph::pop_from_source_signals_queue() {
+	// Check if source signals queue is not empty
+	if (get_num_source_signals() > 0) {
+		// Get last signal in queue
+		ivl_signal_t source_signal = source_signals_.back();
+
+		// Remove last signal in queue
+		source_signals_.pop_back();
+
+		// Return removed signal
+		return source_signal;
+	} else {
+		return NULL;
+	}
+}
+
+// ----------------------------------------------------------------------------------
+// ------------------------------- Setters ------------------------------------------
+// ----------------------------------------------------------------------------------
+void SignalGraph::push_to_source_signals_queue(ivl_signal_t source_signal) {
+	source_signals_.push_back(source_signal);
 }
 
 // ----------------------------------------------------------------------------------

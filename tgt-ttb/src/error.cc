@@ -134,3 +134,8 @@ void Error::unknown_statement_type(unsigned int statement_type) {
     fprintf(stderr, "ERROR: uknown statment type (%d).\n", statement_type);
     exit(BEHAVIORAL_CONNECTIONS_ERROR);
 }
+
+void Error::unknown_expression_type(unsigned int expression_type) {
+    fprintf(stderr, "ERROR: uknown statment type (%d).\n", expression_type);
+    exit(BEHAVIORAL_CONNECTIONS_ERROR);
+}

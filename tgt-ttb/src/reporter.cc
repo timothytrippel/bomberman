@@ -52,7 +52,7 @@ void Reporter::print_message(const char* message){
     assert(file_ptr_ != NULL && "ERROR: reporter file ptr is NULL.\n");
 
     // Print init message
-    fprintf(file_ptr_, "-----------------------------\n");
+    fprintf(file_ptr_, "\n-----------------------------\n");
     fprintf(file_ptr_, "%s\n", message);
 }
 
@@ -90,7 +90,7 @@ void Reporter::num_connections(unsigned long num_connections){
     assert(file_ptr_ != NULL && "ERROR: reporter file ptr is NULL.\n");
 
     // Print number of signals in vector
-    fprintf(file_ptr_, "Number of connections found: %lu\n", num_connections);
+    fprintf(file_ptr_, "\nNumber of connections found: %lu\n", num_connections);
 }
 
 void Reporter::signal_names(sig_map_t signals_map){
@@ -111,9 +111,6 @@ void Reporter::signal_names(sig_map_t signals_map){
         // Increment the iterator
         it++;
     }
-
-    // Print new line
-    fprintf(file_ptr_, "\n");
 }
 
 void Reporter::end(){

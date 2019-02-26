@@ -183,6 +183,17 @@ void find_combinational_connections(SignalGraph* sg) {
     }
 }
 
+void find_behavioral_connections(ivl_design_t design, SignalGraph* sg) {
+    int result = 0;
+
+    // Processes are initial, always, or final blocks
+    // Goes through all assignments in process blocks.
+    result = ivl_design_process(design, process_process, sg);
+    if (result != 0) {
+        Error::processing_behavioral_connections();
+    }
+}
+
 // ----------------------------------------------------------------------------------
 // ------------------------ IVL Target Entry Point "main" ---------------------------
 // ----------------------------------------------------------------------------------

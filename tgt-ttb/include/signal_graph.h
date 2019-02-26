@@ -41,7 +41,7 @@ class SignalGraph {
         void add_connection(ivl_signal_t sink_signal, 
                             ivl_signal_t source_signal,  
                             string       ws);
-        
+
         // Helper Functions
         void track_lpm_connection_slice(unsigned int      msb, 
                                         unsigned int      lsb,
@@ -50,16 +50,23 @@ class SignalGraph {
         // Getters
         unsigned long get_num_connections();
         unsigned long get_num_signals();
+        unsigned long get_num_source_signals();
         sig_map_t     get_signals_map();
+        sig_q_t       get_source_signals_queue();
+        ivl_signal_t  pop_from_source_signals_queue();
+
+        // Setters
+        void push_to_source_signals_queue(ivl_signal_t source_signal);
 
         // Dot Graph Management
-        void          save_dot_graph();
+        void save_dot_graph();
     private:
         // (Private) Member Variables
         unsigned long     num_connections_; // number of connections enumerated in design
         sig_map_t         signals_map_;     // signal graph (adjacency list)
         DotGraph          dg_;              // dot graph object
         vector<SliceInfo> signal_slices_;   // signal slice information stack
+        sig_q_t           source_signals_;  // source signal queue
         
         // Signal Enumeration
         void find_signals(ivl_scope_t scope);

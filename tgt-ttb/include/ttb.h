@@ -112,12 +112,21 @@ const char* get_const_type_as_string(ivl_net_const_t constant);
 void find_behavioral_connections(ivl_design_t design, SignalGraph* sg);
 
 // Process
-int propagate_process(ivl_process_t process, void* data);
-
-int process_always_statement(ivl_statement_t statement, 
-                             SignalGraph* sg, 
-                             string ws);
-
+int process_process(ivl_process_t process, void* data);
 const char* get_process_type_as_string(ivl_process_t process);
+
+// Expression
+void process_expression(ivl_expr_t expression, SignalGraph* sg, string ws);
+void process_expression_signal(ivl_expr_t expression, SignalGraph* sg, string ws);
+const char* get_expr_type_as_string(ivl_expr_t expression);
+
+// Statement
+void process_statement(ivl_statement_t statement, 
+                              SignalGraph* sg, 
+                              string ws);
+
+void process_statement_wait(ivl_statement_t statement, SignalGraph* sg, string ws);
+void process_statement_condit(ivl_statement_t statement, SignalGraph* sg, string ws);
+const char* get_statement_type_as_string(ivl_statement_t statement);
 
 #endif

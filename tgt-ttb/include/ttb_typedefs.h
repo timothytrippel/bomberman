@@ -39,6 +39,9 @@ using namespace std;
 // Signal graph adjaceny list
 typedef map<ivl_signal_t, vector<ivl_signal_t>> sig_map_t;
 
+// Signal queue
+typedef vector<ivl_signal_t> sig_q_t;
+
 // Node that is sliced (either SINK or SOURCE)
 typedef enum SLICE_NODE_TYPE {
       SINK   = 0,

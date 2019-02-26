@@ -42,6 +42,7 @@ class Error {
         static void unknown_part_select_lpm_type_error(ivl_lpm_type_t lpm_type);
         static void processing_behavioral_connections();
         static void unknown_statement_type(unsigned int statement_type);
+        static void unknown_expression_type(unsigned int expression_type);
 };
 
 #endif
