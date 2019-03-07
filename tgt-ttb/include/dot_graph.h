@@ -38,7 +38,8 @@ class DotGraph {
         void        add_node(string name, string label, string shape);
         void        add_connection(string source_node_name,
                                    string sink_node_name, 
-                                   string connection_label);
+                                   string connection_label,
+                                   string ws);
         void        save_graph();
         // void         save_graph(sig_map_t signals);
     private:

@@ -59,7 +59,14 @@ void DotGraph::add_node(string name, string label, string shape){
 
 void DotGraph::add_connection(string source_node_name,
                               string sink_node_name, 
-                              string connection_label){
+                              string connection_label,
+                              string ws){
+
+    // Debug Print
+    fprintf(stdout, "%sADDING CONNECTION from %s to %s\n", 
+        ws.c_str(), 
+        source_node_name.c_str(), 
+        sink_node_name.c_str());
 
     // Add connection to .dot file
     fprintf(file_ptr_, "\t\"%s\" -> \"%s\"[label=\"%s\"];\n", 

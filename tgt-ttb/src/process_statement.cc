@@ -89,9 +89,14 @@ const char* get_statement_type_as_string(ivl_statement_t statement) {
 // ----------------------------------------------------------------------------------
 // --------------------------- SUB-PROCESSING Functions -----------------------------
 // ----------------------------------------------------------------------------------
-void process_event_nexus(ivl_nexus_t nexus, ivl_statement_t statement, SignalGraph* sg, string ws) {
+void process_event_nexus(ivl_nexus_t     nexus, 
+                         ivl_statement_t statement, 
+                         SignalGraph*    sg, 
+                         string          ws) {
+
     // Source Signal Object
-    ivl_signal_t source_signal = NULL;
+    node_object_t node_obj    = {NULL};
+    node_t        source_node = {node_obj, IVL_NONE};
 
     // Check no more than one nexus pointer for an event nexus
     // Check nexus pointer type is signal object only
@@ -99,13 +104,17 @@ void process_event_nexus(ivl_nexus_t nexus, ivl_statement_t statement, SignalGra
     Error::check_event_nexus(nexus, statement);
 
     // Get event nexus pointer signal object
-    source_signal = ivl_nexus_ptr_sig(ivl_nexus_ptr(nexus, 0));
+    source_node.object.ivl_signal = ivl_nexus_ptr_sig(ivl_nexus_ptr(nexus, 0));
+    source_node.type              = IVL_SIGNAL;
 
     // Push signal to source signals queue
-    sg->push_to_source_signals_queue(source_signal, ws);
+    sg->push_to_source_nodes_queue(source_node, ws);
 }
 
-void process_statement_wait(ivl_statement_t statement, SignalGraph* sg, string ws) {
+void process_statement_wait(ivl_statement_t statement, 
+                            SignalGraph*    sg, 
+                            string          ws) {
+
     ivl_event_t     event                  = NULL;
     ivl_nexus_t     event_nexus            = NULL;
     ivl_statement_t sub_statement          = NULL;
@@ -157,7 +166,10 @@ void process_statement_wait(ivl_statement_t statement, SignalGraph* sg, string w
     }
 }
 
-void process_statement_condit(ivl_statement_t statement, SignalGraph* sg, string ws) { 
+void process_statement_condit(ivl_statement_t statement, 
+                              SignalGraph*    sg, 
+                              string          ws) {
+
     // Get conditional expression object
     ivl_expr_t condit_expr = ivl_stmt_cond_expr(statement);
 
@@ -166,7 +178,10 @@ void process_statement_condit(ivl_statement_t statement, SignalGraph* sg, string
     ivl_statement_t false_statement = ivl_stmt_cond_false(statement);
     
     // Process conditional expression to get source signals
-    process_expression(condit_expr, NULL, sg, ws);
+    node_t source_node = process_expression(condit_expr, sg, ws);
+    
+    // Push source node to source nodes queue
+    sg->push_to_source_nodes_queue(source_node, ws);
 
     // Process true/false sub-statements to propagate 
     // source signals to sink signals
@@ -178,12 +193,16 @@ void process_statement_condit(ivl_statement_t statement, SignalGraph* sg, string
     }
 }
 
-void process_statement_assign(ivl_statement_t statement, SignalGraph* sg, string ws) {
-    ivl_signal_t sink_signal = NULL;
-    ivl_signal_t source_signal = NULL;
-    ivl_lval_t   lval      = NULL;
+void process_statement_assign(ivl_statement_t statement, 
+                              SignalGraph*    sg, 
+                              string          ws) {
+
+    ivl_signal_t sink_signal        = NULL;
+    ivl_lval_t   lval               = NULL;
     ivl_expr_t   part_select_offset = NULL;
-    unsigned int num_lvals = 0;
+    unsigned int num_lvals          = 0;
+    node_t       source_node;
+    node_t       offset_node;
 
     // Get number of lvals
     num_lvals = ivl_stmt_lvals(statement);
@@ -194,6 +213,7 @@ void process_statement_assign(ivl_statement_t statement, SignalGraph* sg, string
     // Process lval
     fprintf(stdout, "%sprocessing (%u) lval(s) ...\n", 
         ws.c_str(), num_lvals);
+
     // @TODO: support concatenated lvals
     for (unsigned int i = 0; i < num_lvals; i++) {
         // Get lval object
@@ -204,28 +224,37 @@ void process_statement_assign(ivl_statement_t statement, SignalGraph* sg, string
 
         // Get sink signal
         sink_signal = ivl_lval_sig(lval);
+        fprintf(stdout, "%ssink signal: %s\n", 
+            string(ws + "  ").c_str(),
+            get_signal_fullname(sink_signal).c_str());
 
         // Process lval expression (if necessary)
         if ((part_select_offset = ivl_lval_part_off(lval))) {
-            process_expression(part_select_offset, sink_signal, sg, ws + "  ");
-            process_expression(part_select_offset, sink_signal, sg, ws + "  ");
+            offset_node = process_expression(part_select_offset, sg, ws + "  ");
         }
     }
 
-    // Process rval
+    // Process rval expression
     fprintf(stdout, "%sprocessing rval ...\n", ws.c_str());
-    process_expression(ivl_stmt_rval(statement), sink_signal, sg, ws + "  ");
+    source_node = process_expression(ivl_stmt_rval(statement), sg, ws + "  ");
+
+    // Push source node to source nodes queue
+    sg->push_to_source_nodes_queue(source_node, ws);
 
     // Add connection(s)
-    while ((source_signal = sg->pop_from_source_signals_queue())) {
-        sg->add_signal_connection(sink_signal, source_signal, ws + "  ");
+    fprintf(stdout, "%sprocessing connections ...\n", ws.c_str());
+    while (sg->get_num_source_nodes()) {
+        source_node = sg->pop_from_source_nodes_queue();
+        sg->add_connection(sink_signal, source_node, ws + "  ");
     }
 }
 
 // ----------------------------------------------------------------------------------
 // --------------------------- Main PROCESSING Function -----------------------------
 // ----------------------------------------------------------------------------------
-void process_statement(ivl_statement_t statement, SignalGraph* sg, string ws) {
+void process_statement(ivl_statement_t statement, 
+                       SignalGraph*    sg, 
+                       string          ws) {
 
     fprintf(stdout, "%sprocessing statement (%s)\n", 
         ws.c_str(), get_statement_type_as_string(statement));

@@ -22,6 +22,9 @@ Graphviz .dot file.
 
 using namespace std;
 
+// ----------------------------------------------------------------------------------
+// ------------------------------- Data Validation ----------------------------------
+// ----------------------------------------------------------------------------------
 void Error::check_scope_types(ivl_scope_t* scopes, unsigned int num_scopes) {
     ivl_scope_type_t scope_type           = IVL_SCT_MODULE;
     string           scope_type_name      = "UNKNOWN";
@@ -70,8 +73,13 @@ void Error::check_scope_types(ivl_scope_t* scopes, unsigned int num_scopes) {
 
         // Check if scope type supported 
         if (!scope_type_supported) {
-            fprintf(stderr, "NOT-SUPPORTED: verilog scope type: %s", scope_type_name.c_str());
-            fprintf(stderr, "File: %s Line: %d\n", ivl_scope_file(scopes[i]), ivl_scope_lineno(scopes[i]));
+            fprintf(stderr, "NOT-SUPPORTED: verilog scope type: %s", 
+                scope_type_name.c_str());
+
+            fprintf(stderr, "File: %s Line: %d\n", 
+                ivl_scope_file(scopes[i]), 
+                ivl_scope_lineno(scopes[i]));
+
             exit(NOT_SUPPORTED_ERROR);
         }
     }
@@ -81,6 +89,7 @@ void Error::check_signal_exists_in_map(sig_map_t signals, ivl_signal_t sig) {
     if (signals.count(sig) > 0) {
         fprintf(stderr, "ERROR: signal (%s) already exists in hashmap.\n", 
             get_signal_fullname(sig).c_str());
+
         exit(DUPLICATE_SIGNALS_FOUND_ERROR);
     }
 } 
@@ -90,20 +99,24 @@ void Error::check_signal_not_arrayed(ivl_signal_t signal) {
     if (ivl_signal_dimensions(signal) > 0) {
         fprintf(stderr, "NOT-SUPPORTED: arrayed signal (%s -- %d) encountered.\n", 
             get_signal_fullname(signal).c_str(), ivl_signal_dimensions(signal));
+        
         exit(NOT_SUPPORTED_ERROR);
     } else {
         // Confirm that ARRAY_BASE is 0 (should be for non-arrayed signals)
-        assert(ivl_signal_array_base(signal) == 0 && "NOT-SUPPORTED: non-arrayed signal with non-zero ARRAY_BASE.");
+        assert(ivl_signal_array_base(signal) == 0 && 
+            "NOT-SUPPORTED: non-arrayed signal with non-zero ARRAY_BASE.");
 
         // Confirm that ARRAY_COUNT is a (should be for non-arrayed signals)
-        assert(ivl_signal_array_count(signal) == 1 && "NOT-SUPPORTED: non-arrayed signal with ARRAY_COUNT != 1.");
+        assert(ivl_signal_array_count(signal) == 1 && 
+            "NOT-SUPPORTED: non-arrayed signal with ARRAY_COUNT != 1.");
     }
 }
 
 void Error::check_signal_not_multidimensional(ivl_signal_t signal) {
     // Check if signal is multidimensional
     if (ivl_signal_packed_dimensions(signal) > 1) {
-        fprintf(stderr, "NOT-SUPPORTED: multidimensional signal (%s -- %d) encountered.\n", get_signal_fullname(signal).c_str(), ivl_signal_packed_dimensions(signal));
+        fprintf(stderr, "NOT-SUPPORTED: multidimensional signal (%s -- %d) encountered.\n", 
+            get_signal_fullname(signal).c_str(), ivl_signal_packed_dimensions(signal));
         exit(NOT_SUPPORTED_ERROR);
     }
 }
@@ -114,6 +127,7 @@ void Error::check_event_nexus(ivl_nexus_t nexus, ivl_statement_t statement) {
         fprintf(stderr, "NOT-SUPPORTED: multiple (%d) nexus pointers for event nexus. \
             \n(File: %s -- Line: %d).\n", 
             ivl_nexus_ptrs(nexus), ivl_stmt_file(statement), ivl_stmt_lineno(statement));
+
         exit(NOT_SUPPORTED_ERROR);
     }
 
@@ -122,6 +136,7 @@ void Error::check_event_nexus(ivl_nexus_t nexus, ivl_statement_t statement) {
         fprintf(stderr, "NOT-SUPPORTED: non-signal event nexus pointer. \
             \n(File: %s -- Line: %d).\n", 
             ivl_stmt_file(statement), ivl_stmt_lineno(statement));
+
         exit(NOT_SUPPORTED_ERROR);
     }
 }
@@ -131,6 +146,7 @@ void Error::check_lvals_not_concatenated(unsigned int num_lvals, ivl_statement_t
     if (num_lvals > 1) {
         fprintf(stderr, "NOT-SUPPORTED: concatenated lvals (File: %s -- Line: %d).\n", 
             ivl_stmt_file(statement), ivl_stmt_lineno(statement));
+
         exit(NOT_SUPPORTED_ERROR);
     }
 }
@@ -140,41 +156,68 @@ void Error::check_lval_not_nested(ivl_lval_t lval, ivl_statement_t statement) {
     if (ivl_lval_nest(lval)) {
         fprintf(stderr, "NOT-SUPPORTED: nested lvals (File: %s -- Line: %d).\n", 
             ivl_stmt_file(statement), ivl_stmt_lineno(statement));
+
         exit(NOT_SUPPORTED_ERROR);
     }
 }
 
-void Error::not_supported_error(const char* message) {
-    fprintf(stderr, "NOT-SUPPORTED: %s\n", message);
+// ----------------------------------------------------------------------------------
+// ------------------------- Error Reporting: Unkown Types --------------------------
+// ----------------------------------------------------------------------------------
+void Error::unknown_node_type(node_type_t node_type) {
+    fprintf(stderr, "ERROR: unkown node type (%d) encountered.\n", node_type);
+    
     exit(NOT_SUPPORTED_ERROR);
 }
 
-void Error::unknown_nexus_type_error() {
-    fprintf(stderr, "NOT-SUPPORTED: unkown nexus type for nexus.\n");
+void Error::unknown_nexus_type() {
+    fprintf(stderr, "ERROR: unkown nexus type for nexus.\n");
+    
     exit(NOT_SUPPORTED_ERROR);
 }
 
-void Error::connecting_signal_not_in_graph(ivl_signal_t signal) {
-    fprintf(stderr, "ERROR: attempting to connect signal (%s) not in graph.\n", get_signal_fullname(signal).c_str());
-    exit(NOT_SUPPORTED_ERROR);
-}
-
-void Error::unknown_part_select_lpm_type_error(ivl_lpm_type_t lpm_type) {
+void Error::unknown_part_select_lpm_type(ivl_lpm_type_t lpm_type) {
     fprintf(stderr, "ERROR: unkown part select LPM type (%d).\n", lpm_type);
+    
     exit(NOT_SUPPORTED_ERROR);
-}
-
-void Error::processing_behavioral_connections() {
-    fprintf(stderr, "ERROR: processing behavioral logic connections.\n");
-    exit(BEHAVIORAL_CONNECTIONS_ERROR);
 }
 
 void Error::unknown_statement_type(ivl_statement_type_t statement_type) {
     fprintf(stderr, "ERROR: uknown statement type (%d).\n", (int) statement_type);
+    
     exit(BEHAVIORAL_CONNECTIONS_ERROR);
 }
 
 void Error::unknown_expression_type(ivl_expr_type_t expression_type) {
     fprintf(stderr, "ERROR: uknown expression type (%d).\n", (int) expression_type);
+
+    exit(BEHAVIORAL_CONNECTIONS_ERROR);
+}
+
+// ----------------------------------------------------------------------------------
+// ---------------------------- Error Reporting: Other ------------------------------
+// ----------------------------------------------------------------------------------
+void Error::not_supported(const char* message) {
+    fprintf(stderr, "NOT-SUPPORTED: %s\n", message);
+    
+    exit(NOT_SUPPORTED_ERROR);
+}
+
+void Error::null_node_type() {
+    fprintf(stderr, "ERROR: node type IVL_NONE encountered.\n");
+    
+    exit(NOT_SUPPORTED_ERROR);
+}
+
+void Error::connecting_signal_not_in_graph(ivl_signal_t signal) {
+    fprintf(stderr, "ERROR: attempting to connect signal (%s) not in graph.\n", 
+        get_signal_fullname(signal).c_str());
+
+    exit(NOT_SUPPORTED_ERROR);
+}
+
+void Error::processing_behavioral_connections() {
+    fprintf(stderr, "ERROR: processing behavioral logic connections.\n");
+    
     exit(BEHAVIORAL_CONNECTIONS_ERROR);
 }

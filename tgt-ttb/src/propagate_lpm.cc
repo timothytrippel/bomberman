@@ -143,7 +143,7 @@ void process_lpm_part_select(ivl_lpm_t    lpm,
     // may be NULL if not used is non-constant base is used.
     base_nexus = ivl_lpm_data(lpm, LPM_PART_SELECT_BASE_NEXUS_INDEX);
     if (base_nexus) {
-        Error::not_supported_error("non-constant base for LPM part select device.");
+        Error::not_supported("non-constant base for LPM part select device.");
     }
 
     // Get MSB and LSB of slice
@@ -158,7 +158,7 @@ void process_lpm_part_select(ivl_lpm_t    lpm,
         // part select: part to vector (PV: part select in lval)
         sg->track_lpm_connection_slice(msb, lsb, SINK);
     } else {
-        Error::unknown_part_select_lpm_type_error(ivl_lpm_type(lpm));
+        Error::unknown_part_select_lpm_type(ivl_lpm_type(lpm));
     }
 
     // Propagate nexus
@@ -221,7 +221,7 @@ void process_lpm_concat(ivl_lpm_t    lpm,
                 break;
 
             } else if (ivl_nexus_ptr_lpm(input_nexus_ptr) != lpm) {
-                Error::not_supported_error("LPM-CONCAT input device type.");
+                Error::not_supported("LPM-CONCAT input device type.");
             }
         }
     }
@@ -323,43 +323,43 @@ void propagate_lpm(ivl_lpm_t    lpm,
 
             break;
         case IVL_LPM_ABS:
-            Error::not_supported_error("LPM device type (IVL_LPM_ABS)");
+            Error::not_supported("LPM device type (IVL_LPM_ABS)");
             break;
         case IVL_LPM_ARRAY:
-            Error::not_supported_error("LPM device type (IVL_LPM_ARRAY)");
+            Error::not_supported("LPM device type (IVL_LPM_ARRAY)");
             break;
         case IVL_LPM_CAST_INT:
-            Error::not_supported_error("LPM device type (IVL_LPM_CAST_INT)");
+            Error::not_supported("LPM device type (IVL_LPM_CAST_INT)");
             break;
         case IVL_LPM_CAST_INT2:
-            Error::not_supported_error("LPM device type (IVL_LPM_CAST_INT2)");
+            Error::not_supported("LPM device type (IVL_LPM_CAST_INT2)");
             break;
         case IVL_LPM_CAST_REAL:
-            Error::not_supported_error("LPM device type (IVL_LPM_CAST_REAL)");
+            Error::not_supported("LPM device type (IVL_LPM_CAST_REAL)");
             break;
         case IVL_LPM_FF:
-            Error::not_supported_error("LPM device type (IVL_LPM_FF)");
+            Error::not_supported("LPM device type (IVL_LPM_FF)");
             break;
         case IVL_LPM_MOD:
-            Error::not_supported_error("LPM device type (IVL_LPM_MOD)");
+            Error::not_supported("LPM device type (IVL_LPM_MOD)");
             break;
         case IVL_LPM_REPEAT:
-            Error::not_supported_error("LPM device type (IVL_LPM_REPEAT)");
+            Error::not_supported("LPM device type (IVL_LPM_REPEAT)");
             break;
         case IVL_LPM_SFUNC:
-            Error::not_supported_error("LPM device type (IVL_LPM_SFUNC)");
+            Error::not_supported("LPM device type (IVL_LPM_SFUNC)");
             break;
         case IVL_LPM_SIGN_EXT:
-            Error::not_supported_error("LPM device type (IVL_LPM_SIGN_EXT)");
+            Error::not_supported("LPM device type (IVL_LPM_SIGN_EXT)");
             break;
         case IVL_LPM_SUBSTITUTE:
-            Error::not_supported_error("LPM device type (IVL_LPM_SUBSTITUTE)");
+            Error::not_supported("LPM device type (IVL_LPM_SUBSTITUTE)");
             break;
         case IVL_LPM_UFUNC:
-            Error::not_supported_error("LPM device type (IVL_LPM_UFUNC)");
+            Error::not_supported("LPM device type (IVL_LPM_UFUNC)");
             break;
         default:
-            Error::not_supported_error("LPM device type (UNKNOWN)");
+            Error::not_supported("LPM device type (UNKNOWN)");
             break;
     }
 }

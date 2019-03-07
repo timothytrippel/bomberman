@@ -39,13 +39,17 @@ class Error {
         static void check_lval_not_nested(ivl_lval_t lval, ivl_statement_t statement);
 
         // Error Reporting Functions
-        static void not_supported_error(const char* message);
-        static void unknown_nexus_type_error();
-        static void connecting_signal_not_in_graph(ivl_signal_t signal);
-        static void unknown_part_select_lpm_type_error(ivl_lpm_type_t lpm_type);
-        static void processing_behavioral_connections();
+        // Unknown Types
+        static void unknown_node_type(node_type_t);
+        static void unknown_nexus_type();
+        static void unknown_part_select_lpm_type(ivl_lpm_type_t lpm_type);
         static void unknown_statement_type(ivl_statement_type_t statement_type);
         static void unknown_expression_type(ivl_expr_type_t expression_type);
+        // Other
+        static void not_supported(const char* message);
+        static void null_node_type();
+        static void connecting_signal_not_in_graph(ivl_signal_t signal);
+        static void processing_behavioral_connections();
 };
 
 #endif

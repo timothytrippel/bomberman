@@ -39,21 +39,50 @@ using namespace std;
 // Signal graph adjaceny list
 typedef map<ivl_signal_t, vector<ivl_signal_t>> sig_map_t;
 
-// Signal queue
-typedef vector<ivl_signal_t> sig_q_t;
-
+// ------------------------------------------------------------
+// ------------------------ Node Slice ------------------------
+// ------------------------------------------------------------
 // Node that is sliced (either SINK or SOURCE)
-typedef enum SLICE_NODE_TYPE {
-      SINK   = 0,
-      SOURCE = 1
-} slice_node_type_t;
+typedef enum node_slice_type_e {
+    SINK   = 0,
+    SOURCE = 1
+} node_slice_type_t;
 
 // Struct for holding MSB-LSB pair for tracking 
 // signal vector slices at a given nexus
-struct SliceInfo {
+typedef struct node_slice_s {
     unsigned int      msb;
     unsigned int      lsb;
-    slice_node_type_t node;
-};
+    node_slice_type_t type;
+} node_slice_t;
+
+// ------------------------------------------------------------
+// ------------------------ Graph Node ------------------------
+// ------------------------------------------------------------
+// Tagged union for holding a signal node object.
+// Graph nodes can either be an IVL signal or 
+// an IVL constant. Constants can additionally
+// come in two forms: an net_const object or 
+// an expression object.
+typedef union node_object_u {
+    ivl_signal_t    ivl_signal;
+    ivl_net_const_t ivl_constant;
+    ivl_expr_t      ivl_const_expr;
+} node_object_t;
+
+typedef enum node_type_e {
+    IVL_NONE       = 0,
+    IVL_SIGNAL     = 1,
+    IVL_CONST      = 2,
+    IVL_CONST_EXPR = 3,
+} node_type_t;
+
+typedef struct node_s {
+    node_object_t object;
+    node_type_t   type;
+} node_t;
+
+// Signal queue
+typedef vector<node_t> node_q_t;
 
 #endif

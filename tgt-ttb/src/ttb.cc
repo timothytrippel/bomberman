@@ -22,6 +22,21 @@ Graphviz .dot file.
 // ----------------------------------------------------------------------------------
 // ------------------------------- Helper Functions ---------------------------------
 // ----------------------------------------------------------------------------------
+const char* get_node_type_as_string(node_type_t node_type) {
+    switch(node_type) {
+        case IVL_NONE:
+            return "IVL_NONE";
+        case IVL_SIGNAL:
+            return "IVL_SIGNAL";
+        case IVL_CONST:
+            return "IVL_CONST";
+        case IVL_CONST_EXPR:
+            return "IVL_CONST_EXPR";
+        default:
+            return "UNKOWN";
+    }
+}
+
 string get_signal_fullname(ivl_signal_t signal) {
     string scopename = ivl_scope_name(ivl_signal_scope(signal)); 
     string basename  = ivl_signal_basename(signal);
@@ -153,14 +168,14 @@ string get_const_expr_connection_label(ivl_expr_t   source_const_expr,
 
 string get_sliced_signal_connection_label(ivl_signal_t source_signal, 
                                           ivl_signal_t sink_signal, 
-                                          SliceInfo    signal_slice) {
+                                          node_slice_t signal_slice) {
     unsigned int sink_msb;
     unsigned int sink_lsb;
     unsigned int source_msb;
     unsigned int source_lsb;
     stringstream ss;
 
-    if (signal_slice.node == SINK) {
+    if (signal_slice.type == SINK) {
         // sliced sink node (signal)
         sink_msb   = signal_slice.msb;
         sink_lsb   = signal_slice.lsb;

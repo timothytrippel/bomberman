@@ -64,7 +64,7 @@ void propagate_nexus(ivl_nexus_t nexus, ivl_signal_t sink_signal, SignalGraph* s
             propagate_constant(source_constant, sink_signal, sg, ws);
         } else {
             // Nexus target object is UNKNOWN
-            Error::unknown_nexus_type_error();
+            Error::unknown_nexus_type();
         }
     }
 }

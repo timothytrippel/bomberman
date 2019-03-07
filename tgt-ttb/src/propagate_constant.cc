@@ -35,14 +35,17 @@ void propagate_constant(ivl_net_const_t constant,
                         SignalGraph*    sg,
                         string          ws) {
 
+    // Source node
+    node_object_t node_obj    = {.ivl_constant = constant};
+    node_t        source_node = {node_obj, IVL_CONST};
+
     switch (ivl_const_type(constant)) {
         case IVL_VT_BOOL:
         case IVL_VT_LOGIC:
-            // process_constant(constant, sink_nexus, sink_signal, ws);
-            sg->add_constant_connection(sink_signal, constant, ws + "   ");
+            sg->add_connection(sink_signal, source_node, ws + "   ");
             break;
         default:
-            Error::not_supported_error("CONSTANT device type (UNKNOWN)");
+            Error::not_supported("CONSTANT device type (UNKNOWN)");
             break;
     }
 }
