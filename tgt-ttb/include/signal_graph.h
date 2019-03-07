@@ -38,9 +38,18 @@ class SignalGraph {
                                      ivl_net_const_t source_constant,
                                      string          ws);
 
-        void add_connection(ivl_signal_t sink_signal, 
-                            ivl_signal_t source_signal,  
-                            string       ws);
+        void add_constant_expr_connection(ivl_signal_t sink_signal, 
+                                          ivl_expr_t   source_const_expr,
+                                          string       ws);
+
+        void add_signal_connection(ivl_signal_t sink_signal, 
+                                   ivl_signal_t source_signal,  
+                                   string       ws);
+
+        void add_connection(string source_signal_name, 
+                            string sink_signal_name, 
+                            string connection_label,
+                            string ws);
 
         // Helper Functions
         void track_lpm_connection_slice(unsigned int      msb, 
@@ -62,6 +71,7 @@ class SignalGraph {
         void save_dot_graph();
     private:
         // (Private) Member Variables
+        unsigned long     num_constants_;   // number of constants enumerated in design
         unsigned long     num_connections_; // number of connections enumerated in design
         sig_map_t         signals_map_;     // signal graph (adjacency list)
         DotGraph          dg_;              // dot graph object

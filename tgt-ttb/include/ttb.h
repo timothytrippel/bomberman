@@ -27,16 +27,19 @@ using namespace std;
 // ------------------------------- Helper Functions ---------------------------------
 // ----------------------------------------------------------------------------------
 string       get_signal_fullname(ivl_signal_t signal);
-string       get_constant_fullname(ivl_net_const_t constant);
+string       get_constant_fullname(ivl_net_const_t constant, unsigned long num_constants);
+string       get_constant_expr_fullname(ivl_expr_t const_expr, unsigned long num_constants);
 unsigned int get_signal_msb(ivl_signal_t signal);
 unsigned int get_signal_lsb(ivl_signal_t signal);
 unsigned int get_const_msb(ivl_net_const_t constant);
+unsigned int get_expr_msb(ivl_expr_t expression);
 
 // ----------------------------------------------------------------------------------
 // ------------------------ Dot Graph Helper Functions ------------------------------
 // ----------------------------------------------------------------------------------
 string get_signal_node_label(ivl_signal_t signal);
 string get_const_node_label(ivl_net_const_t constant);
+string get_const_expr_node_label(ivl_expr_t const_expr);
 
 string get_signal_connection_label(ivl_signal_t source_signal, 
                                    ivl_signal_t sink_signal);
@@ -47,6 +50,9 @@ string get_sliced_signal_connection_label(ivl_signal_t source_signal,
 
 string get_const_connection_label(ivl_net_const_t source_constant, 
                                   ivl_signal_t    sink_signal);
+
+string get_const_expr_connection_label(ivl_expr_t   source_const_expr, 
+                                       ivl_signal_t sink_signal);
 
 // ----------------------------------------------------------------------------------
 // --------------------- Combinational Logic Processing -----------------------------
@@ -116,9 +122,9 @@ int process_process(ivl_process_t process, void* data);
 const char* get_process_type_as_string(ivl_process_t process);
 
 // Expression
-void process_expression(ivl_expr_t expression, SignalGraph* sg, string ws);
-void process_expression_signal(ivl_expr_t expression, SignalGraph* sg, string ws);
-void process_expression_number(ivl_expr_t expression, SignalGraph* sg, string ws);
+void process_expression(ivl_expr_t expression, ivl_signal_t sink_signal, SignalGraph* sg, string ws);
+void process_expression_signal(ivl_expr_t expression, ivl_signal_t sink_signal, SignalGraph* sg, string ws);
+void process_expression_number(ivl_expr_t expression, ivl_signal_t sink_signal, SignalGraph* sg, string ws);
 const char* get_expr_type_as_string(ivl_expr_t expression);
 
 // Statement

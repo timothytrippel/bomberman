@@ -14,6 +14,7 @@ Graphviz .dot file.
 #include <cassert>
 #include <cstring>
 #include <string>
+#include <typeinfo>
 
 // TTB Headers
 #include "ttb.h"

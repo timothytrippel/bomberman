@@ -72,9 +72,6 @@ void Reporter::root_scopes(ivl_scope_t* scopes, unsigned int num_scopes){
         // Print scope name
         fprintf(file_ptr_, "    %s\n", scope_name.c_str());
     }
-
-    // Print new line
-    fprintf(file_ptr_, "\n");
 }
 
 void Reporter::num_signals(unsigned long num_signals){

@@ -149,14 +149,14 @@ void SignalGraph::find_signals(ivl_scope_t scope) {
 void SignalGraph::add_constant_connection(ivl_signal_t    sink_signal, 
                                           ivl_net_const_t source_constant,
                                           string          ws) {
-    
+
     string source_constant_name;
     string source_constant_label;
     string sink_signal_name;
     string connection_label;
 
     // Get constant node name and label
-    source_constant_name  = get_constant_fullname(source_constant);
+    source_constant_name  = get_constant_fullname(source_constant, num_constants_);
     source_constant_label = get_const_node_label(source_constant);
     
     // Get sink signal names
@@ -173,20 +173,50 @@ void SignalGraph::add_constant_connection(ivl_signal_t    sink_signal,
     // Add CONSTANT node to dot graph
     dg_.add_node(source_constant_name, source_constant_label, CONST_NODE_SHAPE);
 
-    // Debug Print
-    fprintf(stdout, "%sADDING CONNECTION from %s to %s\n", 
-        ws.c_str(), 
-        source_constant_name.c_str(), 
-        sink_signal_name.c_str());
+    // Increment constants counter
+    num_constants_++;
 
     // Add connection to dot graph
-    dg_.add_connection(source_constant_name, sink_signal_name, connection_label);
-    num_connections_++;
+    add_connection(source_constant_name, sink_signal_name, connection_label, ws);
 }
 
-void SignalGraph::add_connection(ivl_signal_t sink_signal, 
-                                 ivl_signal_t source_signal, 
-                                 string       ws) {
+void SignalGraph::add_constant_expr_connection(ivl_signal_t sink_signal, 
+                                               ivl_expr_t   source_const_expr,
+                                               string       ws) {
+    
+    string source_constant_name;
+    string source_constant_label;
+    string sink_signal_name;
+    string connection_label;
+
+    // Get constant node name and label
+    source_constant_name  = get_constant_expr_fullname(source_const_expr, num_constants_);
+    source_constant_label = get_const_expr_node_label(source_const_expr);
+    
+    // Get sink signal names
+    sink_signal_name = get_signal_fullname(sink_signal);
+
+    // Get connection label
+    connection_label = get_const_expr_connection_label(source_const_expr, sink_signal);
+
+    // Debug Print
+    fprintf(stdout, "%sADDING CONSTANT EXPRESSION NODE (%s)\n", 
+        ws.c_str(), 
+        source_constant_name.c_str());
+
+    // Add CONSTANT node to dot graph
+    dg_.add_node(source_constant_name, source_constant_label, CONST_NODE_SHAPE);
+
+    // Increment constants counter
+    num_constants_++;
+
+    // Add connection to dot graph
+    add_connection(source_constant_name, sink_signal_name, connection_label, ws);
+}
+
+void SignalGraph::add_signal_connection(ivl_signal_t sink_signal, 
+                                        ivl_signal_t source_signal, 
+                                        string       ws) {
 
     string source_signal_name;
     string sink_signal_name;
@@ -196,14 +226,8 @@ void SignalGraph::add_connection(ivl_signal_t sink_signal,
     // Thus, ignoring local IVL generated signals as these
     // are not added to the graph when it is initialized.
     if (signals_map_.count(source_signal)) {
-
+    	// Add signal object to adjacency list
         signals_map_[sink_signal].push_back(source_signal);
-
-        // Debug Print
-        fprintf(stdout, "%sADDING CONNECTION from %s to %s\n", 
-            ws.c_str(), 
-            get_signal_fullname(source_signal).c_str(), 
-            get_signal_fullname(sink_signal).c_str());
         
         // Get signal names
         source_signal_name = get_signal_fullname(source_signal);
@@ -231,11 +255,26 @@ void SignalGraph::add_connection(ivl_signal_t sink_signal,
         }
 
         // Add connection to dot graph
-        dg_.add_connection(source_signal_name, sink_signal_name, connection_label);
-        num_connections_++;
+        add_connection(source_signal_name, sink_signal_name, connection_label, ws);
     } else if (!ivl_signal_local(source_signal)) {
         Error::connecting_signal_not_in_graph(source_signal);
     }
+}
+
+void SignalGraph::add_connection(string source_signal_name, 
+                                 string sink_signal_name, 
+                                 string connection_label,
+                                 string ws) {
+
+	// Debug Print
+    fprintf(stdout, "%sADDING CONNECTION from %s to %s\n", 
+        ws.c_str(), 
+        source_signal_name.c_str(), 
+        sink_signal_name.c_str());
+
+	// Add connection to dot graph
+    dg_.add_connection(source_signal_name, sink_signal_name, connection_label);
+    num_connections_++;
 }
 
 void SignalGraph::track_lpm_connection_slice(unsigned int      msb, 

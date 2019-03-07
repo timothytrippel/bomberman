@@ -30,11 +30,20 @@ string get_signal_fullname(ivl_signal_t signal) {
     return fullname;
 }
 
-string get_constant_fullname(ivl_net_const_t constant) {
-    string scopename = ivl_scope_name(ivl_const_scope(constant)); 
+string get_constant_fullname(ivl_net_const_t constant, unsigned long num_constants) {
+    // string scopename = ivl_scope_name(ivl_const_scope(constant)); 
     string basename  = string(ivl_const_bits(constant), (size_t)ivl_const_width(constant));
     reverse(basename.begin(), basename.end());
-    string fullname  = scopename + string(".const_") + basename;
+    // string fullname  = scopename + string(".const_") + basename;
+    string fullname  = string("const_") + to_string(num_constants) + string(".") + basename;
+
+    return fullname;
+}
+
+string get_constant_expr_fullname(ivl_expr_t const_expr, unsigned long num_constants) {
+    string basename  = string(ivl_expr_bits(const_expr), (size_t)ivl_expr_width(const_expr));
+    reverse(basename.begin(), basename.end());
+    string fullname  = string("const_") + to_string(num_constants) + string(".") + basename;
 
     return fullname;
 }
@@ -67,6 +76,10 @@ unsigned int get_const_msb(ivl_net_const_t constant) {
     return ivl_const_width(constant) - 1;
 }
 
+unsigned int get_expr_msb(ivl_expr_t expression) {
+    return ivl_expr_width(expression) - 1;
+}
+
 // ----------------------------------------------------------------------------------
 // ------------------------ Dot Graph Helper Functions ------------------------------
 // ----------------------------------------------------------------------------------
@@ -92,8 +105,19 @@ string get_const_node_label(ivl_net_const_t constant) {
     return ss.str();
 }
 
+string get_const_expr_node_label(ivl_expr_t const_expr) {
+    stringstream ss;
+
+    ss << "[";
+    ss << get_expr_msb(const_expr);
+    ss << ":0]";
+
+    return ss.str();
+}
+
 string get_signal_connection_label(ivl_signal_t source_signal, 
-                                                ivl_signal_t sink_signal) {
+                                   ivl_signal_t sink_signal) {
+
     stringstream ss;
     
     ss << get_signal_node_label(source_signal);
@@ -115,6 +139,18 @@ string get_const_connection_label(ivl_net_const_t source_constant,
     return ss.str();
 }
 
+string get_const_expr_connection_label(ivl_expr_t   source_const_expr, 
+                                       ivl_signal_t sink_signal) {
+
+    stringstream ss;
+    
+    ss << get_const_expr_node_label(source_const_expr);
+    ss << "->";
+    ss << get_signal_node_label(sink_signal);
+
+    return ss.str();
+}
+
 string get_sliced_signal_connection_label(ivl_signal_t source_signal, 
                                           ivl_signal_t sink_signal, 
                                           SliceInfo    signal_slice) {
@@ -126,8 +162,8 @@ string get_sliced_signal_connection_label(ivl_signal_t source_signal,
 
     if (signal_slice.node == SINK) {
         // sliced sink node (signal)
-        sink_msb = signal_slice.msb;
-        sink_lsb = signal_slice.lsb;
+        sink_msb   = signal_slice.msb;
+        sink_lsb   = signal_slice.lsb;
         source_msb = get_signal_msb(source_signal);
         source_lsb = get_signal_lsb(source_signal);
     } else {
@@ -152,6 +188,9 @@ string get_sliced_signal_connection_label(ivl_signal_t source_signal,
     return ss.str();
 }
 
+// ----------------------------------------------------------------------------------
+// ---------------------- Connection Enumeration Functions --------------------------
+// ----------------------------------------------------------------------------------
 void find_combinational_connections(SignalGraph* sg) {
     // Get signals adjacency list
     sig_map_t signals_map = sg->get_signals_map();

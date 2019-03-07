@@ -90,11 +90,8 @@ const char* get_statement_type_as_string(ivl_statement_t statement) {
 // --------------------------- SUB-PROCESSING Functions -----------------------------
 // ----------------------------------------------------------------------------------
 void process_event_nexus(ivl_nexus_t nexus, ivl_statement_t statement, SignalGraph* sg, string ws) {
-    // Nexus Pointer
-    ivl_nexus_ptr_t nexus_ptr = NULL;
-
     // Source Signal Object
-    ivl_signal_t    source_signal    = NULL;
+    ivl_signal_t source_signal = NULL;
 
     // Check no more than one nexus pointer for an event nexus
     // Check nexus pointer type is signal object only
@@ -169,7 +166,7 @@ void process_statement_condit(ivl_statement_t statement, SignalGraph* sg, string
     ivl_statement_t false_statement = ivl_stmt_cond_false(statement);
     
     // Process conditional expression to get source signals
-    process_expression(condit_expr, sg, ws);
+    process_expression(condit_expr, NULL, sg, ws);
 
     // Process true/false sub-statements to propagate 
     // source signals to sink signals
@@ -210,18 +207,18 @@ void process_statement_assign(ivl_statement_t statement, SignalGraph* sg, string
 
         // Process lval expression (if necessary)
         if ((part_select_offset = ivl_lval_part_off(lval))) {
-            process_expression(part_select_offset, sg, ws + "  ");
-            process_expression(part_select_offset, sg, ws + "  ");
+            process_expression(part_select_offset, sink_signal, sg, ws + "  ");
+            process_expression(part_select_offset, sink_signal, sg, ws + "  ");
         }
     }
 
     // Process rval
     fprintf(stdout, "%sprocessing rval ...\n", ws.c_str());
-    process_expression(ivl_stmt_rval(statement), sg, ws + "  ");
+    process_expression(ivl_stmt_rval(statement), sink_signal, sg, ws + "  ");
 
     // Add connection(s)
     while ((source_signal = sg->pop_from_source_signals_queue())) {
-        sg->add_connection(sink_signal, source_signal, ws + "  ");
+        sg->add_signal_connection(sink_signal, source_signal, ws + "  ");
     }
 }
 
@@ -244,15 +241,18 @@ void process_statement(ivl_statement_t statement, SignalGraph* sg, string ws) {
             break;
 
         case IVL_ST_BLOCK:
+            Error::unknown_statement_type(ivl_statement_type(statement));
             break;
 
         case IVL_ST_CASE:
         case IVL_ST_CASER:
         case IVL_ST_CASEX:
         case IVL_ST_CASEZ:
+            Error::unknown_statement_type(ivl_statement_type(statement));
             break;
 
         case IVL_ST_CASSIGN:
+            Error::unknown_statement_type(ivl_statement_type(statement));
             break;
 
         case IVL_ST_CONDIT:
@@ -261,6 +261,7 @@ void process_statement(ivl_statement_t statement, SignalGraph* sg, string ws) {
         
         case IVL_ST_DELAY:
         case IVL_ST_DELAYX:
+            Error::unknown_statement_type(ivl_statement_type(statement));
             break;
         
         case IVL_ST_WAIT:
