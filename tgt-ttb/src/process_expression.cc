@@ -80,8 +80,8 @@ const char* get_expr_type_as_string(ivl_expr_t expression) {
 // --------------------------- SUB-PROCESSING Functions -----------------------------
 // ----------------------------------------------------------------------------------
 node_t process_expression_signal(ivl_expr_t   expression, 
-                               SignalGraph* sg, 
-                               string       ws) {
+                                 SignalGraph* sg, 
+                                 string       ws) {
 
     // Source (IVL signal/const/const_expr) node
     node_object_t node_obj    = {NULL};
@@ -98,8 +98,8 @@ node_t process_expression_signal(ivl_expr_t   expression,
 }
 
 node_t process_expression_number(ivl_expr_t   expression, 
-                               SignalGraph* sg, 
-                               string       ws) {
+                                 SignalGraph* sg, 
+                                 string       ws) {
 
     // Source (IVL signal/const/const_expr) node
     node_object_t node_obj    = {NULL};
@@ -116,8 +116,8 @@ node_t process_expression_number(ivl_expr_t   expression,
 // --------------------------- Main PROCESSING Function -----------------------------
 // ----------------------------------------------------------------------------------
 node_t process_expression(ivl_expr_t   expression, 
-                        SignalGraph* sg, 
-                        string       ws) {
+                          SignalGraph* sg, 
+                          string       ws) {
     
     fprintf(stdout, "%sprocessing expression (%s)\n", 
         ws.c_str(), get_expr_type_as_string(expression));

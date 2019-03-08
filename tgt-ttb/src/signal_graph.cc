@@ -194,10 +194,28 @@ void SignalGraph::add_constant_connection(ivl_signal_t sink_signal,
     		source_constant_label = get_const_node_label(
     			source_node.object.ivl_constant);
 
-    		// Get connnection label
-    		connection_label = get_const_connection_label(
-    			source_node.object.ivl_constant, 
-    			sink_signal);
+    		// Check if connection is sliced
+	        if (node_slices_.size()) {
+	            // SLICED connection
+
+	            // Get signal slice info
+	            node_slice_t signal_slice = node_slices_.back();
+
+	            // Get connection label
+	            connection_label = get_sliced_const_connection_label(
+	            	source_node.object.ivl_constant, 
+	            	signal_slice);
+
+	            // pop slice info from stack
+	            node_slices_.pop_back();
+	        } else {
+	            // FULL connection
+
+	            // Get connection label
+	            connection_label = get_const_connection_label(
+	            	source_node.object.ivl_constant, 
+	            	sink_signal);
+	        }
 
     		break;
 
@@ -212,10 +230,28 @@ void SignalGraph::add_constant_connection(ivl_signal_t sink_signal,
     			source_node.object.ivl_const_expr);
     		
     		// Get connnection label
-    		connection_label = get_const_expr_connection_label(
-    			source_node.object.ivl_const_expr,
-    			sink_signal);
+    		if (node_slices_.size()) {
+	            // SLICED connection
 
+	            // Get signal slice info
+	            node_slice_t signal_slice = node_slices_.back();
+
+	            // Get connection label
+	            connection_label = get_sliced_const_expr_connection_label(
+    				source_node.object.ivl_const_expr,
+    				signal_slice);
+
+	            // pop slice info from stack
+	            node_slices_.pop_back();
+	        } else {
+	            // FULL connection
+
+	            // Get connection label
+	            connection_label = get_const_expr_connection_label(
+    				source_node.object.ivl_const_expr,
+    				sink_signal);
+	        }
+	        
     		break;
 
         default:

@@ -98,6 +98,8 @@ unsigned int get_expr_msb(ivl_expr_t expression) {
 // ----------------------------------------------------------------------------------
 // ------------------------ Dot Graph Helper Functions ------------------------------
 // ----------------------------------------------------------------------------------
+
+// ----------------------------- IVL Signal Processing ------------------------------
 string get_signal_node_label(ivl_signal_t signal) {
     stringstream ss;
 
@@ -110,56 +112,12 @@ string get_signal_node_label(ivl_signal_t signal) {
     return ss.str();
 }
 
-string get_const_node_label(ivl_net_const_t constant) {
-    stringstream ss;
-
-    ss << "[";
-    ss << get_const_msb(constant);
-    ss << ":0]";
-
-    return ss.str();
-}
-
-string get_const_expr_node_label(ivl_expr_t const_expr) {
-    stringstream ss;
-
-    ss << "[";
-    ss << get_expr_msb(const_expr);
-    ss << ":0]";
-
-    return ss.str();
-}
-
 string get_signal_connection_label(ivl_signal_t source_signal, 
                                    ivl_signal_t sink_signal) {
 
     stringstream ss;
     
     ss << get_signal_node_label(source_signal);
-    ss << "->";
-    ss << get_signal_node_label(sink_signal);
-
-    return ss.str();
-}
-
-string get_const_connection_label(ivl_net_const_t source_constant, 
-                                  ivl_signal_t    sink_signal) {
-
-    stringstream ss;
-    
-    ss << get_const_node_label(source_constant);
-    ss << "->";
-    ss << get_signal_node_label(sink_signal);
-
-    return ss.str();
-}
-
-string get_const_expr_connection_label(ivl_expr_t   source_const_expr, 
-                                       ivl_signal_t sink_signal) {
-
-    stringstream ss;
-    
-    ss << get_const_expr_node_label(source_const_expr);
     ss << "->";
     ss << get_signal_node_label(sink_signal);
 
@@ -189,12 +147,107 @@ string get_sliced_signal_connection_label(ivl_signal_t source_signal,
         source_lsb = signal_slice.lsb;
     }
     
-    
     ss << "[";
     ss << source_msb;
     ss << ":";
     ss << source_lsb;
     ss << "]->[";
+    ss << sink_msb;
+    ss << ":";
+    ss << sink_lsb;
+    ss << "]";
+
+    return ss.str();
+}
+
+// ---------------------------- IVL Constant Processing -----------------------------
+string get_const_node_label(ivl_net_const_t constant) {
+    stringstream ss;
+
+    ss << "[";
+    ss << get_const_msb(constant);
+    ss << ":0]";
+
+    return ss.str();
+}
+
+string get_const_connection_label(ivl_net_const_t source_constant, 
+                                  ivl_signal_t    sink_signal) {
+
+    stringstream ss;
+    
+    ss << get_const_node_label(source_constant);
+    ss << "->";
+    ss << get_signal_node_label(sink_signal);
+
+    return ss.str();
+}
+
+string get_sliced_const_connection_label(ivl_net_const_t source_constant,  
+                                         node_slice_t    signal_slice) {
+
+    unsigned int sink_msb;
+    unsigned int sink_lsb;
+    stringstream ss;
+
+    // Source (const expr) node CANNOT be sliced
+    assert(signal_slice.type == SINK && 
+        "ERROR: slice source constant encountered.\n"); 
+
+    // sliced sink node (signal)
+    sink_msb = signal_slice.msb;
+    sink_lsb = signal_slice.lsb;
+    
+    ss << get_const_node_label(source_constant);
+    ss << "->[";
+    ss << sink_msb;
+    ss << ":";
+    ss << sink_lsb;
+    ss << "]";
+
+    return ss.str();
+}
+
+// --------------------- IVL Constant Expression Processing -------------------------
+string get_const_expr_node_label(ivl_expr_t const_expr) {
+    stringstream ss;
+
+    ss << "[";
+    ss << get_expr_msb(const_expr);
+    ss << ":0]";
+
+    return ss.str();
+}
+
+string get_const_expr_connection_label(ivl_expr_t   source_const_expr, 
+                                       ivl_signal_t sink_signal) {
+
+    stringstream ss;
+    
+    ss << get_const_expr_node_label(source_const_expr);
+    ss << "->";
+    ss << get_signal_node_label(sink_signal);
+
+    return ss.str();
+}
+
+string get_sliced_const_expr_connection_label(ivl_expr_t   source_const_expr, 
+                                              node_slice_t signal_slice) {
+
+    unsigned int sink_msb;
+    unsigned int sink_lsb;
+    stringstream ss;
+
+    // Source (const expr) node CANNOT be sliced
+    assert(signal_slice.type == SINK && 
+        "ERROR: slice source constant encountered.\n"); 
+
+    // sliced sink node (signal)
+    sink_msb = signal_slice.msb;
+    sink_lsb = signal_slice.lsb;
+    
+    ss << get_const_expr_node_label(source_const_expr);
+    ss << "->[";
     ss << sink_msb;
     ss << ":";
     ss << sink_lsb;
@@ -281,6 +334,11 @@ int target_design(ivl_design_t design) {
     find_combinational_connections(&sg);      // Process COMBINATIONAL logic connections
     reporter.print_message(BEHAVE_CONNECTION_ENUM_MESSAGE);
     find_behavioral_connections(design, &sg); // Process BEHAVIORAL logic connections
+
+    // Report Graph Stats
+    reporter.line_separator();
+    reporter.num_signals(sg.get_num_signals());
+    reporter.num_constants(sg.get_num_constants());
     reporter.num_connections(sg.get_num_connections());
 
     // Save dot graph to file

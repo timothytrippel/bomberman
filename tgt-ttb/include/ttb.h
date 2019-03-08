@@ -38,9 +38,8 @@ unsigned int get_expr_msb(ivl_expr_t expression);
 // ----------------------------------------------------------------------------------
 // ------------------------ Dot Graph Helper Functions ------------------------------
 // ----------------------------------------------------------------------------------
+// Signals
 string get_signal_node_label(ivl_signal_t signal);
-string get_const_node_label(ivl_net_const_t constant);
-string get_const_expr_node_label(ivl_expr_t const_expr);
 
 string get_signal_connection_label(ivl_signal_t source_signal, 
                                    ivl_signal_t sink_signal);
@@ -49,11 +48,23 @@ string get_sliced_signal_connection_label(ivl_signal_t source_signal,
                                           ivl_signal_t sink_signal, 
                                           node_slice_t signal_slice);
 
+// Constants
+string get_const_node_label(ivl_net_const_t constant);
+
 string get_const_connection_label(ivl_net_const_t source_constant, 
                                   ivl_signal_t    sink_signal);
 
+string get_sliced_const_connection_label(ivl_net_const_t source_constant, 
+                                         node_slice_t    signal_slice);
+
+// Constant Expressions
+string get_const_expr_node_label(ivl_expr_t const_expr);
+
 string get_const_expr_connection_label(ivl_expr_t   source_const_expr, 
                                        ivl_signal_t sink_signal);
+
+string get_sliced_const_expr_connection_label(ivl_expr_t   source_const_expr, 
+                                              node_slice_t signal_slice);
 
 // ----------------------------------------------------------------------------------
 // --------------------- Combinational Logic Processing -----------------------------
@@ -130,8 +141,10 @@ const char* get_expr_type_as_string(ivl_expr_t expression);
 
 // Statement
 void process_statement(ivl_statement_t statement, SignalGraph* sg, string ws);
+void process_event_nexus(ivl_nexus_t nexus, ivl_statement_t statement, SignalGraph* sg, string ws);
 void process_statement_wait(ivl_statement_t statement, SignalGraph* sg, string ws);
 void process_statement_condit(ivl_statement_t statement, SignalGraph* sg, string ws);
+unsigned int process_statement_assign_partselect(node_t offset_node, ivl_statement_t statement);
 void process_statement_assign(ivl_statement_t statement, SignalGraph* sg, string ws);
 const char* get_statement_type_as_string(ivl_statement_t statement);
 

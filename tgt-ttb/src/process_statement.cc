@@ -89,6 +89,8 @@ const char* get_statement_type_as_string(ivl_statement_t statement) {
 // ----------------------------------------------------------------------------------
 // --------------------------- SUB-PROCESSING Functions -----------------------------
 // ----------------------------------------------------------------------------------
+
+// ------------------------------- WAIT Statement -----------------------------------
 void process_event_nexus(ivl_nexus_t     nexus, 
                          ivl_statement_t statement, 
                          SignalGraph*    sg, 
@@ -166,6 +168,7 @@ void process_statement_wait(ivl_statement_t statement,
     }
 }
 
+// ------------------------------ CONDIT Statement ----------------------------------
 void process_statement_condit(ivl_statement_t statement, 
                               SignalGraph*    sg, 
                               string          ws) {
@@ -181,7 +184,7 @@ void process_statement_condit(ivl_statement_t statement,
     node_t source_node = process_expression(condit_expr, sg, ws);
     
     // Push source node to source nodes queue
-    sg->push_to_source_nodes_queue(source_node, ws);
+    sg->push_to_source_nodes_queue(source_node, ws + "  ");
 
     // Process true/false sub-statements to propagate 
     // source signals to sink signals
@@ -193,6 +196,24 @@ void process_statement_condit(ivl_statement_t statement,
     }
 }
 
+// ------------------------------ ASSIGN Statement ----------------------------------
+unsigned int process_statement_assign_partselect(node_t offset_node, ivl_statement_t statement) {
+    // Check offset_node is only of type IVL_CONST_EXPR
+    // @TODO: support non-constant part select offsets,
+    // e.g. signals: signal_a[signal_b] <= signal_c;
+    Error::check_lval_offset(offset_node.type, statement);
+
+    // Get offset node constant expression
+    ivl_expr_t const_expr = offset_node.object.ivl_const_expr;
+
+    // Get LSB offset index
+    string bit_string = string(ivl_expr_bits(const_expr));
+    reverse(bit_string.begin(), bit_string.end());
+
+    // Convert bitstring to unsigned long
+    return stoul(bit_string, NULL, BITSTRING_BASE);
+}
+
 void process_statement_assign(ivl_statement_t statement, 
                               SignalGraph*    sg, 
                               string          ws) {
@@ -201,16 +222,18 @@ void process_statement_assign(ivl_statement_t statement,
     ivl_lval_t   lval               = NULL;
     ivl_expr_t   part_select_offset = NULL;
     unsigned int num_lvals          = 0;
+    unsigned int lval_msb           = 0;
+    unsigned int lval_lsb           = 0;
     node_t       source_node;
     node_t       offset_node;
 
     // Get number of lvals
     num_lvals = ivl_stmt_lvals(statement);
 
-    // Check for concatendated lvals
+    // Check for (NON-SUPPORTED) concatenated lvals
+    // @TODO: support concatenated lvals
     Error::check_lvals_not_concatenated(num_lvals, statement);
 
-    // Process lval
     fprintf(stdout, "%sprocessing (%u) lval(s) ...\n", 
         ws.c_str(), num_lvals);
 
@@ -219,27 +242,50 @@ void process_statement_assign(ivl_statement_t statement,
         // Get lval object
         lval = ivl_stmt_lval(statement, i);
 
-        // Check that lval is NOT nested
+        // Get MSB of lval
+        lval_msb = lval_lsb + ivl_lval_width(lval) - 1;
+
+        // Check for a (NON-SUPPORTED) nested lval
+        // @TODO: support nested lvals
         Error::check_lval_not_nested(lval, statement);
+
+        // Check for (NON-SUPPORTED) memory lvals
+        // @TODO: support memory lvals
+        Error::check_lval_not_memory(lval, statement);
 
         // Get sink signal
         sink_signal = ivl_lval_sig(lval);
-        fprintf(stdout, "%ssink signal: %s\n", 
-            string(ws + "  ").c_str(),
-            get_signal_fullname(sink_signal).c_str());
-
-        // Process lval expression (if necessary)
+        
+        // Process lval part select expression (if necessary)
         if ((part_select_offset = ivl_lval_part_off(lval))) {
+            fprintf(stdout, "%sprocessing lval part select ...\n", 
+                string(ws + "  ").c_str());
+
+            // Get LSB offset as constant expressio node
             offset_node = process_expression(part_select_offset, sg, ws + "  ");
+
+            // Update MSB and LSB of slice
+            lval_lsb = process_statement_assign_partselect(offset_node, statement);
+            lval_msb = lval_lsb + ivl_lval_width(lval) - 1;
         }
     }
+
+    // Print LVal sink signal selects
+    fprintf(stdout, "%ssink signal: %s[%d:%d]\n", 
+        string(ws + "  ").c_str(),
+        get_signal_fullname(sink_signal).c_str(),
+        lval_msb,
+        lval_lsb);
+
+    // Track connection slice information
+    sg->track_lpm_connection_slice(lval_msb, lval_lsb, SINK);
 
     // Process rval expression
     fprintf(stdout, "%sprocessing rval ...\n", ws.c_str());
     source_node = process_expression(ivl_stmt_rval(statement), sg, ws + "  ");
 
     // Push source node to source nodes queue
-    sg->push_to_source_nodes_queue(source_node, ws);
+    sg->push_to_source_nodes_queue(source_node, ws + "  ");
 
     // Add connection(s)
     fprintf(stdout, "%sprocessing connections ...\n", ws.c_str());

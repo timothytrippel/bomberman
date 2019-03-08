@@ -37,6 +37,8 @@ class Error {
         static void check_event_nexus(ivl_nexus_t nexus, ivl_statement_t statement);
         static void check_lvals_not_concatenated(unsigned int num_lvals, ivl_statement_t statement);
         static void check_lval_not_nested(ivl_lval_t lval, ivl_statement_t statement);
+        static void check_lval_not_memory(ivl_lval_t lval, ivl_statement_t statement);
+        static void check_lval_offset(node_type_t node_type, ivl_statement_t statement);
 
         // Error Reporting Functions
         // Unknown Types

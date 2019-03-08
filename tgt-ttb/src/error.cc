@@ -161,6 +161,27 @@ void Error::check_lval_not_nested(ivl_lval_t lval, ivl_statement_t statement) {
     }
 }
 
+void Error::check_lval_not_memory(ivl_lval_t lval, ivl_statement_t statement) {
+    // Check if lval is a memory
+    if (ivl_lval_idx(lval)) {
+        fprintf(stderr, "NOT-SUPPORTED: memory lvals (File: %s -- Line: %d).\n", 
+            ivl_stmt_file(statement), ivl_stmt_lineno(statement));
+
+        exit(NOT_SUPPORTED_ERROR);
+    }
+}
+
+void Error::check_lval_offset(node_type_t node_type, ivl_statement_t statement) {
+    // Check lval offset expression os only of type IVL_CONST_EXPR,
+    // i.e. it is a constant expression
+    if (node_type != IVL_CONST_EXPR) {
+        fprintf(stderr, "NOT-SUPPORTED: non-constant expression lval offset (File: %s -- Line: %d).\n", 
+            ivl_stmt_file(statement), ivl_stmt_lineno(statement));
+
+        exit(NOT_SUPPORTED_ERROR);
+    }
+}
+
 // ----------------------------------------------------------------------------------
 // ------------------------- Error Reporting: Unkown Types --------------------------
 // ----------------------------------------------------------------------------------
@@ -218,6 +239,6 @@ void Error::connecting_signal_not_in_graph(ivl_signal_t signal) {
 
 void Error::processing_behavioral_connections() {
     fprintf(stderr, "ERROR: processing behavioral logic connections.\n");
-    
+
     exit(BEHAVIORAL_CONNECTIONS_ERROR);
 }

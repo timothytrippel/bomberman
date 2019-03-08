@@ -78,16 +78,24 @@ void Reporter::num_signals(unsigned long num_signals){
     // Check that file has been opened for writing report
     assert(file_ptr_ != NULL && "ERROR: reporter file ptr is NULL.\n");
 
-    // Print number of signals in vector
-    fprintf(file_ptr_, "Number of signals found: %lu\n\n", num_signals);
+    // Print number of signals enumerated in design
+    fprintf(file_ptr_, "Number of signals found: %lu\n", num_signals);
+}
+
+void Reporter::num_constants(unsigned long num_constants){
+    // Check that file has been opened for writing report
+    assert(file_ptr_ != NULL && "ERROR: reporter file ptr is NULL.\n");
+
+    // Print number of constants enumerated in design
+    fprintf(file_ptr_, "Number of constants found: %lu\n", num_constants);
 }
 
 void Reporter::num_connections(unsigned long num_connections){
     // Check that file has been opened for writing report
     assert(file_ptr_ != NULL && "ERROR: reporter file ptr is NULL.\n");
 
-    // Print number of signals in vector
-    fprintf(file_ptr_, "\nNumber of connections found: %lu\n", num_connections);
+    // Print number of connections enumerated in design
+    fprintf(file_ptr_, "Number of connections found: %lu\n", num_connections);
 }
 
 void Reporter::signal_names(sig_map_t signals_map){
@@ -110,6 +118,14 @@ void Reporter::signal_names(sig_map_t signals_map){
     }
 }
 
+void Reporter::line_separator(){
+    // Check that file has been opened for writing report
+    assert(file_ptr_ != NULL && "ERROR: reporter file ptr is NULL.\n");
+
+    // Print line separator
+    fprintf(file_ptr_, "\n%s\n", LINE_SEPARATOR);
+}
+
 void Reporter::end(){
     // Check that file has been opened for writing report
     assert(file_ptr_ != NULL && "ERROR: reporter file ptr is NULL.\n");
@@ -117,7 +133,7 @@ void Reporter::end(){
     // Record current execution time
     execution_time_ = (clock() - start_time_) / (double) CLOCKS_PER_SEC;
     fprintf(file_ptr_, "\nExecution Time: %f (s)\n", execution_time_);
-    fprintf(file_ptr_, "-----------------------------\n");
+    fprintf(file_ptr_, "%s\n", LINE_SEPARATOR);
 
     // Close output file
     fclose(file_ptr_);

@@ -6,7 +6,7 @@ module sliced_ff(input clk, input rst, input [1:0] d, input en, output reg [1:0]
 
 	always @(posedge clk) begin
 		if (rst)
-			q[1:1] <= 1'b0;
+			q[1:1] <= 1'b1;
 		else
 			q <= next_q;
 	end
