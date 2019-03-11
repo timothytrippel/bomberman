@@ -27,7 +27,6 @@ using namespace std;
 #define SIGNAL_ENUM_MESSAGE            "Enumerating signals..."
 #define COMB_CONNECTION_ENUM_MESSAGE   "Enumerating combinational logic connections..."
 #define BEHAVE_CONNECTION_ENUM_MESSAGE "Enumerating behavioral logic connections..."
-#define LINE_SEPARATOR                 "-----------------------------"
 
 // Define Indexes
 #define LOGIC_OUTPUT_PIN_NEXUS_INDEX      0
@@ -36,6 +35,8 @@ using namespace std;
 
 // Other Defines
 #define BITSTRING_BASE 2
+#define LINE_SEPARATOR "-----------------------------"
+#define WS_TAB         "  "
 
 // Debugging Switches
 #define DEBUG_PRINTS false

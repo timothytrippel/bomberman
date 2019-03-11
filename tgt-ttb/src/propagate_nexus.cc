@@ -48,7 +48,7 @@ void propagate_nexus(ivl_nexus_t nexus, ivl_signal_t sink_signal, SignalGraph* s
             // @TODO: investigate this
             // Ignore connections to local (IVL generated) signals.
             if (source_signal != sink_signal) {
-                sg->add_signal_connection(sink_signal, source_signal, ws + "  ");
+                sg->add_signal_connection(sink_signal, source_signal, ws + WS_TAB);
             }
         } else if ((source_logic = ivl_nexus_ptr_log(nexus_ptr))) {
             // Nexus target object is a LOGIC

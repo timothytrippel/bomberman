@@ -182,6 +182,22 @@ void Error::check_lval_offset(node_type_t node_type, ivl_statement_t statement) 
     }
 }
 
+void Error::check_slice_tracking_stacks(vector<node_slice_t> source_slices, 
+                                        vector<node_slice_t> sink_slices) {
+
+    // Check SOURCE slice info stack size
+    if (source_slices.size() > 1) {
+        fprintf(stderr, "ERROR: source slice info stack size > 1.\n");
+        exit(SLICE_TRACKING_ERROR);
+    }
+
+    // Check SINK slice info stack size
+    if (sink_slices.size() > 1) {
+        fprintf(stderr, "ERROR: sink slice info stack size > 1.\n");
+        exit(SLICE_TRACKING_ERROR);
+    }
+}
+
 // ----------------------------------------------------------------------------------
 // ------------------------- Error Reporting: Unkown Types --------------------------
 // ----------------------------------------------------------------------------------

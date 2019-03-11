@@ -27,6 +27,7 @@ using namespace std;
 // ------------------------------- Helper Functions ---------------------------------
 // ----------------------------------------------------------------------------------
 const char*  get_node_type_as_string(node_type_t node_type);
+const char*  get_node_slice_type_as_string(node_slice_type_t node_slice_type);
 string       get_signal_fullname(ivl_signal_t signal);
 string       get_constant_fullname(ivl_net_const_t constant, unsigned long num_constants);
 string       get_constant_expr_fullname(ivl_expr_t const_expr, unsigned long num_constants);
@@ -41,30 +42,20 @@ unsigned int get_expr_msb(ivl_expr_t expression);
 // Signals
 string get_signal_node_label(ivl_signal_t signal);
 
-string get_signal_connection_label(ivl_signal_t source_signal, 
-                                   ivl_signal_t sink_signal);
-
-string get_sliced_signal_connection_label(ivl_signal_t source_signal, 
-                                          ivl_signal_t sink_signal, 
-                                          node_slice_t signal_slice);
+string get_signal_connection_label(node_slice_t source_slice,
+                                   node_slice_t sink_slice);
 
 // Constants
 string get_const_node_label(ivl_net_const_t constant);
 
 string get_const_connection_label(ivl_net_const_t source_constant, 
-                                  ivl_signal_t    sink_signal);
-
-string get_sliced_const_connection_label(ivl_net_const_t source_constant, 
-                                         node_slice_t    signal_slice);
+                                  node_slice_t    sink_signal_slice);
 
 // Constant Expressions
 string get_const_expr_node_label(ivl_expr_t const_expr);
 
 string get_const_expr_connection_label(ivl_expr_t   source_const_expr, 
-                                       ivl_signal_t sink_signal);
-
-string get_sliced_const_expr_connection_label(ivl_expr_t   source_const_expr, 
-                                              node_slice_t signal_slice);
+                                       node_slice_t sink_signal_slice);
 
 // ----------------------------------------------------------------------------------
 // --------------------- Combinational Logic Processing -----------------------------
@@ -134,9 +125,9 @@ int process_process(ivl_process_t process, void* data);
 const char* get_process_type_as_string(ivl_process_t process);
 
 // Expression
-node_t process_expression(ivl_expr_t expression, SignalGraph* sg, string ws);
-node_t process_expression_signal(ivl_expr_t expression, SignalGraph* sg, string ws);
-node_t process_expression_number(ivl_expr_t expression, SignalGraph* sg, string ws);
+node_t process_expression(ivl_expr_t expression, string ws);
+node_t process_expression_signal(ivl_expr_t expression);
+node_t process_expression_number(ivl_expr_t expression);
 const char* get_expr_type_as_string(ivl_expr_t expression);
 
 // Statement
@@ -146,6 +137,9 @@ void process_statement_wait(ivl_statement_t statement, SignalGraph* sg, string w
 void process_statement_condit(ivl_statement_t statement, SignalGraph* sg, string ws);
 unsigned int process_statement_assign_partselect(node_t offset_node, ivl_statement_t statement);
 void process_statement_assign(ivl_statement_t statement, SignalGraph* sg, string ws);
+void process_statement_block(ivl_statement_t statement, SignalGraph* sg, string ws);
+void process_statement_case(ivl_statement_t statement, SignalGraph* sg, string ws);
+void process_statement_delay(ivl_statement_t statement, SignalGraph* sg, string ws);
 const char* get_statement_type_as_string(ivl_statement_t statement);
 
 #endif

@@ -25,6 +25,7 @@ typedef enum ttb_error_type_e {
     FILE_ERROR                    = 2,  
     DUPLICATE_SIGNALS_FOUND_ERROR = 3,
     BEHAVIORAL_CONNECTIONS_ERROR  = 4,
+    SLICE_TRACKING_ERROR          = 5,
 } ttb_error_type_t;
 
 class Error {
@@ -39,6 +40,7 @@ class Error {
         static void check_lval_not_nested(ivl_lval_t lval, ivl_statement_t statement);
         static void check_lval_not_memory(ivl_lval_t lval, ivl_statement_t statement);
         static void check_lval_offset(node_type_t node_type, ivl_statement_t statement);
+        static void check_slice_tracking_stacks(vector<node_slice_t> source_slices, vector<node_slice_t> sink_slices);
 
         // Error Reporting Functions
         // Unknown Types

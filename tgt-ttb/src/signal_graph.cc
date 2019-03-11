@@ -27,8 +27,9 @@ SignalGraph::SignalGraph():
     num_connections_(0),
     signals_map_(),
     dg_(),
-    node_slices_(),
-    source_nodes_() {} 
+    source_nodes_(),
+    source_slices_(),
+    sink_slices_() {} 
 
 SignalGraph::SignalGraph(const char* dot_graph_fname) {
     // Initialize Constants Counter
@@ -65,26 +66,6 @@ sig_map_t SignalGraph::get_signals_map() {
     return signals_map_;
 }
 
-node_q_t SignalGraph::get_source_nodes_queue() {
-	return source_nodes_;	
-}
-
-node_t SignalGraph::pop_from_source_nodes_queue() {
-	node_t source_node = {{NULL}, IVL_NONE};
-
-	// Check if source nodes queue is not empty
-	if (get_num_source_nodes() > 0) {
-		// Get last node in queue
-		source_node = source_nodes_.back();
-
-		// Remove last node in queue
-		source_nodes_.pop_back();	
-	}
-
-	// Return removed node
-	return source_node;
-}
-
 string SignalGraph::get_node_fullname(node_t node) {
     switch(node.type) {
         case IVL_NONE:
@@ -100,17 +81,79 @@ string SignalGraph::get_node_fullname(node_t node) {
             Error::unknown_node_type(node.type);
             break;
     }
+
+    return string("NULL");
+}
+
+node_q_t SignalGraph::get_source_nodes_queue() {
+    return source_nodes_;   
+}
+
+node_t SignalGraph::pop_from_source_nodes_queue() {
+    node_t source_node = {{NULL}, IVL_NONE};
+
+    // Check if source nodes queue is not empty
+    if (get_num_source_nodes() > 0) {
+        // Get last node in queue
+        source_node = source_nodes_.back();
+
+        // Remove last node in queue
+        source_nodes_.pop_back();   
+    }
+
+    // Return removed node
+    return source_node;
+}
+
+unsigned int SignalGraph::get_num_source_slices() {
+    return source_slices_.size();
+}
+
+unsigned int SignalGraph::get_num_sink_slices() {
+    return sink_slices_.size();
+}
+
+node_slice_t SignalGraph::pop_from_source_slices_queue(ivl_signal_t source_signal) {
+    // Source slice information
+    node_slice_t source_slice = {
+            get_signal_msb(source_signal), 
+            get_signal_lsb(source_signal),
+            SOURCE
+        };
+
+    if (get_num_source_slices() > 0) {
+        source_slice = source_slices_.back();
+        source_slices_.pop_back();
+    }
+
+    return source_slice;
+}
+
+node_slice_t SignalGraph::pop_from_sink_slices_queue(ivl_signal_t sink_signal) {
+    // Sink slice information
+    node_slice_t sink_slice = {
+            get_signal_msb(sink_signal), 
+            get_signal_lsb(sink_signal),
+            SINK
+        };
+
+    if (get_num_sink_slices() > 0) {
+        sink_slice = sink_slices_.back();
+        sink_slices_.pop_back();
+    }
+
+    return sink_slice;
 }
 
 // ----------------------------------------------------------------------------------
 // ------------------------------- Setters ------------------------------------------
 // ----------------------------------------------------------------------------------
 void SignalGraph::push_to_source_nodes_queue(node_t source_node, string ws) {
-	fprintf(stdout, "%sadding source node (%s) to connection queue\n", 
+    fprintf(stdout, "%sadding source node (%s) to connection queue\n", 
         ws.c_str(), 
         get_node_fullname(source_node).c_str());
 
-	source_nodes_.push_back(source_node);
+    source_nodes_.push_back(source_node);
 }
 
 // ----------------------------------------------------------------------------------
@@ -176,90 +219,58 @@ void SignalGraph::add_constant_connection(ivl_signal_t sink_signal,
                                           node_t       source_node,
                                           string       ws) {
 
-    string source_constant_name;
-    string source_constant_label;
-    string sink_signal_name;
-    string connection_label;
+    string       source_constant_name;
+    string       source_constant_label;
+    string       sink_signal_name;
+    node_slice_t sink_signal_slice;
+    string       connection_label;
+
+    // Get sink signal name
+    sink_signal_name = get_signal_fullname(sink_signal);
+
+    // Get sink signal slice
+    sink_signal_slice = pop_from_sink_slices_queue(sink_signal);
 
     // Get constant node name and label
-	switch(source_node.type) {
+    switch(source_node.type) {
 
         case IVL_CONST:
             // Get constant name
             source_constant_name = get_constant_fullname(
-            	source_node.object.ivl_constant, 
-            	num_constants_);
+                source_node.object.ivl_constant, 
+                num_constants_);
 
             // Get constant bits label
-    		source_constant_label = get_const_node_label(
-    			source_node.object.ivl_constant);
+            source_constant_label = get_const_node_label(
+                source_node.object.ivl_constant);
 
-    		// Check if connection is sliced
-	        if (node_slices_.size()) {
-	            // SLICED connection
+            // Get connection label
+            connection_label = get_const_connection_label(
+                source_node.object.ivl_constant, 
+                sink_signal_slice);
 
-	            // Get signal slice info
-	            node_slice_t signal_slice = node_slices_.back();
-
-	            // Get connection label
-	            connection_label = get_sliced_const_connection_label(
-	            	source_node.object.ivl_constant, 
-	            	signal_slice);
-
-	            // pop slice info from stack
-	            node_slices_.pop_back();
-	        } else {
-	            // FULL connection
-
-	            // Get connection label
-	            connection_label = get_const_connection_label(
-	            	source_node.object.ivl_constant, 
-	            	sink_signal);
-	        }
-
-    		break;
+            break;
 
         case IVL_CONST_EXPR:
-        	// Get constant name
+            // Get constant name
             source_constant_name = get_constant_expr_fullname(
-            	source_node.object.ivl_const_expr, 
-            	num_constants_);
-    		
-    		// Get constant bits label
-    		source_constant_label = get_const_expr_node_label(
-    			source_node.object.ivl_const_expr);
-    		
-    		// Get connnection label
-    		if (node_slices_.size()) {
-	            // SLICED connection
+                source_node.object.ivl_const_expr, 
+                num_constants_);
+            
+            // Get constant bits label
+            source_constant_label = get_const_expr_node_label(
+                source_node.object.ivl_const_expr);
+            
+            // Get connection label
+            connection_label = get_const_expr_connection_label(
+                source_node.object.ivl_const_expr, 
+                sink_signal_slice);
 
-	            // Get signal slice info
-	            node_slice_t signal_slice = node_slices_.back();
-
-	            // Get connection label
-	            connection_label = get_sliced_const_expr_connection_label(
-    				source_node.object.ivl_const_expr,
-    				signal_slice);
-
-	            // pop slice info from stack
-	            node_slices_.pop_back();
-	        } else {
-	            // FULL connection
-
-	            // Get connection label
-	            connection_label = get_const_expr_connection_label(
-    				source_node.object.ivl_const_expr,
-    				sink_signal);
-	        }
-	        
-    		break;
+            break;
 
         default:
             Error::not_supported("node type for constant.");
     }
-
-    // Get sink signal names
-    sink_signal_name = get_signal_fullname(sink_signal);
 
     // Debug Print
     fprintf(stdout, "%sADDING CONSTANT NODE (%s)\n", 
@@ -280,41 +291,30 @@ void SignalGraph::add_signal_connection(ivl_signal_t sink_signal,
                                         ivl_signal_t source_signal, 
                                         string       ws) {
 
-    string source_signal_name;
-    string sink_signal_name;
-    string connection_label;
+    string       source_signal_name;
+    string       sink_signal_name;
+    node_slice_t sink_signal_slice;
+    node_slice_t source_signal_slice;
+    string       connection_label;
 
     // Only add connections to signals already in graph.
     // Thus, ignoring local IVL generated signals as these
     // are not added to the graph when it is initialized.
     if (signals_map_.count(source_signal)) {
-    	// Add signal object to adjacency list
+        // Add signal object to adjacency list
         signals_map_[sink_signal].push_back(source_signal);
         
         // Get signal names
         source_signal_name = get_signal_fullname(source_signal);
         sink_signal_name   = get_signal_fullname(sink_signal);
 
-        // Check if connection is sliced
-        if (node_slices_.size()) {
-            // SLICED connection
+        // Get signal slices
+        source_signal_slice = pop_from_source_slices_queue(source_signal);
+        sink_signal_slice   = pop_from_sink_slices_queue(sink_signal);
 
-            // Get signal slice info
-            node_slice_t signal_slice = node_slices_.back();
-
-            // Get connection label
-            connection_label = get_sliced_signal_connection_label(source_signal, 
-                                                                  sink_signal, 
-                                                                  signal_slice);
-
-            // pop slice info from stack
-            node_slices_.pop_back();
-        } else {
-            // FULL connection
-
-            // Get connection label
-            connection_label = get_signal_connection_label(source_signal, sink_signal);
-        }
+        // Get connection label
+        connection_label = get_signal_connection_label(source_signal_slice,
+                                                       sink_signal_slice);
 
         // Add connection to dot graph
         dg_.add_connection(source_signal_name, sink_signal_name, connection_label, ws);
@@ -324,11 +324,11 @@ void SignalGraph::add_signal_connection(ivl_signal_t sink_signal,
 }
 
 void SignalGraph::add_connection(ivl_signal_t sink_signal,
-								 node_t       source_node,
+                                 node_t       source_node,
                                  string       ws) {
 
-	// Add connection
-	switch(source_node.type) {
+    // Add connection
+    switch(source_node.type) {
         case IVL_NONE:
             Error::null_node_type();
             break;
@@ -348,18 +348,33 @@ void SignalGraph::add_connection(ivl_signal_t sink_signal,
     num_connections_++;
 }
 
-void SignalGraph::track_lpm_connection_slice(unsigned int      msb, 
-                                             unsigned int      lsb,
-                                             node_slice_type_t node_type){
+void SignalGraph::track_connection_slice(unsigned int      msb, 
+                                         unsigned int      lsb,
+                                         node_slice_type_t node_slice_type,
+                                         string            ws) {
+
+    // Check that slice-info stacks are empty,
+    // (Stacks should never grow beyond size 1.)
+    Error::check_slice_tracking_stacks(
+        source_slices_,
+        sink_slices_);
 
     // Set signal slice info
-    node_slice_t slice = {msb, lsb, node_type};
+    node_slice_t slice = {msb, lsb, node_slice_type};
 
-    // Check that slice-info stack is empty
-    // (it should never grow beyond a size of 1)
-    assert(node_slices_.size() <= 1 && 
-        "ERROR: slice info stack NOT empty.\n");
+    // Debug Print
+    fprintf(stdout, "%sTracking %s signal slice [%u:%u]\n", 
+        ws.c_str(),
+        get_node_slice_type_as_string(node_slice_type),
+        msb,
+        lsb);
 
     // push slice info to a stack
-    node_slices_.push_back(slice);
+    if (slice.type == SOURCE) {
+        source_slices_.push_back(slice);
+    } else if (slice.type == SINK) {
+        sink_slices_.push_back(slice);
+    } else {
+        Error::not_supported("slice type.");
+    }
 }

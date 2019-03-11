@@ -104,7 +104,7 @@ void propagate_logic(ivl_net_logic_t logic,
             pin_nexus = ivl_logic_pin(logic, i);
 
             // Propagate the nexus
-            propagate_nexus(pin_nexus, sink_signal, sg, ws + "  ");
+            propagate_nexus(pin_nexus, sink_signal, sg, ws + WS_TAB);
         }
     }
 }

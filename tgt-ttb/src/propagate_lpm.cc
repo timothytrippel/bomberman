@@ -123,7 +123,7 @@ void process_lpm_basic(ivl_lpm_t    lpm,
         input_nexus = ivl_lpm_data(lpm, i);
 
         // Propagate data input nexus
-        propagate_nexus(input_nexus, sink_signal, sg, ws + "    ");
+        propagate_nexus(input_nexus, sink_signal, sg, ws + WS_TAB);
     }    
 }
 
@@ -153,16 +153,16 @@ void process_lpm_part_select(ivl_lpm_t    lpm,
     // Determine LPM type and track connection slice 
     if (ivl_lpm_type(lpm) == IVL_LPM_PART_VP) {
         // part select: vector to part (VP: part select in rval)
-        sg->track_lpm_connection_slice(msb, lsb, SOURCE);
+        sg->track_connection_slice(msb, lsb, SOURCE, ws);
     } else if (ivl_lpm_type(lpm) == IVL_LPM_PART_PV) {
         // part select: part to vector (PV: part select in lval)
-        sg->track_lpm_connection_slice(msb, lsb, SINK);
+        sg->track_connection_slice(msb, lsb, SINK, ws);
     } else {
         Error::unknown_part_select_lpm_type(ivl_lpm_type(lpm));
     }
 
     // Propagate nexus
-    propagate_nexus(input_nexus, sink_signal, sg, ws + "    ");
+    propagate_nexus(input_nexus, sink_signal, sg, ws + WS_TAB);
 }
 
 void process_lpm_concat(ivl_lpm_t    lpm,
@@ -182,8 +182,8 @@ void process_lpm_concat(ivl_lpm_t    lpm,
     // Track bit slices
     // While it is undocumented in ivl_target.h, empiracally it
     // seems the concat inputs are always tracked from LSB->MSB.
-    unsigned int current_msb         = 0;
-    unsigned int current_lsb         = 0;
+    unsigned int current_msb = 0;
+    unsigned int current_lsb = 0;
 
     // Iterate over input nexi
     for (unsigned int i = 0; i < ivl_lpm_size(lpm); i++) {
@@ -195,10 +195,11 @@ void process_lpm_concat(ivl_lpm_t    lpm,
         // 1) one to the LPM device and 2) a (non-local) signal, or
         // 1) one to the LPM device, 2) one to a local signal, and 
         // 3) one to a constant device.
-        assert((ivl_nexus_ptrs(input_nexus) == 2 ||
-                ivl_nexus_ptrs(input_nexus) == 3) && 
-            "NOT-SUPPORTED: LPM-CONCAT device input \
-            nexus with more than 2 nexus pointers.\n");
+
+        // assert((ivl_nexus_ptrs(input_nexus) == 2 ||
+        //         ivl_nexus_ptrs(input_nexus) == 3) && 
+        //     "NOT-SUPPORTED: LPM-CONCAT device input \
+        //     nexus with more than 2 nexus pointers.\n");
 
         // Find input nexus ptr to a signal object
         for (unsigned int j = 0; j < ivl_nexus_ptrs(input_nexus); j++) {
@@ -211,10 +212,10 @@ void process_lpm_concat(ivl_lpm_t    lpm,
                 current_msb = current_lsb + ivl_signal_width(source_signal) - 1;
 
                 // Track connection slice information
-                sg->track_lpm_connection_slice(current_msb, current_lsb, SINK);
+                sg->track_connection_slice(current_msb, current_lsb, SINK, ws);
 
                 // Propagate input nexus
-                propagate_nexus(input_nexus, sink_signal, sg, ws + "    ");
+                propagate_nexus(input_nexus, sink_signal, sg, ws + WS_TAB);
 
                 // Update current LSB of sink signal slice
                 current_lsb += ivl_signal_width(source_signal);
@@ -239,7 +240,7 @@ void process_lpm_mux(ivl_lpm_t    lpm,
     input_nexus = ivl_lpm_select(lpm);
 
     // Propagate select input nexus
-    propagate_nexus(input_nexus, sink_signal, sg, ws + "    ");
+    propagate_nexus(input_nexus, sink_signal, sg, ws + WS_TAB);
 
     // Propagate DATA input(s)
     process_lpm_basic(lpm, sink_signal, sg, ws);

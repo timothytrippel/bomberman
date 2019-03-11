@@ -47,20 +47,32 @@ class SignalGraph {
                             string       ws);
 
         // Helper Functions
-        void track_lpm_connection_slice(unsigned int      msb, 
-                                        unsigned int      lsb,
-                                        node_slice_type_t node_type);
+        void track_connection_slice(unsigned int      msb, 
+                                    unsigned int      lsb,
+                                    node_slice_type_t node_slice_type,
+                                    string            ws);
 
         // Getters
+        //      Graph Stats
         unsigned long get_num_connections();
         unsigned long get_num_signals();
         unsigned long get_num_constants();
-        unsigned long get_num_source_nodes();
-        sig_map_t     get_signals_map();
-        node_q_t      get_source_nodes_queue();
-        node_t        pop_from_source_nodes_queue();
-        string        get_node_fullname(node_t node);
 
+        //      Signals Map
+        sig_map_t     get_signals_map();
+        
+        //      Source Nodes Queue
+        unsigned long get_num_source_nodes();
+        node_q_t      get_source_nodes_queue();
+        string        get_node_fullname(node_t node);
+        node_t        pop_from_source_nodes_queue();
+
+        //      Slice Tracking Queues
+        unsigned int  get_num_source_slices();
+        unsigned int  get_num_sink_slices();
+        node_slice_t  pop_from_source_slices_queue(ivl_signal_t source_signal);
+        node_slice_t  pop_from_sink_slices_queue(ivl_signal_t sink_signal);
+        
         // Setters
         void push_to_source_nodes_queue(node_t source_node, string ws);
 
@@ -72,8 +84,9 @@ class SignalGraph {
         unsigned long        num_connections_; // number of connections enumerated in design
         sig_map_t            signals_map_;     // signal graph (adjacency list)
         DotGraph             dg_;              // dot graph object
-        vector<node_slice_t> node_slices_;     // signal slice information stack
         node_q_t             source_nodes_;    // source signal queue
+        vector<node_slice_t> source_slices_;   // source signal slice information stack
+        vector<node_slice_t> sink_slices_;     // sink signal slice information stack
         
         // Signal Enumeration
         void find_signals(ivl_scope_t scope);

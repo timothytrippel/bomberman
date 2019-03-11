@@ -42,7 +42,7 @@ void propagate_constant(ivl_net_const_t constant,
     switch (ivl_const_type(constant)) {
         case IVL_VT_BOOL:
         case IVL_VT_LOGIC:
-            sg->add_connection(sink_signal, source_node, ws + "   ");
+            sg->add_connection(sink_signal, source_node, ws + WS_TAB);
             break;
         default:
             Error::not_supported("CONSTANT device type (UNKNOWN)");

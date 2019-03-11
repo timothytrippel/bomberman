@@ -38,21 +38,17 @@ int process_process(ivl_process_t process, void* sg) {
 
     switch (ivl_process_type(process)) {
         case IVL_PR_ALWAYS:
-            
+        case IVL_PR_INITIAL:
+        case IVL_PR_FINAL:
+
             // Check that the always block is not an analog process
             if (ivl_process_analog(process)) {
                 Error::not_supported("analog IVL_PR_ALWAYS process statement.");
             }
 
-            process_statement(ivl_process_stmt(process), (SignalGraph*) sg, "  ");
+            process_statement(ivl_process_stmt(process), (SignalGraph*) sg, WS_TAB);
+            break;
 
-            break;
-        case IVL_PR_INITIAL:
-            Error::not_supported("process statement type (IVL_PR_INITIAL).");
-            break;
-        case IVL_PR_FINAL:
-            Error::not_supported("process statement type (IVL_PR_FINAL).");
-            break;
         default:
             Error::not_supported("process statement type (UNKOWN).");
             break;

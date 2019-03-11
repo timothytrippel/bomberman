@@ -139,7 +139,7 @@ void process_statement_wait(ivl_statement_t statement,
             fprintf(stdout, "%sprocessing event %d @posedge\n", ws.c_str(), i);
             for (unsigned int j = 0; j < num_posedge_nexus_ptrs; j++) {
                 event_nexus = ivl_event_pos(event, j);      
-                process_event_nexus(event_nexus, statement, sg, ws + "  ");
+                process_event_nexus(event_nexus, statement, sg, ws + WS_TAB);
             }
         }
     
@@ -148,7 +148,7 @@ void process_statement_wait(ivl_statement_t statement,
             fprintf(stdout, "%sprocessing event %d @negedge\n", ws.c_str(), i);
             for (unsigned int j = 0; j < num_negedge_nexus_ptrs; j++) {
                 event_nexus = ivl_event_neg(event, j);      
-                process_event_nexus(event_nexus, statement, sg, ws + "  ");
+                process_event_nexus(event_nexus, statement, sg, ws + WS_TAB);
             }
         }
 
@@ -157,7 +157,7 @@ void process_statement_wait(ivl_statement_t statement,
             fprintf(stdout, "%sprocessing event %d @anyedge\n", ws.c_str(), i);
             for (unsigned int j = 0; j < num_anyedge_nexus_ptrs; j++) {
                 event_nexus = ivl_event_any(event, j);      
-                process_event_nexus(event_nexus, statement, sg, ws + "  ");
+                process_event_nexus(event_nexus, statement, sg, ws + WS_TAB);
             }
         }
     }
@@ -181,10 +181,10 @@ void process_statement_condit(ivl_statement_t statement,
     ivl_statement_t false_statement = ivl_stmt_cond_false(statement);
     
     // Process conditional expression to get source signals
-    node_t source_node = process_expression(condit_expr, sg, ws);
+    node_t source_node = process_expression(condit_expr, ws);
     
     // Push source node to source nodes queue
-    sg->push_to_source_nodes_queue(source_node, ws + "  ");
+    sg->push_to_source_nodes_queue(source_node, ws + WS_TAB);
 
     // Process true/false sub-statements to propagate 
     // source signals to sink signals
@@ -262,7 +262,7 @@ void process_statement_assign(ivl_statement_t statement,
                 string(ws + "  ").c_str());
 
             // Get LSB offset as constant expressio node
-            offset_node = process_expression(part_select_offset, sg, ws + "  ");
+            offset_node = process_expression(part_select_offset, ws + WS_TAB);
 
             // Update MSB and LSB of slice
             lval_lsb = process_statement_assign_partselect(offset_node, statement);
@@ -278,20 +278,47 @@ void process_statement_assign(ivl_statement_t statement,
         lval_lsb);
 
     // Track connection slice information
-    sg->track_lpm_connection_slice(lval_msb, lval_lsb, SINK);
+    sg->track_connection_slice(lval_msb, lval_lsb, SINK, ws);
 
     // Process rval expression
     fprintf(stdout, "%sprocessing rval ...\n", ws.c_str());
-    source_node = process_expression(ivl_stmt_rval(statement), sg, ws + "  ");
+    source_node = process_expression(ivl_stmt_rval(statement), ws + WS_TAB);
 
     // Push source node to source nodes queue
-    sg->push_to_source_nodes_queue(source_node, ws + "  ");
+    sg->push_to_source_nodes_queue(source_node, ws + WS_TAB);
 
     // Add connection(s)
     fprintf(stdout, "%sprocessing connections ...\n", ws.c_str());
     while (sg->get_num_source_nodes()) {
         source_node = sg->pop_from_source_nodes_queue();
-        sg->add_connection(sink_signal, source_node, ws + "  ");
+        sg->add_connection(sink_signal, source_node, ws + WS_TAB);
+    }
+}
+
+// ------------------------------- BLOCK Statement ----------------------------------
+void process_statement_block(ivl_statement_t statement, SignalGraph* sg, string ws) {
+    // Iterate over sub-statements in block
+    for (unsigned int i = 0; i < ivl_stmt_block_count(statement); i++) {
+        process_statement(ivl_stmt_block_stmt(statement, i), sg, ws + WS_TAB);
+    }
+}
+
+// ------------------------------- CASE Statement -----------------------------------
+void process_statement_case(ivl_statement_t statement, SignalGraph* sg, string ws) {
+    // Iterate over sub-statements in block
+    for (unsigned int i = 0; i < ivl_stmt_case_count(statement); i++) {
+        process_statement(ivl_stmt_case_stmt(statement, i), sg, ws + WS_TAB);
+    }
+}
+
+// ------------------------------- DELAY Statement ----------------------------------
+void process_statement_delay(ivl_statement_t statement, SignalGraph* sg, string ws) {
+    // Sub-statement
+    ivl_statement_t sub_statement = NULL;
+
+    // Check for a sub-statement
+    if ((sub_statement = ivl_stmt_sub_stmt(statement))) {
+        process_statement(sub_statement, sg, ws + WS_TAB);
     }
 }
 
@@ -312,18 +339,18 @@ void process_statement(ivl_statement_t statement,
         
         case IVL_ST_ASSIGN:
         case IVL_ST_ASSIGN_NB:
-            process_statement_assign(statement, sg, ws + "  ");
+            process_statement_assign(statement, sg, ws + WS_TAB);
             break;
 
         case IVL_ST_BLOCK:
-            Error::unknown_statement_type(ivl_statement_type(statement));
+            process_statement_block(statement, sg, ws + WS_TAB);
             break;
 
         case IVL_ST_CASE:
         case IVL_ST_CASER:
         case IVL_ST_CASEX:
         case IVL_ST_CASEZ:
-            Error::unknown_statement_type(ivl_statement_type(statement));
+            process_statement_case(statement, sg, ws + WS_TAB);
             break;
 
         case IVL_ST_CASSIGN:
@@ -331,16 +358,16 @@ void process_statement(ivl_statement_t statement,
             break;
 
         case IVL_ST_CONDIT:
-            process_statement_condit(statement, sg, ws + "  ");
+            process_statement_condit(statement, sg, ws + WS_TAB);
             break;
         
         case IVL_ST_DELAY:
         case IVL_ST_DELAYX:
-            Error::unknown_statement_type(ivl_statement_type(statement));
+            process_statement_delay(statement, sg, ws + WS_TAB);
             break;
         
         case IVL_ST_WAIT:
-            process_statement_wait(statement, sg, ws + "  ");
+            process_statement_wait(statement, sg, ws + WS_TAB);
             break;
 
         case IVL_ST_NONE:

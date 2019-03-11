@@ -37,6 +37,17 @@ const char* get_node_type_as_string(node_type_t node_type) {
     }
 }
 
+const char* get_node_slice_type_as_string(node_slice_type_t node_slice_type) {
+    switch(node_slice_type) {
+        case SOURCE:
+            return "SOURCE";
+        case SINK:
+            return "SINK";
+        default:
+            return "UNKOWN";
+    }
+}
+
 string get_signal_fullname(ivl_signal_t signal) {
     string scopename = ivl_scope_name(ivl_signal_scope(signal)); 
     string basename  = ivl_signal_basename(signal);
@@ -112,49 +123,19 @@ string get_signal_node_label(ivl_signal_t signal) {
     return ss.str();
 }
 
-string get_signal_connection_label(ivl_signal_t source_signal, 
-                                   ivl_signal_t sink_signal) {
+string get_signal_connection_label(node_slice_t source_slice,
+                                   node_slice_t sink_slice) {
 
     stringstream ss;
-    
-    ss << get_signal_node_label(source_signal);
-    ss << "->";
-    ss << get_signal_node_label(sink_signal);
-
-    return ss.str();
-}
-
-string get_sliced_signal_connection_label(ivl_signal_t source_signal, 
-                                          ivl_signal_t sink_signal, 
-                                          node_slice_t signal_slice) {
-    unsigned int sink_msb;
-    unsigned int sink_lsb;
-    unsigned int source_msb;
-    unsigned int source_lsb;
-    stringstream ss;
-
-    if (signal_slice.type == SINK) {
-        // sliced sink node (signal)
-        sink_msb   = signal_slice.msb;
-        sink_lsb   = signal_slice.lsb;
-        source_msb = get_signal_msb(source_signal);
-        source_lsb = get_signal_lsb(source_signal);
-    } else {
-        // sliced source node (signal)
-        sink_msb = get_signal_msb(sink_signal);
-        sink_lsb = get_signal_lsb(sink_signal);
-        source_msb = signal_slice.msb;
-        source_lsb = signal_slice.lsb;
-    }
     
     ss << "[";
-    ss << source_msb;
+    ss << source_slice.msb;
     ss << ":";
-    ss << source_lsb;
+    ss << source_slice.lsb;
     ss << "]->[";
-    ss << sink_msb;
+    ss << sink_slice.msb;
     ss << ":";
-    ss << sink_lsb;
+    ss << sink_slice.lsb;
     ss << "]";
 
     return ss.str();
@@ -171,38 +152,20 @@ string get_const_node_label(ivl_net_const_t constant) {
     return ss.str();
 }
 
-string get_const_connection_label(ivl_net_const_t source_constant, 
-                                  ivl_signal_t    sink_signal) {
+string get_const_connection_label(ivl_net_const_t source_constant,  
+                                  node_slice_t    sink_signal_slice) {
 
-    stringstream ss;
-    
-    ss << get_const_node_label(source_constant);
-    ss << "->";
-    ss << get_signal_node_label(sink_signal);
-
-    return ss.str();
-}
-
-string get_sliced_const_connection_label(ivl_net_const_t source_constant,  
-                                         node_slice_t    signal_slice) {
-
-    unsigned int sink_msb;
-    unsigned int sink_lsb;
     stringstream ss;
 
     // Source (const expr) node CANNOT be sliced
-    assert(signal_slice.type == SINK && 
+    assert(sink_signal_slice.type == SINK && 
         "ERROR: slice source constant encountered.\n"); 
-
-    // sliced sink node (signal)
-    sink_msb = signal_slice.msb;
-    sink_lsb = signal_slice.lsb;
     
     ss << get_const_node_label(source_constant);
     ss << "->[";
-    ss << sink_msb;
+    ss << sink_signal_slice.msb;
     ss << ":";
-    ss << sink_lsb;
+    ss << sink_signal_slice.lsb;
     ss << "]";
 
     return ss.str();
@@ -220,37 +183,19 @@ string get_const_expr_node_label(ivl_expr_t const_expr) {
 }
 
 string get_const_expr_connection_label(ivl_expr_t   source_const_expr, 
-                                       ivl_signal_t sink_signal) {
+                                       node_slice_t sink_signal_slice) {
 
-    stringstream ss;
-    
-    ss << get_const_expr_node_label(source_const_expr);
-    ss << "->";
-    ss << get_signal_node_label(sink_signal);
-
-    return ss.str();
-}
-
-string get_sliced_const_expr_connection_label(ivl_expr_t   source_const_expr, 
-                                              node_slice_t signal_slice) {
-
-    unsigned int sink_msb;
-    unsigned int sink_lsb;
     stringstream ss;
 
     // Source (const expr) node CANNOT be sliced
-    assert(signal_slice.type == SINK && 
+    assert(sink_signal_slice.type == SINK && 
         "ERROR: slice source constant encountered.\n"); 
-
-    // sliced sink node (signal)
-    sink_msb = signal_slice.msb;
-    sink_lsb = signal_slice.lsb;
     
     ss << get_const_expr_node_label(source_const_expr);
     ss << "->[";
-    ss << sink_msb;
+    ss << sink_signal_slice.msb;
     ss << ":";
-    ss << sink_lsb;
+    ss << sink_signal_slice.lsb;
     ss << "]";
 
     return ss.str();
@@ -283,7 +228,7 @@ void find_combinational_connections(SignalGraph* sg) {
         assert(sink_nexus);
 
         // Propagate the nexus
-        propagate_nexus(sink_nexus, sink_signal, sg, "  ");
+        propagate_nexus(sink_nexus, sink_signal, sg, WS_TAB);
 
         // Increment the iterator
         it++;
