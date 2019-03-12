@@ -128,6 +128,8 @@ const char* get_process_type_as_string(ivl_process_t process);
 void process_expression(ivl_expr_t expression, SignalGraph* sg, string ws);
 void process_expression_signal(ivl_expr_t expression, SignalGraph* sg, string ws);
 void process_expression_number(ivl_expr_t expression, SignalGraph* sg, string ws);
+void process_expression_concat(ivl_expr_t expression, SignalGraph* sg, string ws);
+void process_expression_unary(ivl_expr_t expression, SignalGraph* sg, string ws);
 void process_expression_binary(ivl_expr_t expression, SignalGraph* sg, string ws);
 void process_expression_ternary(ivl_expr_t expression, SignalGraph* sg, string ws);
 const char* get_expr_type_as_string(ivl_expr_t expression);

@@ -108,6 +108,20 @@ void process_expression_number(ivl_expr_t expression, SignalGraph* sg, string ws
     sg->push_to_source_nodes_queue(source_node, ws + WS_TAB);
 }
 
+void process_expression_concat(ivl_expr_t expression, SignalGraph* sg, string ws) {
+    // Process concatenated expressions
+    for (unsigned int i = 0; i < ivl_expr_repeat(expression); i++) {
+        for (unsigned int j = 0; j < ivl_expr_parms(expression); j++) {
+            process_expression(ivl_expr_parm(expression, j), sg, ws + WS_TAB);
+        }      
+    }
+}
+
+void process_expression_unary(ivl_expr_t expression, SignalGraph* sg, string ws) {
+    // Process operand expression
+    process_expression(ivl_expr_oper1(expression), sg, ws + WS_TAB);
+}
+
 void process_expression_binary(ivl_expr_t expression, SignalGraph* sg, string ws) {
     // Process operand expressions
     process_expression(ivl_expr_oper1(expression), sg, ws + WS_TAB);
@@ -145,7 +159,7 @@ void process_expression(ivl_expr_t   expression,
             process_expression_binary(expression, sg, ws);
             break;
         case IVL_EX_CONCAT:
-            Error::not_supported("expression type (IVL_EX_CONCAT).");
+            process_expression_concat(expression, sg, ws);
             break;
         case IVL_EX_DELAY:
             Error::not_supported("expression type (IVL_EX_DELAY).");
@@ -205,7 +219,7 @@ void process_expression(ivl_expr_t   expression,
             Error::not_supported("expression type (IVL_EX_ULONG).");
             break;
         case IVL_EX_UNARY:
-            Error::not_supported("expression type (IVL_EX_UNARY).");
+            process_expression_unary(expression, sg, ws);
             break;
         default:
             Error::unknown_expression_type(ivl_expr_type(expression));
