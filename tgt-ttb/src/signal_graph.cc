@@ -28,6 +28,7 @@ SignalGraph::SignalGraph():
     signals_map_(),
     dg_(),
     source_nodes_(),
+    num_nodes_in_scope(),
     source_slices_(),
     sink_slices_() {} 
 

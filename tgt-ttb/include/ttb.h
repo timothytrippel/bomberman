@@ -125,10 +125,23 @@ int process_process(ivl_process_t process, void* data);
 const char* get_process_type_as_string(ivl_process_t process);
 
 // Expression
-node_t process_expression(ivl_expr_t expression, string ws);
-node_t process_expression_signal(ivl_expr_t expression);
-node_t process_expression_number(ivl_expr_t expression);
+void process_expression(ivl_expr_t expression, SignalGraph* sg, string ws);
+void process_expression_signal(ivl_expr_t expression, SignalGraph* sg, string ws);
+void process_expression_number(ivl_expr_t expression, SignalGraph* sg, string ws);
+void process_expression_binary(ivl_expr_t expression, SignalGraph* sg, string ws);
+void process_expression_ternary(ivl_expr_t expression, SignalGraph* sg, string ws);
 const char* get_expr_type_as_string(ivl_expr_t expression);
+
+// Event
+void process_event_nexus(ivl_nexus_t     nexus, 
+                         ivl_statement_t statement, 
+                         SignalGraph*    sg, 
+                         string          ws);
+
+void process_event(ivl_event_t     event, 
+                   ivl_statement_t statement, 
+                   SignalGraph*    sg, 
+                   string          ws);
 
 // Statement
 void process_statement(ivl_statement_t statement, SignalGraph* sg, string ws);

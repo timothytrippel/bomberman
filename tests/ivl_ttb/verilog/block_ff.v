@@ -1,4 +1,10 @@
-module sliced_ff(input clk, input rst, input [1:0] d, input en, output reg [1:0] q);
+module block_ff(
+	input clk, 
+	input rst, 
+	input [1:0] d, 
+	input en, 
+	output reg [1:0] q
+);
 
 	wire [1:0] next_q;
 

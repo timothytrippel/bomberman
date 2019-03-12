@@ -74,7 +74,11 @@ class SignalGraph {
         node_slice_t  pop_from_sink_slices_queue(ivl_signal_t sink_signal);
         
         // Setters
+        //      Source Nodes Queue
         void push_to_source_nodes_queue(node_t source_node, string ws);
+
+        //      Enumeration Scope Queue
+        // void push_to_num_nodes_in_scope_queue(unsigned int, string ws);
 
         // Dot Graph Management
         void save_dot_graph();
@@ -85,6 +89,7 @@ class SignalGraph {
         sig_map_t            signals_map_;     // signal graph (adjacency list)
         DotGraph             dg_;              // dot graph object
         node_q_t             source_nodes_;    // source signal queue
+        vector<unsigned int> num_nodes_in_scope; 
         vector<node_slice_t> source_slices_;   // source signal slice information stack
         vector<node_slice_t> sink_slices_;     // sink signal slice information stack
         

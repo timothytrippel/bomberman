@@ -91,38 +91,12 @@ const char* get_statement_type_as_string(ivl_statement_t statement) {
 // ----------------------------------------------------------------------------------
 
 // ------------------------------- WAIT Statement -----------------------------------
-void process_event_nexus(ivl_nexus_t     nexus, 
-                         ivl_statement_t statement, 
-                         SignalGraph*    sg, 
-                         string          ws) {
-
-    // Source Signal Object
-    node_object_t node_obj    = {NULL};
-    node_t        source_node = {node_obj, IVL_NONE};
-
-    // Check no more than one nexus pointer for an event nexus
-    // Check nexus pointer type is signal object only
-    // @TODO: propgate other nexus types besides signals
-    Error::check_event_nexus(nexus, statement);
-
-    // Get event nexus pointer signal object
-    source_node.object.ivl_signal = ivl_nexus_ptr_sig(ivl_nexus_ptr(nexus, 0));
-    source_node.type              = IVL_SIGNAL;
-
-    // Push signal to source signals queue
-    sg->push_to_source_nodes_queue(source_node, ws);
-}
-
 void process_statement_wait(ivl_statement_t statement, 
                             SignalGraph*    sg, 
                             string          ws) {
 
     ivl_event_t     event                  = NULL;
-    ivl_nexus_t     event_nexus            = NULL;
     ivl_statement_t sub_statement          = NULL;
-    unsigned int    num_posedge_nexus_ptrs = 0;
-    unsigned int    num_negedge_nexus_ptrs = 0;
-    unsigned int    num_anyedge_nexus_ptrs = 0;
 
     // Get number of WAIT statement events
     unsigned int num_events = ivl_stmt_nevent(statement);
@@ -134,37 +108,13 @@ void process_statement_wait(ivl_statement_t statement,
         // Get event
         event = ivl_stmt_events(statement, i);
 
-        // Iterate through nexi associated with an POS-EDGE event
-        if ((num_posedge_nexus_ptrs = ivl_event_npos(event))) {
-            fprintf(stdout, "%sprocessing event %d @posedge\n", ws.c_str(), i);
-            for (unsigned int j = 0; j < num_posedge_nexus_ptrs; j++) {
-                event_nexus = ivl_event_pos(event, j);      
-                process_event_nexus(event_nexus, statement, sg, ws + WS_TAB);
-            }
-        }
-    
-        // Iterate through nexi associated with an NEG-EDGE event
-        if ((num_negedge_nexus_ptrs = ivl_event_nneg(event))) {
-            fprintf(stdout, "%sprocessing event %d @negedge\n", ws.c_str(), i);
-            for (unsigned int j = 0; j < num_negedge_nexus_ptrs; j++) {
-                event_nexus = ivl_event_neg(event, j);      
-                process_event_nexus(event_nexus, statement, sg, ws + WS_TAB);
-            }
-        }
-
-        // Iterate through nexi associated with an ANY-EDGE event
-         if ((num_anyedge_nexus_ptrs = ivl_event_nany(event))) {
-            fprintf(stdout, "%sprocessing event %d @anyedge\n", ws.c_str(), i);
-            for (unsigned int j = 0; j < num_anyedge_nexus_ptrs; j++) {
-                event_nexus = ivl_event_any(event, j);      
-                process_event_nexus(event_nexus, statement, sg, ws + WS_TAB);
-            }
-        }
+        // Process event
+        process_event(event, statement, sg, ws + WS_TAB);
     }
 
     // Get/process sub-statement
     if ((sub_statement = ivl_stmt_sub_stmt(statement))) {
-        process_statement(sub_statement, sg, ws);
+        process_statement(sub_statement, sg, ws + WS_TAB);
     }
 }
 
@@ -181,18 +131,15 @@ void process_statement_condit(ivl_statement_t statement,
     ivl_statement_t false_statement = ivl_stmt_cond_false(statement);
     
     // Process conditional expression to get source signals
-    node_t source_node = process_expression(condit_expr, ws);
-    
-    // Push source node to source nodes queue
-    sg->push_to_source_nodes_queue(source_node, ws + WS_TAB);
+    process_expression(condit_expr, sg, ws + WS_TAB);
 
     // Process true/false sub-statements to propagate 
     // source signals to sink signals
     if (true_statement) {
-        process_statement(true_statement, sg, ws);
+        process_statement(true_statement, sg, ws + WS_TAB);
     }
     if (false_statement) {
-        process_statement(false_statement, sg, ws);
+        process_statement(false_statement, sg, ws + WS_TAB);
     }
 }
 
@@ -259,10 +206,11 @@ void process_statement_assign(ivl_statement_t statement,
         // Process lval part select expression (if necessary)
         if ((part_select_offset = ivl_lval_part_off(lval))) {
             fprintf(stdout, "%sprocessing lval part select ...\n", 
-                string(ws + "  ").c_str());
+                string(ws + WS_TAB).c_str());
 
             // Get LSB offset as constant expressio node
-            offset_node = process_expression(part_select_offset, ws + WS_TAB);
+            process_expression(part_select_offset, sg, ws + WS_TAB);
+            offset_node = sg->pop_from_source_nodes_queue();
 
             // Update MSB and LSB of slice
             lval_lsb = process_statement_assign_partselect(offset_node, statement);
@@ -272,20 +220,17 @@ void process_statement_assign(ivl_statement_t statement,
 
     // Print LVal sink signal selects
     fprintf(stdout, "%ssink signal: %s[%d:%d]\n", 
-        string(ws + "  ").c_str(),
+        string(ws + WS_TAB).c_str(),
         get_signal_fullname(sink_signal).c_str(),
         lval_msb,
         lval_lsb);
 
     // Track connection slice information
-    sg->track_connection_slice(lval_msb, lval_lsb, SINK, ws);
+    sg->track_connection_slice(lval_msb, lval_lsb, SINK, ws + WS_TAB);
 
     // Process rval expression
     fprintf(stdout, "%sprocessing rval ...\n", ws.c_str());
-    source_node = process_expression(ivl_stmt_rval(statement), ws + WS_TAB);
-
-    // Push source node to source nodes queue
-    sg->push_to_source_nodes_queue(source_node, ws + WS_TAB);
+    process_expression(ivl_stmt_rval(statement), sg, ws + WS_TAB);
 
     // Add connection(s)
     fprintf(stdout, "%sprocessing connections ...\n", ws.c_str());
@@ -343,14 +288,14 @@ void process_statement(ivl_statement_t statement,
             break;
 
         case IVL_ST_BLOCK:
-            process_statement_block(statement, sg, ws + WS_TAB);
+            process_statement_block(statement, sg, ws);
             break;
 
         case IVL_ST_CASE:
         case IVL_ST_CASER:
         case IVL_ST_CASEX:
         case IVL_ST_CASEZ:
-            process_statement_case(statement, sg, ws + WS_TAB);
+            process_statement_case(statement, sg, ws);
             break;
 
         case IVL_ST_CASSIGN:
@@ -358,16 +303,16 @@ void process_statement(ivl_statement_t statement,
             break;
 
         case IVL_ST_CONDIT:
-            process_statement_condit(statement, sg, ws + WS_TAB);
+            process_statement_condit(statement, sg, ws);
             break;
         
         case IVL_ST_DELAY:
         case IVL_ST_DELAYX:
-            process_statement_delay(statement, sg, ws + WS_TAB);
+            process_statement_delay(statement, sg, ws);
             break;
         
         case IVL_ST_WAIT:
-            process_statement_wait(statement, sg, ws + WS_TAB);
+            process_statement_wait(statement, sg, ws);
             break;
 
         case IVL_ST_NONE:

@@ -79,7 +79,7 @@ const char* get_expr_type_as_string(ivl_expr_t expression) {
 // ----------------------------------------------------------------------------------
 // --------------------------- SUB-PROCESSING Functions -----------------------------
 // ----------------------------------------------------------------------------------
-node_t process_expression_signal(ivl_expr_t expression) {
+void process_expression_signal(ivl_expr_t expression, SignalGraph* sg, string ws) {
     // Source (IVL signal/const/const_expr) node
     node_object_t node_obj    = {NULL};
     node_t        source_node = {node_obj, IVL_NONE};
@@ -91,10 +91,11 @@ node_t process_expression_signal(ivl_expr_t expression) {
     source_node.object.ivl_signal = ivl_expr_signal(expression);
     source_node.type              = IVL_SIGNAL;
 
-    return source_node;
+    // Push source node to source nodes queue
+    sg->push_to_source_nodes_queue(source_node, ws + WS_TAB);
 }
 
-node_t process_expression_number(ivl_expr_t expression) {
+void process_expression_number(ivl_expr_t expression, SignalGraph* sg, string ws) {
     // Source (IVL signal/const/const_expr) node
     node_object_t node_obj    = {NULL};
     node_t        source_node = {node_obj, IVL_NONE};
@@ -103,18 +104,29 @@ node_t process_expression_number(ivl_expr_t expression) {
     source_node.object.ivl_const_expr = expression;
     source_node.type                  = IVL_CONST_EXPR;
 
-    return source_node;
+    // Push source node to source nodes queue
+    sg->push_to_source_nodes_queue(source_node, ws + WS_TAB);
+}
+
+void process_expression_binary(ivl_expr_t expression, SignalGraph* sg, string ws) {
+    // Process operand expressions
+    process_expression(ivl_expr_oper1(expression), sg, ws + WS_TAB);
+    process_expression(ivl_expr_oper2(expression), sg, ws + WS_TAB);
+}
+
+void process_expression_ternary(ivl_expr_t expression, SignalGraph* sg, string ws) {
+    // Process operand expressions
+    process_expression(ivl_expr_oper1(expression), sg, ws + WS_TAB);
+    process_expression(ivl_expr_oper2(expression), sg, ws + WS_TAB);
+    process_expression(ivl_expr_oper3(expression), sg, ws + WS_TAB);
 }
 
 // ----------------------------------------------------------------------------------
 // --------------------------- Main PROCESSING Function -----------------------------
 // ----------------------------------------------------------------------------------
-node_t process_expression(ivl_expr_t expression, 
-                          string     ws) {
-    
-    // NULL source (IVL signal/const/const_expr) node
-    node_object_t node_obj         = {NULL};
-    node_t        null_source_node = {node_obj, IVL_NONE};
+void process_expression(ivl_expr_t   expression, 
+                        SignalGraph* sg,
+                        string       ws) {
 
     fprintf(stdout, "%sprocessing expression (%s)\n", 
         ws.c_str(), get_expr_type_as_string(expression));
@@ -130,7 +142,7 @@ node_t process_expression(ivl_expr_t expression,
             Error::not_supported("expression type (IVL_EX_BACCESS).");
             break;
         case IVL_EX_BINARY:
-            Error::not_supported("expression type (IVL_EX_BINARY).");
+            process_expression_binary(expression, sg, ws);
             break;
         case IVL_EX_CONCAT:
             Error::not_supported("expression type (IVL_EX_CONCAT).");
@@ -154,7 +166,7 @@ node_t process_expression(ivl_expr_t expression,
             Error::not_supported("expression type (IVL_EX_NULL).");
             break;
         case IVL_EX_NUMBER:
-            return process_expression_number(expression);
+            process_expression_number(expression, sg, ws);
             break;
         case IVL_EX_ARRAY_PATTERN:
             Error::not_supported("expression type (IVL_EX_ARRAY_PATTERN).");
@@ -178,13 +190,13 @@ node_t process_expression(ivl_expr_t expression,
             Error::not_supported("expression type (IVL_EX_SHALLOWCOPY).");
             break;
         case IVL_EX_SIGNAL:
-            return process_expression_signal(expression);
+            process_expression_signal(expression, sg, ws);
             break;
         case IVL_EX_STRING:
             Error::not_supported("expression type (IVL_EX_STRING).");
             break;
         case IVL_EX_TERNARY:
-            Error::not_supported("expression type (IVL_EX_TERNARY).");
+            process_expression_ternary(expression, sg, ws);
             break;
         case IVL_EX_UFUNC:
             Error::not_supported("expression type (IVL_EX_UFUNC).");
@@ -199,6 +211,4 @@ node_t process_expression(ivl_expr_t expression,
             Error::unknown_expression_type(ivl_expr_type(expression));
             break;
     }
-
-    return null_source_node;
 }
