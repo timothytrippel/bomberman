@@ -11,20 +11,17 @@ i.e., @(posedge), @(negedge), or @(anyedge).
 // Standard Headers
 
 // TTB Headers
+#include "ttb_typedefs.h"
 #include "ttb.h"
 #include "error.h"
 
 // ----------------------------------------------------------------------------------
 // --------------------------- SUB-PROCESSING Functions -----------------------------
 // ----------------------------------------------------------------------------------
-void process_event_nexus(ivl_nexus_t     nexus, 
-                         ivl_statement_t statement, 
-                         SignalGraph*    sg, 
-                         string          ws) {
-
-    // Source Signal Object
-    node_object_t node_obj    = {NULL};
-    node_t        source_node = {node_obj, IVL_NONE};
+unsigned int process_event_nexus(ivl_nexus_t     nexus, 
+                                 ivl_statement_t statement, 
+                                 SignalGraph*    sg, 
+                                 string          ws) {
 
     // Check no more than one nexus pointer for an event nexus
     // Check nexus pointer type is signal object only
@@ -32,17 +29,18 @@ void process_event_nexus(ivl_nexus_t     nexus,
     Error::check_event_nexus(nexus, statement);
 
     // Get event nexus pointer signal object
-    source_node.object.ivl_signal = ivl_nexus_ptr_sig(ivl_nexus_ptr(nexus, 0));
-    source_node.type              = IVL_SIGNAL;
+    Signal source_signal = Signal(ivl_nexus_ptr_sig(ivl_nexus_ptr(nexus, 0)));
 
     // Push signal to source signals queue
-    sg->push_to_source_nodes_queue(source_node, ws + WS_TAB);
+    sg->push_to_source_signals_queue(source_signal, ws + WS_TAB);
+
+    return 1;
 }
 
 // ----------------------------------------------------------------------------------
 // --------------------------- Main PROCESSING Function -----------------------------
 // ----------------------------------------------------------------------------------
-void process_event(ivl_event_t     event, 
+unsigned int process_event(ivl_event_t     event, 
                    ivl_statement_t statement, 
                    SignalGraph*    sg, 
                    string          ws) {
@@ -51,13 +49,15 @@ void process_event(ivl_event_t     event,
     unsigned int num_posedge_nexus_ptrs = 0;
     unsigned int num_negedge_nexus_ptrs = 0;
     unsigned int num_anyedge_nexus_ptrs = 0;
+    unsigned int num_nodes_processed    = 0;
 
     // Iterate through nexi associated with an POS-EDGE event
     if ((num_posedge_nexus_ptrs = ivl_event_npos(event))) {
         fprintf(stdout, "%sprocessing event @posedge\n", ws.c_str());
         for (unsigned int j = 0; j < num_posedge_nexus_ptrs; j++) {
             event_nexus = ivl_event_pos(event, j);      
-            process_event_nexus(event_nexus, statement, sg, ws);
+            num_nodes_processed += process_event_nexus(
+                event_nexus, statement, sg, ws);
         }
     }
 
@@ -66,7 +66,8 @@ void process_event(ivl_event_t     event,
         fprintf(stdout, "%sprocessing event @negedge\n", ws.c_str());
         for (unsigned int j = 0; j < num_negedge_nexus_ptrs; j++) {
             event_nexus = ivl_event_neg(event, j);      
-            process_event_nexus(event_nexus, statement, sg, ws);
+            num_nodes_processed += process_event_nexus(
+                event_nexus, statement, sg, ws);
         }
     }
 
@@ -75,7 +76,10 @@ void process_event(ivl_event_t     event,
         fprintf(stdout, "%sprocessing event @anyedge\n", ws.c_str());
         for (unsigned int j = 0; j < num_anyedge_nexus_ptrs; j++) {
             event_nexus = ivl_event_any(event, j);      
-            process_event_nexus(event_nexus, statement, sg, ws);
+            num_nodes_processed += process_event_nexus(
+                event_nexus, statement, sg, ws);
         }
     }
+
+    return num_nodes_processed;
 }

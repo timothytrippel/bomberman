@@ -16,6 +16,7 @@ nexus is connected to the INPUT of a LOGIC device.
 // Standard Headers
 
 // TTB Headers
+#include "ttb_typedefs.h"
 #include "ttb.h"
 #include "error.h"
 
@@ -81,10 +82,10 @@ const char* get_logic_type_as_string(ivl_net_logic_t logic) {
 // --------------------------- Main LOGIC Progation ---------------------------------
 // ----------------------------------------------------------------------------------
 void propagate_logic(ivl_net_logic_t logic, 
-                     ivl_nexus_t     sink_nexus,
-                     ivl_signal_t    sink_signal,
-                     SignalGraph*    sg,
-                     string          ws) {
+                     ivl_nexus_t  sink_nexus,
+                     Signal       sink_signal,
+                     SignalGraph* sg,
+                     string       ws) {
 
     // LOGIC device pin nexus
     ivl_nexus_t pin_nexus = NULL;

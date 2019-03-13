@@ -12,6 +12,7 @@ i.e. behavioral statement blocks.
 // Standard Headers
 
 // TTB Headers
+#include "ttb_typedefs.h"
 #include "ttb.h"
 #include "error.h"
 

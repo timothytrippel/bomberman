@@ -11,6 +11,7 @@ IVL process blocks include initial, always, and final blocks.
 // Standard Headers
 
 // TTB Headers
+#include "ttb_typedefs.h"
 #include "ttb.h"
 #include "error.h"
 
@@ -95,8 +96,9 @@ void process_statement_wait(ivl_statement_t statement,
                             SignalGraph*    sg, 
                             string          ws) {
 
-    ivl_event_t     event                  = NULL;
-    ivl_statement_t sub_statement          = NULL;
+    ivl_event_t     event               = NULL; // event to be processed
+    ivl_statement_t sub_statement       = NULL; // sub-statement to be processed
+    unsigned int    num_nodes_processed = 0;    // source nodes processed here
 
     // Get number of WAIT statement events
     unsigned int num_events = ivl_stmt_nevent(statement);
@@ -109,19 +111,33 @@ void process_statement_wait(ivl_statement_t statement,
         event = ivl_stmt_events(statement, i);
 
         // Process event
-        process_event(event, statement, sg, ws + WS_TAB);
+        num_nodes_processed += process_event(event, statement, sg, ws + WS_TAB);
     }
+
+    // Push number of source nodes processed at this depth
+    sg->push_to_num_signals_at_depth_queue(num_nodes_processed);
+    fprintf(stdout, "%spushed %d source node(s) to queue\n", 
+        ws.c_str(), num_nodes_processed);
 
     // Get/process sub-statement
     if ((sub_statement = ivl_stmt_sub_stmt(statement))) {
         process_statement(sub_statement, sg, ws + WS_TAB);
     }
+
+    // Pop processed source nodes from queue
+    num_nodes_processed = sg->pop_from_num_signals_at_depth_queue();
+    sg->pop_from_source_signals_queue(num_nodes_processed);
+    fprintf(stdout, "%spopped %d source node(s) from queue\n", 
+        ws.c_str(), num_nodes_processed);
 }
 
 // ------------------------------ CONDIT Statement ----------------------------------
 void process_statement_condit(ivl_statement_t statement, 
                               SignalGraph*    sg, 
                               string          ws) {
+
+    // Source nodes processed at this here
+    unsigned int num_nodes_processed = 0;
 
     // Get conditional expression object
     ivl_expr_t condit_expr = ivl_stmt_cond_expr(statement);
@@ -131,7 +147,12 @@ void process_statement_condit(ivl_statement_t statement,
     ivl_statement_t false_statement = ivl_stmt_cond_false(statement);
     
     // Process conditional expression to get source signals
-    process_expression(condit_expr, sg, ws + WS_TAB);
+    num_nodes_processed += process_expression(condit_expr, sg, ws + WS_TAB);
+    
+    // Push number of source nodes processed at this depth
+    sg->push_to_num_signals_at_depth_queue(num_nodes_processed);
+    fprintf(stdout, "%spushed %d source node(s) to queue\n", 
+        ws.c_str(), num_nodes_processed);
 
     // Process true/false sub-statements to propagate 
     // source signals to sink signals
@@ -141,20 +162,28 @@ void process_statement_condit(ivl_statement_t statement,
     if (false_statement) {
         process_statement(false_statement, sg, ws + WS_TAB);
     }
+
+    // Pop processed source nodes from queue
+    num_nodes_processed = sg->pop_from_num_signals_at_depth_queue();
+    sg->pop_from_source_signals_queue(num_nodes_processed);
+    fprintf(stdout, "%spopped %d source node(s) from queue\n", 
+        ws.c_str(), num_nodes_processed);
 }
 
 // ------------------------------ ASSIGN Statement ----------------------------------
-unsigned int process_statement_assign_partselect(node_t offset_node, ivl_statement_t statement) {
+unsigned int process_statement_assign_partselect(Signal          offset, 
+                                                 ivl_statement_t statement) {
+
     // Check offset_node is only of type IVL_CONST_EXPR
     // @TODO: support non-constant part select offsets,
     // e.g. signals: signal_a[signal_b] <= signal_c;
-    Error::check_lval_offset(offset_node.type, statement);
+    Error::check_lval_offset(offset.get_ivl_type(), statement);
 
-    // Get offset node constant expression
-    ivl_expr_t const_expr = offset_node.object.ivl_const_expr;
+    // Get offset constant expression
+    ivl_expr_t expr = (ivl_expr_t) offset.get_ivl_obj();
 
     // Get LSB offset index
-    string bit_string = string(ivl_expr_bits(const_expr));
+    string bit_string = string(ivl_expr_bits(expr));
     reverse(bit_string.begin(), bit_string.end());
 
     // Convert bitstring to unsigned long
@@ -165,14 +194,15 @@ void process_statement_assign(ivl_statement_t statement,
                               SignalGraph*    sg, 
                               string          ws) {
 
-    ivl_signal_t sink_signal        = NULL;
-    ivl_lval_t   lval               = NULL;
-    ivl_expr_t   part_select_offset = NULL;
-    unsigned int num_lvals          = 0;
-    unsigned int lval_msb           = 0;
-    unsigned int lval_lsb           = 0;
-    node_t       source_node;
-    node_t       offset_node;
+    ivl_lval_t   lval                = NULL; // lval that contains sink signal
+    ivl_expr_t   part_select_offset  = NULL; // lval part-select offset expression
+    unsigned int num_lvals           = 0;    // number of lvals to process
+    unsigned int lval_msb            = 0;    // MSB of lval (sink signal)
+    unsigned int lval_lsb            = 0;    // LSB of lval (sink signal)
+    unsigned int num_nodes_processed = 0;    // source nodes processed here
+    Signal       sink_signal;                // sink signal to connect to
+    Signal       source_signal;              // source node to connect to
+    Signal       offset_select;              // "signal" that contains lval offset expr
 
     // Get number of lvals
     num_lvals = ivl_stmt_lvals(statement);
@@ -201,19 +231,21 @@ void process_statement_assign(ivl_statement_t statement,
         Error::check_lval_not_memory(lval, statement);
 
         // Get sink signal
-        sink_signal = ivl_lval_sig(lval);
+        sink_signal = Signal(ivl_lval_sig(lval));
         
         // Process lval part select expression (if necessary)
         if ((part_select_offset = ivl_lval_part_off(lval))) {
             fprintf(stdout, "%sprocessing lval part select ...\n", 
                 string(ws + WS_TAB).c_str());
 
-            // Get LSB offset as constant expressio node
+            // Get LSB offset as constant expression node
+            // Note: Number of nodes added to queue should be 0,
+            // because non-constant lval offsets are not supported.
             process_expression(part_select_offset, sg, ws + WS_TAB);
-            offset_node = sg->pop_from_source_nodes_queue();
+            offset_select = sg->pop_from_source_signals_queue();
 
             // Update MSB and LSB of slice
-            lval_lsb = process_statement_assign_partselect(offset_node, statement);
+            lval_lsb = process_statement_assign_partselect(offset_select, statement);
             lval_msb = lval_lsb + ivl_lval_width(lval) - 1;
         }
     }
@@ -221,23 +253,35 @@ void process_statement_assign(ivl_statement_t statement,
     // Print LVal sink signal selects
     fprintf(stdout, "%ssink signal: %s[%d:%d]\n", 
         string(ws + WS_TAB).c_str(),
-        get_signal_fullname(sink_signal).c_str(),
+        sink_signal.get_fullname().c_str(),
         lval_msb,
         lval_lsb);
 
     // Track connection slice information
-    sg->track_connection_slice(lval_msb, lval_lsb, SINK, ws + WS_TAB);
+    sg->track_sink_slice(lval_msb, lval_lsb, ws + WS_TAB);
 
     // Process rval expression
     fprintf(stdout, "%sprocessing rval ...\n", ws.c_str());
-    process_expression(ivl_stmt_rval(statement), sg, ws + WS_TAB);
+    num_nodes_processed += process_expression(
+        ivl_stmt_rval(statement), sg, ws + WS_TAB);
+
+    // Push number of source nodes processed at this depth
+    sg->push_to_num_signals_at_depth_queue(num_nodes_processed);
+    fprintf(stdout, "%spushed %d source node(s) to queue\n", 
+        ws.c_str(), num_nodes_processed);
 
     // Add connection(s)
     fprintf(stdout, "%sprocessing connections ...\n", ws.c_str());
-    while (sg->get_num_source_nodes()) {
-        source_node = sg->pop_from_source_nodes_queue();
-        sg->add_connection(sink_signal, source_node, ws + WS_TAB);
+    for (unsigned int i = 0; i < sg->get_num_source_signals(); i++) {
+        source_signal = sg->get_source_signal(i);
+        sg->add_connection(sink_signal, source_signal, ws + WS_TAB);
     }
+
+    // Pop processed source nodes from queue
+    num_nodes_processed = sg->pop_from_num_signals_at_depth_queue();
+    sg->pop_from_source_signals_queue(num_nodes_processed);
+    fprintf(stdout, "%spopped %d source node(s) from queue\n", 
+        ws.c_str(), num_nodes_processed);
 }
 
 // ------------------------------- BLOCK Statement ----------------------------------

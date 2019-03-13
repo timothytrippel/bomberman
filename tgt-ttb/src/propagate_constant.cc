@@ -10,6 +10,7 @@ This function propagtes signals connected to a CONSTANT.
 // Standard Headers
 
 // TTB Headers
+#include "ttb_typedefs.h"
 #include "ttb.h"
 #include "error.h"
 
@@ -31,18 +32,17 @@ const char* get_const_type_as_string(ivl_net_const_t constant) {
 // --------------------------- Main CONSTANT Progation ------------------------------
 // ----------------------------------------------------------------------------------
 void propagate_constant(ivl_net_const_t constant,
-                        ivl_signal_t    sink_signal,
+                        Signal          sink_signal,
                         SignalGraph*    sg,
                         string          ws) {
 
-    // Source node
-    node_object_t node_obj    = {.ivl_constant = constant};
-    node_t        source_node = {node_obj, IVL_CONST};
+    // Source signal
+    Signal source_signal = Signal(constant);
 
     switch (ivl_const_type(constant)) {
         case IVL_VT_BOOL:
         case IVL_VT_LOGIC:
-            sg->add_connection(sink_signal, source_node, ws + WS_TAB);
+            sg->add_connection(sink_signal, source_signal, ws + WS_TAB);
             break;
         default:
             Error::not_supported("CONSTANT device type (UNKNOWN)");

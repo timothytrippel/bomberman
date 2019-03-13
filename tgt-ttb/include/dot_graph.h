@@ -12,6 +12,10 @@ Graphviz .dot file.
 #ifndef __DOT_GRAPH_HEADER__
 #define __DOT_GRAPH_HEADER__
 
+// ------------------------------------------------------------
+// ------------------------- Includes -------------------------
+// ------------------------------------------------------------
+
 // Standard Headers
 #include <cstdio>
 
@@ -19,35 +23,38 @@ Graphviz .dot file.
 #include <ivl_target.h>
 
 // TTB Headers
-#include "ttb_typedefs.h"
+#include "signal.h"
+#include "connection.h"
 
-// Dot Graph Shapes
-#define SIGNAL_NODE_SHAPE       "ellipse"
-#define LOCAL_SIGNAL_NODE_SHAPE "circle"
-#define FF_NODE_SHAPE           "square"
-#define INPUT_NODE_SHAPE        "none"
-#define CONST_NODE_SHAPE        "rectangle"
+// ------------------------------------------------------------
+// ------------------------- Dot Graph ------------------------
+// ------------------------------------------------------------
 
 class DotGraph {
     public:
+        // Constructors
         DotGraph();
         DotGraph(const char* p);
-        void        set_file_path(const char* p);
-        const char* get_file_path();
-        void        init_graph();
-        void        add_node(string name, string label, string shape);
-        void        add_connection(string source_node_name,
-                                   string sink_node_name, 
-                                   string connection_label,
-                                   string ws);
-        void        save_graph();
-        // void         save_graph(sig_map_t signals);
+
+        // Getters
+        const char* get_file_path() const;
+
+        // Setters
+        void set_file_path(const char* p);
+
+        // Graph Construction
+        void init_graph();
+        void add_node(Signal signal, string ws) const;
+        void add_connection(Connection conn, string ws) const;
+        void save_graph();
+
     private:
-        const char*   file_path_;
-        FILE*         file_ptr_;
-        FILE*         get_file_ptr();
-        void          open_file();
-        void          close_file();
+        const char* file_path_;
+        FILE*       file_ptr_;
+
+        // File Operations
+        void open_file();
+        void close_file();
 };
 
 #endif

@@ -18,10 +18,11 @@ IVL data-structures it connects.
 // Standard Headers
 
 // TTB Headers
+#include "ttb_typedefs.h"
 #include "ttb.h"
 #include "error.h"
 
-void propagate_nexus(ivl_nexus_t nexus, ivl_signal_t sink_signal, SignalGraph* sg, string ws) {
+void propagate_nexus(ivl_nexus_t nexus, Signal sink_signal, SignalGraph* sg, string ws) {
     // Nexus Pointer
     ivl_nexus_ptr_t nexus_ptr = NULL;
 
@@ -33,13 +34,17 @@ void propagate_nexus(ivl_nexus_t nexus, ivl_signal_t sink_signal, SignalGraph* s
 
     // Iterate over Nexus pointers in Nexus
     for (unsigned int nexus_ind = 0; nexus_ind < ivl_nexus_ptrs(nexus); nexus_ind++) {
+        
         nexus_ptr = ivl_nexus_ptr(nexus, nexus_ind);
         fprintf(stdout, "%sNexus %d", ws.c_str(), nexus_ind);
 
         // Determine type of Nexus
         if ((source_signal = ivl_nexus_ptr_sig(nexus_ptr))){
+            
             // Nexus target object is a SIGNAL
-            fprintf(stdout, " -- SIGNAL -- %s\n", get_signal_fullname(source_signal).c_str());   
+            fprintf(stdout, " -- SIGNAL -- %s\n", 
+                Signal(source_signal).get_fullname().c_str());   
+            
             // propagate_signal(source_signal, sink_signal);
 
             // BASE-CASE:
@@ -47,24 +52,33 @@ void propagate_nexus(ivl_nexus_t nexus, ivl_signal_t sink_signal, SignalGraph* s
             // IGNORE, probably a module hookup
             // @TODO: investigate this
             // Ignore connections to local (IVL generated) signals.
-            if (source_signal != sink_signal) {
-                sg->add_signal_connection(sink_signal, source_signal, ws + WS_TAB);
+            if (source_signal != sink_signal.get_ivl_signal()) {
+                sg->add_signal_connection(sink_signal, Signal(source_signal), ws + WS_TAB);
             }
+
         } else if ((source_logic = ivl_nexus_ptr_log(nexus_ptr))) {
+            
             // Nexus target object is a LOGIC
             fprintf(stdout, " -- LOGIC -- %s\n", get_logic_type_as_string(source_logic));
             propagate_logic(source_logic, nexus, sink_signal, sg, ws);
+
         } else if ((source_lpm = ivl_nexus_ptr_lpm(nexus_ptr))) {
+            
             // Nexus target object is a LPM
             fprintf(stdout, " -- LPM -- %s\n", get_lpm_type_as_string(source_lpm));
             propagate_lpm(source_lpm, nexus, sink_signal, sg, ws);
+
         } else if ((source_constant = ivl_nexus_ptr_con(nexus_ptr))) {
+            
             // Nexus target object is a CONSTANT
             fprintf(stdout, " -- CONSTANT -- %s\n", get_const_type_as_string(source_constant));
             propagate_constant(source_constant, sink_signal, sg, ws);
+
         } else {
+            
             // Nexus target object is UNKNOWN
             Error::unknown_nexus_type();
+
         }
     }
 }

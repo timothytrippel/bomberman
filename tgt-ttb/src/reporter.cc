@@ -9,6 +9,10 @@ dependency graph for a given circuit design. The output format is a
 Graphviz .dot file.
 */
 
+// ------------------------------------------------------------
+// ------------------------- Includes -------------------------
+// ------------------------------------------------------------
+
 // Standard Headers
 #include <cassert>
 #include <ctime>
@@ -16,38 +20,44 @@ Graphviz .dot file.
 #include <string>
 
 // TTB Headers
-#include "ttb.h"
+#include "ttb_typedefs.h"
+#include "signal.h"
 #include "reporter.h"
 
-Reporter::Reporter(): file_path_(NULL), file_ptr_(NULL){}
+// ------------------------------------------------------------
+// ----------------------- Constructors -----------------------
+// ------------------------------------------------------------
 
-Reporter::Reporter(const char* p): file_ptr_(NULL){
+Reporter::Reporter(): 
+    file_path_(NULL), 
+    file_ptr_(NULL) {}
+
+Reporter::Reporter(const char* p) {
+    file_ptr_ = NULL;
     set_file_path(p);
 }
 
-void Reporter::set_file_path(const char* p){
-    file_path_ = p;
-}
+// ------------------------------------------------------------
+// ------------------------- Getters --------------------------
+// ------------------------------------------------------------
 
-const char* Reporter::get_file_path(){
+const char* Reporter::get_file_path() const {
     return file_path_;
 }
 
-void Reporter::init(const char* init_message){
-    // Open output file or print to STDOUT
-    if (file_path_ == NULL){
-        file_ptr_ = stdout;
-    } else {
-        open_file();
-    }
+// ------------------------------------------------------------
+// ------------------------- Setters --------------------------
+// ------------------------------------------------------------
 
-    print_message(init_message);
-
-    // Record start time
-    start_time_ = clock();
+void Reporter::set_file_path(const char* p) {
+    file_path_ = p;
 }
 
-void Reporter::print_message(const char* message){
+// ------------------------------------------------------------
+// --------------------- Message Printing ---------------------
+// ------------------------------------------------------------
+
+void Reporter::print_message(const char* message) const {
     // Check that file has been opened for writing report
     assert(file_ptr_ != NULL && "ERROR: reporter file ptr is NULL.\n");
 
@@ -56,7 +66,7 @@ void Reporter::print_message(const char* message){
     fprintf(file_ptr_, "%s\n", message);
 }
 
-void Reporter::root_scopes(ivl_scope_t* scopes, unsigned int num_scopes){
+void Reporter::root_scopes(ivl_scope_t* scopes, unsigned int num_scopes) const {
     // Check that file has been opened for writing report
     assert(file_ptr_ != NULL && "ERROR: reporter file ptr is NULL.\n");
 
@@ -74,7 +84,7 @@ void Reporter::root_scopes(ivl_scope_t* scopes, unsigned int num_scopes){
     }
 }
 
-void Reporter::num_signals(unsigned long num_signals){
+void Reporter::num_signals(unsigned long num_signals) const {
     // Check that file has been opened for writing report
     assert(file_ptr_ != NULL && "ERROR: reporter file ptr is NULL.\n");
 
@@ -82,7 +92,7 @@ void Reporter::num_signals(unsigned long num_signals){
     fprintf(file_ptr_, "Number of signals found: %lu\n", num_signals);
 }
 
-void Reporter::num_constants(unsigned long num_constants){
+void Reporter::num_constants(unsigned long num_constants) const {
     // Check that file has been opened for writing report
     assert(file_ptr_ != NULL && "ERROR: reporter file ptr is NULL.\n");
 
@@ -90,7 +100,7 @@ void Reporter::num_constants(unsigned long num_constants){
     fprintf(file_ptr_, "Number of constants found: %lu\n", num_constants);
 }
 
-void Reporter::num_connections(unsigned long num_connections){
+void Reporter::num_connections(unsigned long num_connections) const {
     // Check that file has been opened for writing report
     assert(file_ptr_ != NULL && "ERROR: reporter file ptr is NULL.\n");
 
@@ -98,7 +108,7 @@ void Reporter::num_connections(unsigned long num_connections){
     fprintf(file_ptr_, "Number of connections found: %lu\n", num_connections);
 }
 
-void Reporter::signal_names(sig_map_t signals_map){
+void Reporter::signal_names(sig_map_t signals_map) const {
     // Check that file has been opened for writing report
     assert(file_ptr_ != NULL && "ERROR: reporter file ptr is NULL.\n");
 
@@ -111,19 +121,37 @@ void Reporter::signal_names(sig_map_t signals_map){
     // Iterate over the map using Iterator till end.
     while (it != signals_map.end()) {   
         // Print signal name
-        fprintf(file_ptr_, "    %s\n", get_signal_fullname(it->first).c_str());
+        fprintf(file_ptr_, "    %s\n", (it->second).get_fullname().c_str());
  
         // Increment the iterator
         it++;
     }
 }
 
-void Reporter::line_separator(){
+void Reporter::line_separator() const {
     // Check that file has been opened for writing report
     assert(file_ptr_ != NULL && "ERROR: reporter file ptr is NULL.\n");
 
     // Print line separator
     fprintf(file_ptr_, "\n%s\n", LINE_SEPARATOR);
+}
+
+// ------------------------------------------------------------
+// -------------------------- Other ---------------------------
+// ------------------------------------------------------------
+
+void Reporter::init(const char* init_message) {
+    // Open output file or print to STDOUT
+    if (file_path_ == NULL){
+        file_ptr_ = stdout;
+    } else {
+        open_file();
+    }
+
+    print_message(init_message);
+
+    // Record start time
+    start_time_ = clock();
 }
 
 void Reporter::end(){
@@ -139,14 +167,11 @@ void Reporter::end(){
     fclose(file_ptr_);
 }
 
-FILE* Reporter::get_file_ptr(){
-    return file_ptr_;
-}
-
 void Reporter::open_file(){
     file_ptr_ = fopen(file_path_, "w");
     if (!file_ptr_) {
-        printf("ERROR: Could not open file %s\n", file_path_ ? file_path_ : "stdout");
+       fprintf(stderr, "ERROR: Could not open file %s\n", 
+            file_path_ ? file_path_ : "stdout");
         exit(-1);
     }
 }

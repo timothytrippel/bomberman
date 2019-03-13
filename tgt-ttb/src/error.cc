@@ -9,22 +9,27 @@ dependency graph for a given circuit design. The output format is a
 Graphviz .dot file.
 */
 
+// ------------------------------------------------------------
+// ------------------------- Includes -------------------------
+// ------------------------------------------------------------
+
 // Standard Headers
 #include <cstdio>
 #include <cassert>
 #include <cstring>
 #include <string>
-#include <typeinfo>
 
 // TTB Headers
-#include "ttb.h"
+#include "ttb_typedefs.h"
+#include "signal.h"
 #include "error.h"
 
+// Import STD Namespace
 using namespace std;
 
-// ----------------------------------------------------------------------------------
-// ------------------------------- Data Validation ----------------------------------
-// ----------------------------------------------------------------------------------
+// ------------------------------------------------------------
+// ---------------------- Data Validation ---------------------
+// ------------------------------------------------------------
 void Error::check_scope_types(ivl_scope_t* scopes, unsigned int num_scopes) {
     ivl_scope_type_t scope_type           = IVL_SCT_MODULE;
     string           scope_type_name      = "UNKNOWN";
@@ -85,20 +90,20 @@ void Error::check_scope_types(ivl_scope_t* scopes, unsigned int num_scopes) {
     }
 }
 
-void Error::check_signal_exists_in_map(sig_map_t signals, ivl_signal_t sig) {
-    if (signals.count(sig) > 0) {
+void Error::check_signal_exists_in_map(sig_map_t signals, ivl_signal_t signal) {
+    if (signals.count(signal) > 0) {
         fprintf(stderr, "ERROR: signal (%s) already exists in hashmap.\n", 
-            get_signal_fullname(sig).c_str());
+            signals[signal].get_fullname().c_str());
 
         exit(DUPLICATE_SIGNALS_FOUND_ERROR);
     }
 } 
 
-void Error::check_signal_not_arrayed(ivl_signal_t signal) {
+void Error::check_signal_not_arrayed(sig_map_t signals, ivl_signal_t signal) {
     // Check if signal is arrayed
     if (ivl_signal_dimensions(signal) > 0) {
         fprintf(stderr, "NOT-SUPPORTED: arrayed signal (%s -- %d) encountered.\n", 
-            get_signal_fullname(signal).c_str(), ivl_signal_dimensions(signal));
+            signals[signal].get_fullname().c_str(), ivl_signal_dimensions(signal));
         
         exit(NOT_SUPPORTED_ERROR);
     } else {
@@ -112,11 +117,11 @@ void Error::check_signal_not_arrayed(ivl_signal_t signal) {
     }
 }
 
-void Error::check_signal_not_multidimensional(ivl_signal_t signal) {
+void Error::check_signal_not_multidimensional(sig_map_t signals, ivl_signal_t signal) {
     // Check if signal is multidimensional
     if (ivl_signal_packed_dimensions(signal) > 1) {
         fprintf(stderr, "NOT-SUPPORTED: multidimensional signal (%s -- %d) encountered.\n", 
-            get_signal_fullname(signal).c_str(), ivl_signal_packed_dimensions(signal));
+            signals[signal].get_fullname().c_str(), ivl_signal_packed_dimensions(signal));
         exit(NOT_SUPPORTED_ERROR);
     }
 }
@@ -171,10 +176,10 @@ void Error::check_lval_not_memory(ivl_lval_t lval, ivl_statement_t statement) {
     }
 }
 
-void Error::check_lval_offset(node_type_t node_type, ivl_statement_t statement) {
+void Error::check_lval_offset(ivl_obj_type_t obj_type, ivl_statement_t statement) {
     // Check lval offset expression os only of type IVL_CONST_EXPR,
     // i.e. it is a constant expression
-    if (node_type != IVL_CONST_EXPR) {
+    if (obj_type != IVL_EXPR) {
         fprintf(stderr, "NOT-SUPPORTED: non-constant expression lval offset (File: %s -- Line: %d).\n", 
             ivl_stmt_file(statement), ivl_stmt_lineno(statement));
 
@@ -182,27 +187,19 @@ void Error::check_lval_offset(node_type_t node_type, ivl_statement_t statement) 
     }
 }
 
-void Error::check_slice_tracking_stacks(vector<node_slice_t> source_slices, 
-                                        vector<node_slice_t> sink_slices) {
-
-    // Check SOURCE slice info stack size
-    if (source_slices.size() > 1) {
-        fprintf(stderr, "ERROR: source slice info stack size > 1.\n");
-        exit(SLICE_TRACKING_ERROR);
-    }
-
-    // Check SINK slice info stack size
-    if (sink_slices.size() > 1) {
-        fprintf(stderr, "ERROR: sink slice info stack size > 1.\n");
+void Error::check_slice_tracking_stack(vector<signal_slice_t> slice_stack) {
+    // Check slice info stack size
+    if (slice_stack.size() > 1) {
+        fprintf(stderr, "ERROR: slice info stack size > 1.\n");
         exit(SLICE_TRACKING_ERROR);
     }
 }
 
-// ----------------------------------------------------------------------------------
-// ------------------------- Error Reporting: Unkown Types --------------------------
-// ----------------------------------------------------------------------------------
-void Error::unknown_node_type(node_type_t node_type) {
-    fprintf(stderr, "ERROR: unkown node type (%d) encountered.\n", node_type);
+// ------------------------------------------------------------
+// --------------- Error Reporting: Unkown Types --------------
+// ------------------------------------------------------------
+void Error::unknown_ivl_obj_type(ivl_obj_type_t obj_type) {
+    fprintf(stderr, "ERROR: unkown node type (%d) encountered.\n", obj_type);
     
     exit(NOT_SUPPORTED_ERROR);
 }
@@ -231,24 +228,24 @@ void Error::unknown_expression_type(ivl_expr_type_t expression_type) {
     exit(BEHAVIORAL_CONNECTIONS_ERROR);
 }
 
-// ----------------------------------------------------------------------------------
-// ---------------------------- Error Reporting: Other ------------------------------
-// ----------------------------------------------------------------------------------
+// ------------------------------------------------------------
+// ------------------ Error Reporting: Other ------------------
+// ------------------------------------------------------------
 void Error::not_supported(const char* message) {
     fprintf(stderr, "NOT-SUPPORTED: %s\n", message);
     
     exit(NOT_SUPPORTED_ERROR);
 }
 
-void Error::null_node_type() {
+void Error::null_ivl_obj_type() {
     fprintf(stderr, "ERROR: node type IVL_NONE encountered.\n");
     
     exit(NOT_SUPPORTED_ERROR);
 }
 
-void Error::connecting_signal_not_in_graph(ivl_signal_t signal) {
+void Error::connecting_signal_not_in_graph(sig_map_t signals, ivl_signal_t source_signal) {
     fprintf(stderr, "ERROR: attempting to connect signal (%s) not in graph.\n", 
-        get_signal_fullname(signal).c_str());
+        signals[source_signal].get_fullname().c_str());
 
     exit(NOT_SUPPORTED_ERROR);
 }

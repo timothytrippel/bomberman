@@ -9,202 +9,24 @@ dependency graph for a given circuit design. The output format is a
 Graphviz .dot file.
 */
 
+// ------------------------------------------------------------
+// ------------------------- Includes -------------------------
+// ------------------------------------------------------------
+
 // Standard Headers
 #include <cassert>
-#include <cstdio>
-#include <sstream>
 
 // TTB Headers
+#include "ttb_typedefs.h"
 #include "ttb.h"
 #include "reporter.h"
 #include "error.h"
 
-// ----------------------------------------------------------------------------------
-// ------------------------------- Helper Functions ---------------------------------
-// ----------------------------------------------------------------------------------
-const char* get_node_type_as_string(node_type_t node_type) {
-    switch(node_type) {
-        case IVL_NONE:
-            return "IVL_NONE";
-        case IVL_SIGNAL:
-            return "IVL_SIGNAL";
-        case IVL_CONST:
-            return "IVL_CONST";
-        case IVL_CONST_EXPR:
-            return "IVL_CONST_EXPR";
-        default:
-            return "UNKOWN";
-    }
-}
+// ------------------------------------------------------------
+// ------------------ Connection Processing -------------------
+// ------------------------------------------------------------
 
-const char* get_node_slice_type_as_string(node_slice_type_t node_slice_type) {
-    switch(node_slice_type) {
-        case SOURCE:
-            return "SOURCE";
-        case SINK:
-            return "SINK";
-        default:
-            return "UNKOWN";
-    }
-}
-
-string get_signal_fullname(ivl_signal_t signal) {
-    string scopename = ivl_scope_name(ivl_signal_scope(signal)); 
-    string basename  = ivl_signal_basename(signal);
-    string fullname  = scopename + string(".") + basename;
-
-    return fullname;
-}
-
-string get_constant_fullname(ivl_net_const_t constant, unsigned long num_constants) {
-    // string scopename = ivl_scope_name(ivl_const_scope(constant)); 
-    string basename  = string(ivl_const_bits(constant), (size_t)ivl_const_width(constant));
-    reverse(basename.begin(), basename.end());
-    // string fullname  = scopename + string(".const_") + basename;
-    string fullname  = string("const_") + to_string(num_constants) + string(".") + basename;
-
-    return fullname;
-}
-
-string get_constant_expr_fullname(ivl_expr_t const_expr, unsigned long num_constants) {
-    string basename  = string(ivl_expr_bits(const_expr), (size_t)ivl_expr_width(const_expr));
-    reverse(basename.begin(), basename.end());
-    string fullname  = string("const_") + to_string(num_constants) + string(".") + basename;
-
-    return fullname;
-}
-
-unsigned int get_signal_msb(ivl_signal_t signal) {
-    if (ivl_signal_packed_dimensions(signal) > 0) {
-        // Check MSB is not negative
-        assert((ivl_signal_packed_msb(signal, 0) >= 0) && \
-            "NOT-SUPPORTED: negative MSB index.\n");
-        
-        return ivl_signal_packed_msb(signal, 0);
-    } else {
-        return 0;
-    }
-}
-
-unsigned int get_signal_lsb(ivl_signal_t signal) {
-    if (ivl_signal_packed_dimensions(signal) > 0) {
-        // Check LSB is not negative
-        assert((ivl_signal_packed_lsb(signal, 0) >= 0) && \
-            "NOT-SUPPORTED: negative LSB index.\n");
-
-        return ivl_signal_packed_lsb(signal, 0);
-    } else {
-        return 0;
-    }
-}
-
-unsigned int get_const_msb(ivl_net_const_t constant) {
-    return ivl_const_width(constant) - 1;
-}
-
-unsigned int get_expr_msb(ivl_expr_t expression) {
-    return ivl_expr_width(expression) - 1;
-}
-
-// ----------------------------------------------------------------------------------
-// ------------------------ Dot Graph Helper Functions ------------------------------
-// ----------------------------------------------------------------------------------
-
-// ----------------------------- IVL Signal Processing ------------------------------
-string get_signal_node_label(ivl_signal_t signal) {
-    stringstream ss;
-
-    ss << "[";
-    ss << get_signal_msb(signal);
-    ss << ":";
-    ss << get_signal_lsb(signal);
-    ss << "]";
-
-    return ss.str();
-}
-
-string get_signal_connection_label(node_slice_t source_slice,
-                                   node_slice_t sink_slice) {
-
-    stringstream ss;
-    
-    ss << "[";
-    ss << source_slice.msb;
-    ss << ":";
-    ss << source_slice.lsb;
-    ss << "]->[";
-    ss << sink_slice.msb;
-    ss << ":";
-    ss << sink_slice.lsb;
-    ss << "]";
-
-    return ss.str();
-}
-
-// ---------------------------- IVL Constant Processing -----------------------------
-string get_const_node_label(ivl_net_const_t constant) {
-    stringstream ss;
-
-    ss << "[";
-    ss << get_const_msb(constant);
-    ss << ":0]";
-
-    return ss.str();
-}
-
-string get_const_connection_label(ivl_net_const_t source_constant,  
-                                  node_slice_t    sink_signal_slice) {
-
-    stringstream ss;
-
-    // Source (const expr) node CANNOT be sliced
-    assert(sink_signal_slice.type == SINK && 
-        "ERROR: slice source constant encountered.\n"); 
-    
-    ss << get_const_node_label(source_constant);
-    ss << "->[";
-    ss << sink_signal_slice.msb;
-    ss << ":";
-    ss << sink_signal_slice.lsb;
-    ss << "]";
-
-    return ss.str();
-}
-
-// --------------------- IVL Constant Expression Processing -------------------------
-string get_const_expr_node_label(ivl_expr_t const_expr) {
-    stringstream ss;
-
-    ss << "[";
-    ss << get_expr_msb(const_expr);
-    ss << ":0]";
-
-    return ss.str();
-}
-
-string get_const_expr_connection_label(ivl_expr_t   source_const_expr, 
-                                       node_slice_t sink_signal_slice) {
-
-    stringstream ss;
-
-    // Source (const expr) node CANNOT be sliced
-    assert(sink_signal_slice.type == SINK && 
-        "ERROR: slice source constant encountered.\n"); 
-    
-    ss << get_const_expr_node_label(source_const_expr);
-    ss << "->[";
-    ss << sink_signal_slice.msb;
-    ss << ":";
-    ss << sink_signal_slice.lsb;
-    ss << "]";
-
-    return ss.str();
-}
-
-// ----------------------------------------------------------------------------------
-// ---------------------- Connection Enumeration Functions --------------------------
-// ----------------------------------------------------------------------------------
-void find_combinational_connections(SignalGraph* sg) {
+void find_structural_connections(SignalGraph* sg) {
     // Get signals adjacency list
     sig_map_t signals_map = sg->get_signals_map();
 
@@ -213,16 +35,17 @@ void find_combinational_connections(SignalGraph* sg) {
  
     // Iterate over all signals in adjacency list
     while (it != signals_map.end()) {  
-        ivl_signal_t sink_signal = it->first;
+        Signal sink_signal = it->first;
 
         // Print signal name -- signal dimensions
-        fprintf(stdout, "%s:\n", get_signal_fullname(sink_signal).c_str());
+        fprintf(stdout, "%s:\n", sink_signal.get_fullname().c_str());
 
         // Get signal nexus
         // There is exactly one nexus for each WORD of a signal.
         // Since we only support non-arrayed signals (above), 
         // each signal only has one nexus.
-        const ivl_nexus_t sink_nexus = ivl_signal_nex(sink_signal, 0);
+        const ivl_signal_t ivl_sink_signal = (ivl_signal_t) sink_signal.get_ivl_obj();
+        const ivl_nexus_t  sink_nexus      = ivl_signal_nex(ivl_sink_signal, 0);
 
         // Check Nexus IS NOT NULL
         assert(sink_nexus);
@@ -246,9 +69,9 @@ void find_behavioral_connections(ivl_design_t design, SignalGraph* sg) {
     }
 }
 
-// ----------------------------------------------------------------------------------
-// ------------------------ IVL Target Entry Point "main" ---------------------------
-// ----------------------------------------------------------------------------------
+// ------------------------------------------------------------
+// -------------- IVL Target Entry-point ("main") -------------
+// ------------------------------------------------------------
 int target_design(ivl_design_t design) {
     ivl_scope_t*   roots     = 0; // root scopes of the design
     unsigned       num_roots = 0; // number of root scopes of the design
@@ -276,9 +99,9 @@ int target_design(ivl_design_t design) {
 
     // Find signal-to-signal connections
     reporter.print_message(COMB_CONNECTION_ENUM_MESSAGE);
-    find_combinational_connections(&sg);      // Process COMBINATIONAL logic connections
+    find_structural_connections(&sg);
     reporter.print_message(BEHAVE_CONNECTION_ENUM_MESSAGE);
-    find_behavioral_connections(design, &sg); // Process BEHAVIORAL logic connections
+    find_behavioral_connections(design, &sg);
 
     // Report Graph Stats
     reporter.line_separator();

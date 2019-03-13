@@ -1,4 +1,4 @@
-module two_bit_distr_counter(input clk, input rst, input rst2, output [1:0] count);
+module two_bit_distr_counter(input clk, input rst, output [1:0] count);
 	reg lsb;
 	reg msb;
 
@@ -11,7 +11,7 @@ module two_bit_distr_counter(input clk, input rst, input rst2, output [1:0] coun
 	assign count = {msb, lsb};
 
 	always @(posedge clk) begin
-		if (rst | rst2) begin
+		if (rst) begin
 			lsb <= 1'b0;
 			msb <= 1'b0;
 		end else begin

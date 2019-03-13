@@ -15,6 +15,7 @@ type must be handled individually.
 #include <cstdio>
 
 // TTB Headers
+#include "ttb_typedefs.h"
 #include "ttb.h"
 #include "error.h"
 
@@ -108,7 +109,7 @@ const char* get_lpm_type_as_string(ivl_lpm_t lpm) {
 // ------------------------------- LPM Device Types ---------------------------------
 // ----------------------------------------------------------------------------------
 void process_lpm_basic(ivl_lpm_t    lpm,
-                       ivl_signal_t sink_signal,
+                       Signal       sink_signal,
                        SignalGraph* sg,
                        string       ws) {
 
@@ -128,7 +129,7 @@ void process_lpm_basic(ivl_lpm_t    lpm,
 }
 
 void process_lpm_part_select(ivl_lpm_t    lpm,
-                             ivl_signal_t sink_signal,
+                             Signal       sink_signal,
                              SignalGraph* sg,
                              string       ws) {
 
@@ -153,10 +154,10 @@ void process_lpm_part_select(ivl_lpm_t    lpm,
     // Determine LPM type and track connection slice 
     if (ivl_lpm_type(lpm) == IVL_LPM_PART_VP) {
         // part select: vector to part (VP: part select in rval)
-        sg->track_connection_slice(msb, lsb, SOURCE, ws);
+        sg->track_source_slice(msb, lsb, ws);
     } else if (ivl_lpm_type(lpm) == IVL_LPM_PART_PV) {
         // part select: part to vector (PV: part select in lval)
-        sg->track_connection_slice(msb, lsb, SINK, ws);
+        sg->track_sink_slice(msb, lsb, ws);
     } else {
         Error::unknown_part_select_lpm_type(ivl_lpm_type(lpm));
     }
@@ -166,7 +167,7 @@ void process_lpm_part_select(ivl_lpm_t    lpm,
 }
 
 void process_lpm_concat(ivl_lpm_t    lpm,
-                        ivl_signal_t sink_signal,
+                        Signal       sink_signal,
                         SignalGraph* sg,
                         string       ws) {
 
@@ -212,7 +213,7 @@ void process_lpm_concat(ivl_lpm_t    lpm,
                 current_msb = current_lsb + ivl_signal_width(source_signal) - 1;
 
                 // Track connection slice information
-                sg->track_connection_slice(current_msb, current_lsb, SINK, ws);
+                sg->track_sink_slice(current_msb, current_lsb, ws);
 
                 // Propagate input nexus
                 propagate_nexus(input_nexus, sink_signal, sg, ws + WS_TAB);
@@ -229,7 +230,7 @@ void process_lpm_concat(ivl_lpm_t    lpm,
 }
 
 void process_lpm_mux(ivl_lpm_t    lpm,
-                     ivl_signal_t sink_signal,
+                     Signal       sink_signal,
                      SignalGraph* sg,
                      string       ws) {
 
@@ -251,7 +252,7 @@ void process_lpm_mux(ivl_lpm_t    lpm,
 // ----------------------------------------------------------------------------------
 void propagate_lpm(ivl_lpm_t    lpm,
                    ivl_nexus_t  sink_nexus,
-                   ivl_signal_t sink_signal,
+                   Signal       sink_signal,
                    SignalGraph* sg,
                    string       ws) {
 

@@ -12,40 +12,61 @@ Graphviz .dot file.
 #ifndef __REPORTER_HEADER__
 #define __REPORTER_HEADER__
 
-// Standard Headers
-#include <vector>
+// ------------------------------------------------------------
+// ------------------------- Includes -------------------------
+// ------------------------------------------------------------
 
-using namespace std;
+// Standard Headers
+#include <cstdio>
+#include <vector>
 
 // IVL API Header
 #include  <ivl_target.h>
 
 // TTB Headers
-#include "ttb_typedefs.h"
+#include "signal.h"
+
+// Import STD Namespace
+using namespace std;
+
+// ------------------------------------------------------------
+// ------------------------ Reporter --------------------------
+// ------------------------------------------------------------
 
 class Reporter {
     public:
+        // Constructors
         Reporter();
         Reporter(const char* p);
-        void        set_file_path(const char* p);
-        const char* get_file_path();
-        void        init(const char* init_message);
-        void        print_message(const char* message);
-        void        root_scopes(ivl_scope_t* scopes, unsigned int num_scopes);
-        void        num_signals(unsigned long num_signals);
-        void        num_constants(unsigned long num_constants);
-        void        num_connections(unsigned long num_connections);
-        void        signal_names(sig_map_t signals_map);
-        void        line_separator();
-        void        end();
+
+        // Getters
+        const char* get_file_path() const;
+
+        // Setters
+        void set_file_path(const char* p);
+
+        // Message Printing
+        void print_message(const char* message) const;
+        void root_scopes(ivl_scope_t* scopes, unsigned int num_scopes) const;
+        void num_signals(unsigned long num_signals) const;
+        void num_constants(unsigned long num_constants) const;
+        void num_connections(unsigned long num_connections) const;
+        void signal_names(sig_map_t signals_map) const;
+        void line_separator() const;
+
+        // Other
+        void init(const char* init_message);
+        void end();
+    
     private:
         const char* file_path_;
         FILE*       file_ptr_;
         clock_t     start_time_;
         double      execution_time_;
-        FILE*       get_file_ptr();
-        void        open_file();
-        void        close_file();
+
+        // File Operations
+        void open_file();
+        void close_file();
 };
 
 #endif
