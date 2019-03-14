@@ -93,11 +93,13 @@ class Signal {
 
         // General Getters
         string         get_fullname()   const;
+        string         get_basename()   const;
         ivl_object_t   get_ivl_obj()    const;
         ivl_obj_type_t get_ivl_type()   const;
         ivl_signal_t   get_ivl_signal() const;
         unsigned       get_msb()        const;
         unsigned       get_lsb()        const;
+        bool 		   is_signal()      const;
 		bool 		   is_const()       const;
 
         // Dot Getters
@@ -116,6 +118,8 @@ class Signal {
         static unsigned int const_id; 
 
         // Signal Getters
+        string       get_signal_scopename() const;
+        string       get_signal_basename()  const;
         string       get_signal_fullname()  const;
         unsigned int get_signal_msb()       const;
         unsigned int get_signal_lsb()       const;
@@ -124,10 +128,12 @@ class Signal {
         string       get_dot_expr_label()   const;
 
         // Constant Getters
-        string       get_const_fullname() const;
-        unsigned int get_const_msb()      const;
+        string       get_const_bitstring() const;
+        string       get_const_fullname()  const;
+        unsigned int get_const_msb()       const;
 
         // Expression Getters
+        string       get_expr_bitstring() const;
         string       get_expr_fullname()  const;
         unsigned int get_expr_msb()       const;
 };
@@ -139,9 +145,9 @@ class Signal {
 typedef map<ivl_signal_t, Signal*> sig_map_t;
 
 // ------------------------------------------------------------
-// ----------------- Source (TTB) Signal Queue ----------------
+// -------------------- (TTB) Signal Queue --------------------
 // ------------------------------------------------------------
 
-typedef vector<Signal*> source_signals_q_t;
+typedef vector<Signal*> signals_q_t;
 
 #endif

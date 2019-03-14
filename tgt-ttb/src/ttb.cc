@@ -24,6 +24,29 @@ Graphviz .dot file.
 #include "error.h"
 
 // ------------------------------------------------------------
+// -------------- CMD Line Arguments Processing ---------------
+// ------------------------------------------------------------
+
+cmd_args_map_t* process_cmd_line_args(ivl_design_t des) {
+    // Create map to hold cmd line args
+    cmd_args_map_t* cmd_args = new cmd_args_map_t();
+
+    // Process signals to ignore filepath
+    string ignore_filepath = string(ivl_design_flag(des, IGNORE_FILEPATH_FLAG));
+    if (!ignore_filepath.empty()) {
+        (*cmd_args)[IGNORE_FILEPATH_FLAG] = ignore_filepath; 
+    }
+    
+    // Process ignore constants flag
+    string ignore_consts = string(ivl_design_flag(des, IGNORE_CONSTANTS_FLAG));
+    if (!ignore_consts.empty()) {
+        (*cmd_args)[IGNORE_CONSTANTS_FLAG] = ignore_consts;
+    }
+
+    return cmd_args;
+}
+
+// ------------------------------------------------------------
 // ------------------ Connection Processing -------------------
 // ------------------------------------------------------------
 
@@ -79,19 +102,28 @@ unsigned int Signal::const_id = 0;
 // -------------- IVL Target Entry-point ("main") -------------
 // ------------------------------------------------------------
 int target_design(ivl_design_t design) {
-    ivl_scope_t* roots     = 0;    // root scopes of the design
-    unsigned     num_roots = 0;    // number of root scopes of the design
-    Reporter*    reporter  = NULL; // reporter object (prints messages)
-    SignalGraph* sg        = NULL; // signal graph object
+    ivl_scope_t*    roots     = 0;    // root scopes of the design
+    unsigned        num_roots = 0;    // number of root scopes of the design
+    cmd_args_map_t* cmd_args  = NULL; // command line args
+    Reporter*       reporter  = NULL; // reporter object (prints messages)
+    SignalGraph*    sg        = NULL; // signal graph object
 
     // Initialize reporter checking objects
     reporter = new Reporter();
     reporter->init(LAUNCH_MESSAGE);
 
+    // Get IVL design flags (CMD-line args)
+    cmd_args = process_cmd_line_args(design);
+
     // Initialize SignalGraph
     sg = new SignalGraph(ivl_design_flag(design, "-o"));
 
-    
+    // Load signals to ignore
+    if (cmd_args->count(IGNORE_FILEPATH_FLAG)) {
+        reporter->print_message(LOADING_SIGS_TO_IGNORE_MESSAGE);
+        sg->load_signals_to_ignore((*cmd_args)[IGNORE_FILEPATH_FLAG]);
+        reporter->signals_to_ignore(sg->get_signals_to_ignore());
+    }
     
     // Get root scopes (top level modules) of design
     reporter->print_message(SCOPE_EXPANSION_MESSAGE);
@@ -123,6 +155,7 @@ int target_design(ivl_design_t design) {
 
     // Delete Objects
     delete(reporter);
+    delete(cmd_args);
     delete(sg);
 
     return 0;

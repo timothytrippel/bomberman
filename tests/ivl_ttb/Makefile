@@ -1,8 +1,9 @@
 # Directory Structure
 TGT_TTB_DIR=../../tgt-ttb
-SRC_DIR := verilog
-DOT_DIR := dot
-PDF_DIR := pdf
+SRC_DIR     := verilog
+DOT_DIR     := dot
+PDF_DIR     := pdf
+IGNORES_DIR := signal_ignores
 
 # Source/Target Files
 SRCS := $(shell find $(SRC_DIR) -type f -name *.v)
@@ -19,6 +20,7 @@ $(DOT_DIR)/%.dot: $(SRC_DIR)/%.v
 	mkdir -p dot
 	mkdir -p pdf
 	iverilog -o $@ -t ttb $<
+	# iverilog -o $@ -pignore_filepath=$(patsubst $(SRC_DIR)/%,$(IGNORES_DIR)/%,$(<:.v=.txt)) -t ttb $<
 	dot $@ -Tpdf -o $(patsubst $(SRC_DIR)/%,$(PDF_DIR)/%,$(<:.v=.pdf))
 
 .PHONY: build cleanall clean

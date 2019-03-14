@@ -118,6 +118,19 @@ string Signal::get_fullname() const {
     }
 }
 
+string Signal::get_basename() const {
+    switch(ivl_type_) {
+        case IVL_SIGNAL:
+            return get_signal_basename();
+        case IVL_CONST:
+            return get_const_bitstring();
+        case IVL_EXPR:
+            return get_expr_bitstring();
+        default:
+            return "NONE";
+    }
+}
+
 unsigned int Signal::get_msb() const {
 	switch(ivl_type_) {
         case IVL_SIGNAL:
@@ -144,6 +157,14 @@ unsigned int Signal::get_lsb() const {
     }
 }
 
+bool Signal::is_signal() const {
+	if (ivl_type_ == IVL_SIGNAL) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
 bool Signal::is_const() const {
 	if (ivl_type_ == IVL_CONST ||
 		ivl_type_ == IVL_EXPR) {
@@ -154,12 +175,16 @@ bool Signal::is_const() const {
 }
 
 // ----------------------------------- Signal ---------------------------------------
-string Signal::get_signal_fullname() const {
-    string scopename = ivl_scope_name(ivl_signal_scope(ivl_object_.ivl_signal)); 
-    string basename  = ivl_signal_basename(ivl_object_.ivl_signal);
-    string fullname  = scopename + string(".") + basename;
+string Signal::get_signal_scopename() const {
+    return ivl_scope_name(ivl_signal_scope(ivl_object_.ivl_signal));
+}
 
-    return fullname;
+string Signal::get_signal_basename() const {
+    return ivl_signal_basename(ivl_object_.ivl_signal);
+}
+
+string Signal::get_signal_fullname() const {
+    return (get_signal_scopename() + string(".") + get_signal_basename());
 }
 
 unsigned int Signal::get_signal_msb() const {
@@ -187,18 +212,24 @@ unsigned int Signal::get_signal_lsb() const {
 }
 
 // ---------------------------------- Constant --------------------------------------
+string Signal::get_const_bitstring() const {
+	// Get bitstring
+	string bitstring = string(
+    	ivl_const_bits(ivl_object_.ivl_const), 
+    	(size_t) ivl_const_width(ivl_object_.ivl_const) );
+
+	// Reverse bitstring to MSB->LSB order
+    reverse(bitstring.begin(), bitstring.end());
+
+    return bitstring;
+}
+
 string Signal::get_const_fullname() const {
-    // Get (unique) constant  prefix
+    // Get (unique) constant prefix
     // string scopename = ivl_scope_name(ivl_const_scope(ivl_object_.ivl_const)); 
     string const_prefix = string("const.") + to_string(id_) + string(".");
 
-    // Get constant value bitstring
-    string basename = string(
-    	ivl_const_bits(ivl_object_.ivl_const), 
-    	(size_t)ivl_const_width(ivl_object_.ivl_const));
-    reverse(basename.begin(), basename.end());
-
-    return (const_prefix + basename);
+    return (const_prefix + get_const_bitstring());
 }
 
 unsigned int Signal::get_const_msb() const {
@@ -210,17 +241,23 @@ unsigned int Signal::get_const_msb() const {
 }
 
 // --------------------------------- Expression -------------------------------------
+string Signal::get_expr_bitstring() const {
+	// Get bitstring
+	string bitstring = string(
+    	ivl_expr_bits(ivl_object_.ivl_expr), 
+    	(size_t) ivl_expr_width(ivl_object_.ivl_expr) );
+    
+	// Reverse bitstring to MSB->LSB order
+	reverse(bitstring.begin(), bitstring.end());
+
+	return bitstring;
+}
+
 string Signal::get_expr_fullname() const {
-    // Get (unique) constant  prefix
+    // Get (unique) constant prefix
 	string const_prefix = string("const.") + to_string(id_) + string(".");
 
-	// Get constant value bitstring
-    string basename = string(
-    	ivl_expr_bits(ivl_object_.ivl_expr), 
-    	(size_t)ivl_expr_width(ivl_object_.ivl_expr));
-    reverse(basename.begin(), basename.end());
-
-    return (const_prefix + basename);
+    return (const_prefix + get_expr_bitstring());
 }
 
 unsigned int Signal::get_expr_msb() const {

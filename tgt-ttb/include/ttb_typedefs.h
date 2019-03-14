@@ -16,8 +16,15 @@ Graphviz .dot file.
 // ------------------------- Includes -------------------------
 // ------------------------------------------------------------
 
+// Standard Headers
+#include <string>
+#include <map>
+
 // IVL API Header
 #include <ivl_target.h>
+
+// Import STD Namespace
+using namespace std;
 
 // ------------------------------------------------------------
 // ------------------------- Defines --------------------------
@@ -25,6 +32,7 @@ Graphviz .dot file.
 
 // Progress Messages
 #define LAUNCH_MESSAGE                 "Entering TTB Target Module..."
+#define LOADING_SIGS_TO_IGNORE_MESSAGE "Loading signals to ignore..."
 #define SCOPE_EXPANSION_MESSAGE        "Identifying top-level modules..."
 #define SIGNAL_ENUM_MESSAGE            "Enumerating signals..."
 #define COMB_CONNECTION_ENUM_MESSAGE   "Enumerating combinational logic connections..."
@@ -43,5 +51,17 @@ Graphviz .dot file.
 
 // Debugging Switches
 #define DEBUG_PRINTS false
+
+// ------------------------------------------------------------
+// ------------------------ String Map ------------------------
+// ------------------------------------------------------------
+
+typedef map<string, bool> string_map_t;
+
+// ------------------------------------------------------------
+// --------------------- CMD-Line Args Map --------------------
+// ------------------------------------------------------------
+
+typedef map<string, string> cmd_args_map_t;
 
 #endif

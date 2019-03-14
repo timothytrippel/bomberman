@@ -116,7 +116,8 @@ void DotGraph::save_graph() {
 void DotGraph::open_file() {
     file_ptr_ = fopen(file_path_, "w");
     if (!file_ptr_) {
-        printf("ERROR: Could not open file %s\n", file_path_ ? file_path_ : "stdout");
+        fprintf(stderr, "ERROR: Could not open file %s\n", 
+            file_path_ ? file_path_ : "stdout");
         exit(FILE_ERROR);
     }
 }

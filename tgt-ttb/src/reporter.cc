@@ -100,6 +100,26 @@ void Reporter::num_signals(unsigned long num_signals) const {
     fprintf(file_ptr_, "\nNumber of signals found: %lu\n", num_signals);
 }
 
+void Reporter::signals_to_ignore(string_map_t signals_to_ignore) const {
+    // Check that file has been opened for writing report
+    assert(file_ptr_ != NULL && "ERROR: reporter file ptr is NULL.\n");
+
+    // Print (base)names of all signals to ignore
+    fprintf(file_ptr_, "\nSignal (Base)Names to Ignore:\n");   
+
+    // Create iterator
+    string_map_t::iterator it = signals_to_ignore.begin();
+
+    // Iterate over the map until the end
+    while (it != signals_to_ignore.end()) {   
+        // Print signal name
+        fprintf(file_ptr_, "    %s\n", it->first.c_str());
+ 
+        // Increment the iterator
+        it++;
+    }
+}
+
 void Reporter::graph_stats(SignalGraph* sg) const {
     // Check that file has been opened for writing report
     assert(file_ptr_ != NULL && "ERROR: reporter file ptr is NULL.\n");
@@ -121,10 +141,10 @@ void Reporter::signal_names(sig_map_t signals_map) const {
     // Print name of all signals in vector
     fprintf(file_ptr_, "\nSignal Names:\n");      
 
-    // Create a signals map iterator
+    // Create iterator
     sig_map_t::iterator it = signals_map.begin();
  
-    // Iterate over the map using Iterator till end.
+    // Iterate over the map until the end
     while (it != signals_map.end()) {   
         // Print signal name
         fprintf(file_ptr_, "    %s\n", it->second->get_fullname().c_str());

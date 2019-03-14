@@ -10,6 +10,7 @@ Graphviz .dot file.
 */
 
 // Standard Headers
+#include <fstream>
 
 // TTB Headers
 #include "ttb_typedefs.h"
@@ -28,7 +29,8 @@ SignalGraph::SignalGraph():
     num_signals_at_depth_(),
     source_slices_(),
     sink_slices_(),
-    connections_map_() {} 
+    connections_map_(),
+    signals_to_ignore_() {} 
 
 SignalGraph::SignalGraph(const char* dot_graph_fname) {
     // Initialize Constants Counter
@@ -61,7 +63,7 @@ SignalGraph::~SignalGraph() {
 
     // 2. Delete Signals in source_signals_ (if any)
     // Create a signals vector iterator
-    source_signals_q_t::iterator ssig_it = source_signals_.begin();
+    signals_q_t::iterator ssig_it = source_signals_.begin();
  
     // Iterate over the map using iterator till end
     while (ssig_it != source_signals_.end()) {   
@@ -136,7 +138,7 @@ unsigned long SignalGraph::get_num_source_signals() const {
     return source_signals_.size();
 }
 
-source_signals_q_t SignalGraph::get_source_signals_queue() const {
+signals_q_t SignalGraph::get_source_signals_queue() const {
     return source_signals_;   
 }
 
@@ -256,6 +258,32 @@ bool SignalGraph::check_if_connection_exists(Signal*     sink_signal,
     return false;
 }
 
+bool SignalGraph::check_if_ignore_signal(Signal* signal) const {
+    // Check if ignore map is empty
+    if (!signals_to_ignore_.empty()) {
+
+        // Check that signal is not a constant (only ignore signals)
+        if (signal->is_signal()) {
+            return signals_to_ignore_.count(signal->get_basename());
+        }
+    }
+
+    return false;
+}
+
+bool SignalGraph::check_if_ignore_signal(ivl_signal_t signal) const { 
+    // Check if ignore map is empty
+    if (!signals_to_ignore_.empty()) {
+        return signals_to_ignore_.count(ivl_signal_basename(signal));
+    }
+
+    return false;
+}
+
+string_map_t SignalGraph::get_signals_to_ignore() const {
+    return signals_to_ignore_;
+}
+
 // ----------------------------------------------------------------------------------
 // ------------------------------- Setters ------------------------------------------
 // ----------------------------------------------------------------------------------
@@ -272,6 +300,35 @@ void SignalGraph::push_to_source_signals_queue(Signal* source_signal, string ws)
 void SignalGraph::push_to_num_signals_at_depth_queue(unsigned int num_signals) {
     num_signals_at_depth_.push_back(num_signals);
 }
+
+// ---------------------------- Connection Tracking ---------------------------------
+void SignalGraph::add_signal_to_ignore(string signal_basename) {
+    signals_to_ignore_[signal_basename] = true;
+}
+
+void SignalGraph::load_signals_to_ignore(string file_path) {
+    // Ignore file stream object
+    ifstream file_stream = ifstream(file_path);
+
+    // Signal basename (line) read from file stream
+    string signal_basename;
+
+    // Open file
+    if (file_stream.is_open()) {
+
+        // Process File
+        while (getline(file_stream, signal_basename)) {
+            signals_to_ignore_[signal_basename] = true;
+        }
+
+        // Close File
+        file_stream.close();
+
+    } else {
+        fprintf(stderr, "ERROR: Could not open file %s\n", file_path.c_str());
+        exit(FILE_ERROR);
+    }
+}   
 
 // ----------------------------------------------------------------------------------
 // ------------------------------- Dot Graph Management -----------------------------
@@ -320,14 +377,18 @@ void SignalGraph::find_signals(ivl_scope_t scope) {
         // Add signal to graph
         // Ignore local (IVL) generated signals.
         if (!ivl_signal_local(current_signal)) {
-            // Add signal to map
-            signals_map_[current_signal] = new Signal(current_signal);
 
-            // Intialize connections queue for signal
-            connections_map_[signals_map_[current_signal]] = new conn_q_t();
+            // Check if signal is to be ignored
+            if (!check_if_ignore_signal(current_signal)) {
+                // Add signal to map
+                signals_map_[current_signal] = new Signal(current_signal);
 
-            // Add signal to dot graph
-            dg_.add_node(signals_map_[current_signal], WS_TAB);
+                // Intialize connections queue for signal
+                connections_map_[signals_map_[current_signal]] = new conn_q_t();
+
+                // Add signal to dot graph
+                dg_.add_node(signals_map_[current_signal], WS_TAB);
+            }
         }
     } 
 }
@@ -382,7 +443,7 @@ void SignalGraph::add_connection(Signal* sink_signal,
                     dg_.add_node(source_signal, ws);
                     num_constants_++;
                 }
-                
+
                 // Add connection to dot graph
                 dg_.add_connection(conn, ws);
                 

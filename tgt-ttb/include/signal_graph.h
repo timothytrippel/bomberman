@@ -64,7 +64,7 @@ class SignalGraph {
         
         // Source Signals Queue Getters
         unsigned long   get_num_source_signals()              const;
-        vector<Signal*> get_source_signals_queue()            const;
+        signals_q_t     get_source_signals_queue()            const;
         Signal*         get_source_signal(unsigned int index) const;
         Signal*         pop_from_source_signals_queue();
         void            pop_from_source_signals_queue(unsigned int num_nodes);
@@ -83,6 +83,12 @@ class SignalGraph {
         bool check_if_connection_exists(Signal*     sink_signal, 
                                         Connection* new_conn);
 
+        bool check_if_ignore_signal(Signal* signal) const;
+
+        bool check_if_ignore_signal(ivl_signal_t signal) const;
+
+        string_map_t get_signals_to_ignore() const;
+
         // Source Signals Queue Setters
         void push_to_source_signals_queue(Signal* source_node, string ws);
 
@@ -98,21 +104,25 @@ class SignalGraph {
                               unsigned int lsb,
                               string       ws);
 
+        // Connection Tracking Setters
+        void add_signal_to_ignore(string signal_basename);
+        void load_signals_to_ignore(string file_path);
+
         // Dot Graph Management
         void save_dot_graph();
         
-
     private:
         unsigned long          num_constants_;        // number of constants enumerated in design
         unsigned long          num_connections_;      // number of connections enumerated in design
         sig_map_t              signals_map_;          // IVL signal to Signal object map
         DotGraph               dg_;                   // dot graph object
-        source_signals_q_t     source_signals_;       // source signal queue
+        signals_q_t            source_signals_;       // source signal queue
         vector<unsigned int>   num_signals_at_depth_; // back is num source nodes at current depth
         vector<signal_slice_t> source_slices_;        // source signal slice information stack
         vector<signal_slice_t> sink_slices_;          // sink signal slice information stack
-        conn_map_t             connections_map_;
-        
+        conn_map_t             connections_map_;      // sink signal to connections map
+        string_map_t           signals_to_ignore_;    // names of signals to ignore
+
         // Signal Enumeration
         void find_signals(ivl_scope_t scope);
 }; 

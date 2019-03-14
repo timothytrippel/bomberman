@@ -43,7 +43,7 @@ void propagate_nexus(ivl_nexus_t nexus, Signal* sink_signal, SignalGraph* sg, st
             
             // Nexus target object is a SIGNAL
             fprintf(stdout, " -- SIGNAL -- %s\n", 
-                Signal(source_signal).get_fullname().c_str());   
+                ivl_signal_basename(source_signal));   
             
             // propagate_signal(source_signal, sink_signal);
 

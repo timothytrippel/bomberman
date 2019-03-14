@@ -84,16 +84,23 @@ unsigned int process_expression_signal(ivl_expr_t   expression,
                                        SignalGraph* sg, 
                                        string       ws) {
 
-    // Check if signal is arrayed
-    Error::check_signal_not_arrayed(
-        sg->get_signals_map(), 
-        ivl_expr_signal(expression));
+    // Get expression IVL signal (source signal)
+    ivl_signal_t source_ivl_signal = ivl_expr_signal(expression);
 
-    // Get expression signal
-    Signal* source_signal = sg->get_signal_from_ivl_signal(ivl_expr_signal(expression));
+    // Check if signal is to be ignored
+    if (!sg->check_if_ignore_signal(source_ivl_signal)) {
+        
+        // Check if signal is arrayed
+        Error::check_signal_not_arrayed(
+            sg->get_signals_map(), 
+            ivl_expr_signal(expression));
 
-    // Push source node to source nodes queue
-    sg->push_to_source_signals_queue(source_signal, ws + WS_TAB);
+        // Get signal object
+        Signal* source_signal = sg->get_signal_from_ivl_signal(source_ivl_signal);
+
+        // Push source node to source nodes queue
+        sg->push_to_source_signals_queue(source_signal, ws + WS_TAB);
+    }
 
     return 1;
 }

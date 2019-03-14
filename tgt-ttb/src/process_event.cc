@@ -28,12 +28,18 @@ unsigned int process_event_nexus(ivl_nexus_t     nexus,
     // @TODO: propgate other nexus types besides signals
     Error::check_event_nexus(nexus, statement);
 
-    // Get event nexus pointer signal object
-    Signal* source_signal = sg->get_signal_from_ivl_signal(
-        ivl_nexus_ptr_sig(ivl_nexus_ptr(nexus, 0)) );
+    // Get event nexus pointer IVL signal (source signal)
+    ivl_signal_t source_ivl_signal = ivl_nexus_ptr_sig(ivl_nexus_ptr(nexus, 0));
 
-    // Push signal to source signals queue
-    sg->push_to_source_signals_queue(source_signal, ws + WS_TAB);
+    // Check if signal is to be ignored
+    if (!sg->check_if_ignore_signal(source_ivl_signal)) {
+
+        // Get signal object from IVL source signal
+        Signal* source_signal = sg->get_signal_from_ivl_signal( source_ivl_signal );
+
+        // Push signal to source signals queue
+        sg->push_to_source_signals_queue(source_signal, ws + WS_TAB);
+    }
 
     return 1;
 }
