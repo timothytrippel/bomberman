@@ -22,7 +22,7 @@ IVL data-structures it connects.
 #include "ttb.h"
 #include "error.h"
 
-void propagate_nexus(ivl_nexus_t nexus, Signal sink_signal, SignalGraph* sg, string ws) {
+void propagate_nexus(ivl_nexus_t nexus, Signal* sink_signal, SignalGraph* sg, string ws) {
     // Nexus Pointer
     ivl_nexus_ptr_t nexus_ptr = NULL;
 
@@ -52,8 +52,11 @@ void propagate_nexus(ivl_nexus_t nexus, Signal sink_signal, SignalGraph* sg, str
             // IGNORE, probably a module hookup
             // @TODO: investigate this
             // Ignore connections to local (IVL generated) signals.
-            if (source_signal != sink_signal.get_ivl_signal()) {
-                sg->add_signal_connection(sink_signal, Signal(source_signal), ws + WS_TAB);
+            if (source_signal != sink_signal->get_ivl_signal()) {
+                sg->add_connection(
+                    sink_signal, 
+                    sg->get_signal_from_ivl_signal(source_signal), 
+                    ws + WS_TAB);
             }
 
         } else if ((source_logic = ivl_nexus_ptr_log(nexus_ptr))) {

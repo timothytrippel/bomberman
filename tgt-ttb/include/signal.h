@@ -87,13 +87,18 @@ class Signal {
         Signal(ivl_net_const_t constant);
         Signal(ivl_expr_t      expression);
 
+        // Operators
+        bool operator==(const Signal& sig) const;
+        bool operator!=(const Signal& sig) const;
+
         // General Getters
         string         get_fullname()   const;
-        void*          get_ivl_obj()    const;
+        ivl_object_t   get_ivl_obj()    const;
         ivl_obj_type_t get_ivl_type()   const;
         ivl_signal_t   get_ivl_signal() const;
         unsigned       get_msb()        const;
         unsigned       get_lsb()        const;
+		bool 		   is_const()       const;
 
         // Dot Getters
         string get_dot_label() const;
@@ -105,6 +110,10 @@ class Signal {
     private:
         ivl_object_t   ivl_object_;
         ivl_obj_type_t ivl_type_;
+        unsigned int   id_;
+
+        // Unique ID for Constants
+        static unsigned int const_id; 
 
         // Signal Getters
         string       get_signal_fullname()  const;
@@ -127,6 +136,12 @@ class Signal {
 // -------------- IVL Signal to (TTB) Signal Map --------------
 // ------------------------------------------------------------
 
-typedef map<ivl_signal_t, Signal> sig_map_t;
+typedef map<ivl_signal_t, Signal*> sig_map_t;
+
+// ------------------------------------------------------------
+// ----------------- Source (TTB) Signal Queue ----------------
+// ------------------------------------------------------------
+
+typedef vector<Signal*> source_signals_q_t;
 
 #endif

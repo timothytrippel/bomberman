@@ -20,27 +20,67 @@ Graphviz .dot file.
 // ----------------------------------------------------------------------------------
 Signal::Signal():
 	ivl_object_(),
-	ivl_type_(IVL_NONE) {}
+	ivl_type_(IVL_NONE),
+	id_(0) {}
 
 // Signal
 Signal::Signal(ivl_signal_t signal):
 	ivl_object_(signal),
-	ivl_type_(IVL_SIGNAL) {}
+	ivl_type_(IVL_SIGNAL),
+	id_(0) {}
 
 // Net Constant
 Signal::Signal(ivl_net_const_t constant):
 	ivl_object_(constant),
-	ivl_type_(IVL_CONST) {}
+	ivl_type_(IVL_CONST),
+	id_(const_id) {
+
+		// Increment Constant ID counter
+		const_id++;
+
+	}
 
 // Constant Expression
 Signal::Signal(ivl_expr_t expression):
 	ivl_object_(expression),
-	ivl_type_(IVL_EXPR) {}
+	ivl_type_(IVL_EXPR),
+	id_(const_id) {
+
+		// Increment Constant ID counter
+		const_id++;
+
+	}
+
+// ----------------------------------------------------------------------------------
+// --------------------------------- Operators --------------------------------------
+// ----------------------------------------------------------------------------------
+
+bool Signal::operator==(const Signal& sig) const {
+	
+	if (this->ivl_type_ == sig.get_ivl_type()) {
+		switch(this->ivl_type_) {
+			case IVL_SIGNAL:
+	            return (this->ivl_object_.ivl_signal == sig.get_ivl_obj().ivl_signal);
+	        case IVL_CONST:
+	            return (this->ivl_object_.ivl_const  == sig.get_ivl_obj().ivl_const);
+	        case IVL_EXPR:
+	            return (this->ivl_object_.ivl_expr   == sig.get_ivl_obj().ivl_expr);
+	        default:
+	            return false;
+	    };
+	} else {
+		return false;
+	}
+}
+
+bool Signal::operator!=(const Signal& sig) const {
+	return !(*this == sig);
+}
 
 // ----------------------------------------------------------------------------------
 // ---------------------------------- Getters ---------------------------------------
 // ----------------------------------------------------------------------------------
-void* Signal::get_ivl_obj() const {
+ivl_object_t Signal::get_ivl_obj() const {
 	switch(ivl_type_) {
         case IVL_SIGNAL:
             return ivl_object_.ivl_signal;
@@ -49,7 +89,7 @@ void* Signal::get_ivl_obj() const {
         case IVL_EXPR:
             return ivl_object_.ivl_expr;
         default:
-            return NULL;
+            return ivl_object_t();
     }
 }
 
@@ -104,6 +144,15 @@ unsigned int Signal::get_lsb() const {
     }
 }
 
+bool Signal::is_const() const {
+	if (ivl_type_ == IVL_CONST ||
+		ivl_type_ == IVL_EXPR) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
 // ----------------------------------- Signal ---------------------------------------
 string Signal::get_signal_fullname() const {
     string scopename = ivl_scope_name(ivl_signal_scope(ivl_object_.ivl_signal)); 
@@ -139,15 +188,17 @@ unsigned int Signal::get_signal_lsb() const {
 
 // ---------------------------------- Constant --------------------------------------
 string Signal::get_const_fullname() const {
+    // Get (unique) constant  prefix
     // string scopename = ivl_scope_name(ivl_const_scope(ivl_object_.ivl_const)); 
-    string basename  = string(
+    string const_prefix = string("const.") + to_string(id_) + string(".");
+
+    // Get constant value bitstring
+    string basename = string(
     	ivl_const_bits(ivl_object_.ivl_const), 
     	(size_t)ivl_const_width(ivl_object_.ivl_const));
     reverse(basename.begin(), basename.end());
-    // string fullname  = scopename + string(".const_") + basename;
-    string fullname  = string("const_") + basename;
 
-    return fullname;
+    return (const_prefix + basename);
 }
 
 unsigned int Signal::get_const_msb() const {
@@ -160,13 +211,16 @@ unsigned int Signal::get_const_msb() const {
 
 // --------------------------------- Expression -------------------------------------
 string Signal::get_expr_fullname() const {
-    string basename  = string(
+    // Get (unique) constant  prefix
+	string const_prefix = string("const.") + to_string(id_) + string(".");
+
+	// Get constant value bitstring
+    string basename = string(
     	ivl_expr_bits(ivl_object_.ivl_expr), 
     	(size_t)ivl_expr_width(ivl_object_.ivl_expr));
     reverse(basename.begin(), basename.end());
-    string fullname  = string("const_") + basename;
 
-    return fullname;
+    return (const_prefix + basename);
 }
 
 unsigned int Signal::get_expr_msb() const {
@@ -242,6 +296,7 @@ bool Signal::is_ivl_generated() const {
 	if (ivl_type_ == IVL_SIGNAL) {
 		return ivl_signal_local(ivl_object_.ivl_signal);
 	} else {
+		printf("IVL Type: %d\n", ivl_type_);
 		return false;
 	}
 }

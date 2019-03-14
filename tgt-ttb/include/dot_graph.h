@@ -44,8 +44,8 @@ class DotGraph {
 
         // Graph Construction
         void init_graph();
-        void add_node(Signal signal, string ws) const;
-        void add_connection(Connection conn, string ws) const;
+        void add_node(Signal* signal, string ws) const;
+        void add_connection(Connection* conn, string ws) const;
         void save_graph();
 
     private:

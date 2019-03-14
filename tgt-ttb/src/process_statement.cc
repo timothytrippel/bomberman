@@ -171,16 +171,16 @@ void process_statement_condit(ivl_statement_t statement,
 }
 
 // ------------------------------ ASSIGN Statement ----------------------------------
-unsigned int process_statement_assign_partselect(Signal          offset, 
+unsigned int process_statement_assign_partselect(Signal*         offset, 
                                                  ivl_statement_t statement) {
 
     // Check offset_node is only of type IVL_CONST_EXPR
     // @TODO: support non-constant part select offsets,
     // e.g. signals: signal_a[signal_b] <= signal_c;
-    Error::check_lval_offset(offset.get_ivl_type(), statement);
+    Error::check_lval_offset(offset->get_ivl_type(), statement);
 
     // Get offset constant expression
-    ivl_expr_t expr = (ivl_expr_t) offset.get_ivl_obj();
+    ivl_expr_t expr = offset->get_ivl_obj().ivl_expr;
 
     // Get LSB offset index
     string bit_string = string(ivl_expr_bits(expr));
@@ -200,9 +200,9 @@ void process_statement_assign(ivl_statement_t statement,
     unsigned int lval_msb            = 0;    // MSB of lval (sink signal)
     unsigned int lval_lsb            = 0;    // LSB of lval (sink signal)
     unsigned int num_nodes_processed = 0;    // source nodes processed here
-    Signal       sink_signal;                // sink signal to connect to
-    Signal       source_signal;              // source node to connect to
-    Signal       offset_select;              // "signal" that contains lval offset expr
+    Signal*      sink_signal;                // sink signal to connect to
+    Signal*      source_signal;              // source node to connect to
+    Signal*      offset_select;              // "signal" that contains lval offset expr
 
     // Get number of lvals
     num_lvals = ivl_stmt_lvals(statement);
@@ -230,8 +230,11 @@ void process_statement_assign(ivl_statement_t statement,
         // @TODO: support memory lvals
         Error::check_lval_not_memory(lval, statement);
 
-        // Get sink signal
-        sink_signal = Signal(ivl_lval_sig(lval));
+        // Get sink signal from graph
+        sink_signal = sg->get_signal_from_ivl_signal(ivl_lval_sig(lval));
+
+        // Check that sink_signal is valid
+        Error::check_lval_sink_signal_in_map(sink_signal);
         
         // Process lval part select expression (if necessary)
         if ((part_select_offset = ivl_lval_part_off(lval))) {
@@ -253,7 +256,7 @@ void process_statement_assign(ivl_statement_t statement,
     // Print LVal sink signal selects
     fprintf(stdout, "%ssink signal: %s[%d:%d]\n", 
         string(ws + WS_TAB).c_str(),
-        sink_signal.get_fullname().c_str(),
+        sink_signal->get_fullname().c_str(),
         lval_msb,
         lval_lsb);
 

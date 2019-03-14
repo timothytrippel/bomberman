@@ -29,7 +29,8 @@ unsigned int process_event_nexus(ivl_nexus_t     nexus,
     Error::check_event_nexus(nexus, statement);
 
     // Get event nexus pointer signal object
-    Signal source_signal = Signal(ivl_nexus_ptr_sig(ivl_nexus_ptr(nexus, 0)));
+    Signal* source_signal = sg->get_signal_from_ivl_signal(
+        ivl_nexus_ptr_sig(ivl_nexus_ptr(nexus, 0)) );
 
     // Push signal to source signals queue
     sg->push_to_source_signals_queue(source_signal, ws + WS_TAB);

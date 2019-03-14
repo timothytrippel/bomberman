@@ -93,7 +93,7 @@ void Error::check_scope_types(ivl_scope_t* scopes, unsigned int num_scopes) {
 void Error::check_signal_exists_in_map(sig_map_t signals, ivl_signal_t signal) {
     if (signals.count(signal) > 0) {
         fprintf(stderr, "ERROR: signal (%s) already exists in hashmap.\n", 
-            signals[signal].get_fullname().c_str());
+            signals[signal]->get_fullname().c_str());
 
         exit(DUPLICATE_SIGNALS_FOUND_ERROR);
     }
@@ -103,7 +103,7 @@ void Error::check_signal_not_arrayed(sig_map_t signals, ivl_signal_t signal) {
     // Check if signal is arrayed
     if (ivl_signal_dimensions(signal) > 0) {
         fprintf(stderr, "NOT-SUPPORTED: arrayed signal (%s -- %d) encountered.\n", 
-            signals[signal].get_fullname().c_str(), ivl_signal_dimensions(signal));
+            signals[signal]->get_fullname().c_str(), ivl_signal_dimensions(signal));
         
         exit(NOT_SUPPORTED_ERROR);
     } else {
@@ -121,7 +121,7 @@ void Error::check_signal_not_multidimensional(sig_map_t signals, ivl_signal_t si
     // Check if signal is multidimensional
     if (ivl_signal_packed_dimensions(signal) > 1) {
         fprintf(stderr, "NOT-SUPPORTED: multidimensional signal (%s -- %d) encountered.\n", 
-            signals[signal].get_fullname().c_str(), ivl_signal_packed_dimensions(signal));
+            signals[signal]->get_fullname().c_str(), ivl_signal_packed_dimensions(signal));
         exit(NOT_SUPPORTED_ERROR);
     }
 }
@@ -187,6 +187,14 @@ void Error::check_lval_offset(ivl_obj_type_t obj_type, ivl_statement_t statement
     }
 }
 
+void Error::check_lval_sink_signal_in_map(Signal* lval_sink_signal) {
+    if (!lval_sink_signal) {
+        fprintf(stderr, "ERROR: lval sink signal not found in design.\n");
+
+        exit(BEHAVIORAL_CONNECTIONS_ERROR);
+    }
+} 
+
 void Error::check_slice_tracking_stack(vector<signal_slice_t> slice_stack) {
     // Check slice info stack size
     if (slice_stack.size() > 1) {
@@ -199,7 +207,7 @@ void Error::check_slice_tracking_stack(vector<signal_slice_t> slice_stack) {
 // --------------- Error Reporting: Unkown Types --------------
 // ------------------------------------------------------------
 void Error::unknown_ivl_obj_type(ivl_obj_type_t obj_type) {
-    fprintf(stderr, "ERROR: unkown node type (%d) encountered.\n", obj_type);
+    fprintf(stderr, "ERROR: unkown ivl obj type (%d) encountered.\n", obj_type);
     
     exit(NOT_SUPPORTED_ERROR);
 }
@@ -245,7 +253,7 @@ void Error::null_ivl_obj_type() {
 
 void Error::connecting_signal_not_in_graph(sig_map_t signals, ivl_signal_t source_signal) {
     fprintf(stderr, "ERROR: attempting to connect signal (%s) not in graph.\n", 
-        signals[source_signal].get_fullname().c_str());
+        signals[source_signal]->get_fullname().c_str());
 
     exit(NOT_SUPPORTED_ERROR);
 }

@@ -32,12 +32,12 @@ const char* get_const_type_as_string(ivl_net_const_t constant) {
 // --------------------------- Main CONSTANT Progation ------------------------------
 // ----------------------------------------------------------------------------------
 void propagate_constant(ivl_net_const_t constant,
-                        Signal          sink_signal,
+                        Signal*         sink_signal,
                         SignalGraph*    sg,
                         string          ws) {
 
     // Source signal
-    Signal source_signal = Signal(constant);
+    Signal* source_signal = new Signal(constant);
 
     switch (ivl_const_type(constant)) {
         case IVL_VT_BOOL:

@@ -29,6 +29,7 @@ Graphviz .dot file.
 #define SIGNAL_ENUM_MESSAGE            "Enumerating signals..."
 #define COMB_CONNECTION_ENUM_MESSAGE   "Enumerating combinational logic connections..."
 #define BEHAVE_CONNECTION_ENUM_MESSAGE "Enumerating behavioral logic connections..."
+#define STATS_MESSAGE                  "Analysis Complete."
 
 // Define Indexes
 #define LOGIC_OUTPUT_PIN_NEXUS_INDEX      0
@@ -37,7 +38,7 @@ Graphviz .dot file.
 
 // Other Defines
 #define BITSTRING_BASE 2
-#define LINE_SEPARATOR "-----------------------------"
+#define LINE_SEPARATOR "------------------------------------------------------------"
 #define WS_TAB         "  "
 
 // Debugging Switches

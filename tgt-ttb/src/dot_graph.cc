@@ -20,6 +20,7 @@ Graphviz .dot file.
 // TTB Headers
 #include "connection.h"
 #include "dot_graph.h"
+#include "error.h"
 
 // ------------------------------------------------------------
 // ----------------------- Constructors -----------------------
@@ -56,37 +57,56 @@ void DotGraph::init_graph() {
     fprintf(file_ptr_, "digraph G {\n");
 }
 
-void DotGraph::add_node(Signal signal, string ws) const {
-    // Debug Print
-    fprintf(stdout, "%sADDING NODE (%s)\n", 
-        ws.c_str(), 
-        signal.get_fullname().c_str());
+void DotGraph::add_node(Signal* signal, string ws) const {
+    if (file_ptr_) {   
 
-    fprintf(file_ptr_, "\t\"%s\" [shape=%s, label=\"%s%s\"];\n", 
-        signal.get_fullname().c_str(), 
-        signal.get_dot_shape().c_str(), 
-        signal.get_fullname().c_str(), 
-        signal.get_dot_label().c_str());
+        // Debug Print
+        fprintf(stdout, "%sADDING NODE (%s)\n", 
+            ws.c_str(), 
+            signal->get_fullname().c_str());
+
+        // Print to dot file
+        fprintf(file_ptr_, "\t\"%s\" [shape=%s, label=\"%s%s\"];\n", 
+            signal->get_fullname().c_str(), 
+            signal->get_dot_shape().c_str(), 
+            signal->get_fullname().c_str(), 
+            signal->get_dot_label().c_str());
+
+    } else {
+
+        fprintf(stderr, "ERROR: dot graph file (%s) not open.\n", 
+            file_path_ ? file_path_ : "stdout");
+        
+        exit(FILE_ERROR);
+    }
 }
 
-void DotGraph::add_connection(Connection conn, string ws) const {
+void DotGraph::add_connection(Connection* conn, string ws) const {
+    if (file_ptr_) {
+        // Debug Print
+        fprintf(stdout, "%sADDING CONNECTION from %s to %s\n", 
+            ws.c_str(), 
+            conn->get_source()->get_fullname().c_str(), 
+            conn->get_sink()->get_fullname().c_str());
 
-    // Debug Print
-    fprintf(stdout, "%sADDING CONNECTION from %s to %s\n", 
-        ws.c_str(), 
-        conn.get_source().get_fullname().c_str(), 
-        conn.get_sink().get_fullname().c_str());
-
-    // Add connection to .dot file
-    fprintf(file_ptr_, "\t\"%s\" -> \"%s\"[label=\"%s\"];\n", 
-        conn.get_source().get_fullname().c_str(), 
-        conn.get_sink().get_fullname().c_str(), 
-        conn.get_dot_label().c_str());    
+        // Add connection to .dot file
+        fprintf(file_ptr_, "\t\"%s\" -> \"%s\"[label=\"%s\"];\n", 
+            conn->get_source()->get_fullname().c_str(), 
+            conn->get_sink()->get_fullname().c_str(), 
+            conn->get_dot_label().c_str());
+    } else {
+        fprintf(stderr, "ERROR: dot graph file (%s) not open.\n", 
+            file_path_ ? file_path_ : "stdout");
+        exit(FILE_ERROR);
+    } 
 }
 
 void DotGraph::save_graph() {
-    fprintf(file_ptr_, "}\n");
-    close_file();
+    // Check if file is still open
+    if (file_ptr_) {
+        fprintf(file_ptr_, "}\n");
+        close_file();
+    }
 }
 
 // ------------------------------------------------------------
@@ -97,7 +117,7 @@ void DotGraph::open_file() {
     file_ptr_ = fopen(file_path_, "w");
     if (!file_ptr_) {
         printf("ERROR: Could not open file %s\n", file_path_ ? file_path_ : "stdout");
-        exit(-4);
+        exit(FILE_ERROR);
     }
 }
 

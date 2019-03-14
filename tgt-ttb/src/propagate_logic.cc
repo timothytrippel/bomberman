@@ -83,7 +83,7 @@ const char* get_logic_type_as_string(ivl_net_logic_t logic) {
 // ----------------------------------------------------------------------------------
 void propagate_logic(ivl_net_logic_t logic, 
                      ivl_nexus_t  sink_nexus,
-                     Signal       sink_signal,
+                     Signal*      sink_signal,
                      SignalGraph* sg,
                      string       ws) {
 

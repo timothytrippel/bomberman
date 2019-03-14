@@ -58,17 +58,28 @@ class Connection {
         // Constructors
         Connection();
 
-        Connection(Signal source, 
-                   Signal sink);
+        Connection(Signal* source, 
+                   Signal* sink);
 
-        Connection(Signal         source, 
-                   Signal         sink, 
+        Connection(Signal*        source, 
+                   Signal*        sink, 
                    signal_slice_t source_slice, 
                    signal_slice_t sink_slice);
         
+        // Destructors
+        ~Connection();
+        
+        // Operators
+        bool operator==(const Connection& conn) const;
+        bool operator!=(const Connection& conn) const;
+
         // General Getters
-        Signal get_source() const;
-        Signal get_sink()   const;
+        Signal*      get_source()     const;
+        Signal*      get_sink()       const;
+        unsigned int get_source_msb() const;
+        unsigned int get_source_lsb() const;
+        unsigned int get_sink_msb()   const;
+        unsigned int get_sink_lsb()   const;
 
         // Dot Getters
         string get_dot_label() const;
@@ -78,14 +89,26 @@ class Connection {
         conn_type_t type_;
 
         // Source Signal
-        Signal       source_;
+        Signal*      source_;
         unsigned int source_msb_;
         unsigned int source_lsb_;
 
         // Sink Signal
-        Signal       sink_;
+        Signal*      sink_;
         unsigned int sink_msb_;
         unsigned int sink_lsb_;
 };
+
+// ------------------------------------------------------------
+// ----------------- (TTB) Connections Queue ------------------
+// ------------------------------------------------------------
+
+typedef vector<Connection*> conn_q_t;
+
+// ------------------------------------------------------------
+// -------- (TTB) Sink Signal to (TTB) Connection Map ---------
+// ------------------------------------------------------------
+
+typedef map<Signal*, conn_q_t*> conn_map_t;
 
 #endif

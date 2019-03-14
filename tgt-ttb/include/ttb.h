@@ -37,47 +37,47 @@ void find_structural_connections();
 
 // Nexus
 void propagate_nexus(ivl_nexus_t  nexus,
-                     Signal       sink_signal,
+                     Signal*      sink_signal,
                      SignalGraph* sg,
                      string       ws);
 
 // Logic
 void propagate_logic(ivl_net_logic_t logic,
                      ivl_nexus_t     sink_nexus,
-                     Signal          sink_signal,
+                     Signal*         sink_signal,
                      SignalGraph*    sg,
                      string          ws);
 
 // LPM
 void propagate_lpm(ivl_lpm_t    lpm,
                    ivl_nexus_t  sink_nexus,
-                   Signal       sink_signal,
+                   Signal*      sink_signal,
                    SignalGraph* sg,
                    string       ws);
 
 void process_lpm_basic(ivl_lpm_t    lpm,
-                       Signal       sink_signal,
+                       Signal*      sink_signal,
                        SignalGraph* sg,
                        string       ws);
 
 void process_lpm_part_select(ivl_lpm_t    lpm, 
-                             Signal       sink_signal,
+                             Signal*      sink_signal,
                              SignalGraph* sg,
                              string       ws);
 
 void process_lpm_concat(ivl_lpm_t    lpm,
-                        Signal       sink_signal,
+                        Signal*      sink_signal,
                         SignalGraph* sg,
                         string       ws);
 
 void process_lpm_mux(ivl_lpm_t    lpm,
-                     Signal       sink_signal,
+                     Signal*      sink_signal,
                      SignalGraph* sg,
                      string       ws);
 
 // Constant
 void propagate_constant(ivl_net_const_t constant,
-                        Signal          sink_signal, 
+                        Signal*         sink_signal, 
                         SignalGraph*    sg,
                         string          ws);
 
@@ -144,7 +144,7 @@ void process_statement_condit(ivl_statement_t statement,
                               SignalGraph*    sg, 
                               string          ws);
 
-unsigned int process_statement_assign_partselect(Signal          offset, 
+unsigned int process_statement_assign_partselect(Signal*         offset, 
                                                  ivl_statement_t statement);
 
 void process_statement_assign(ivl_statement_t statement, 

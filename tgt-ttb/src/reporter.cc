@@ -22,6 +22,7 @@ Graphviz .dot file.
 // TTB Headers
 #include "ttb_typedefs.h"
 #include "signal.h"
+#include "signal_graph.h"
 #include "reporter.h"
 
 // ------------------------------------------------------------
@@ -35,6 +36,13 @@ Reporter::Reporter():
 Reporter::Reporter(const char* p) {
     file_ptr_ = NULL;
     set_file_path(p);
+}
+
+Reporter::~Reporter() {
+    // Close file if its open and not STDOUT
+    if (file_ptr_) {
+        close_file();
+    }
 }
 
 // ------------------------------------------------------------
@@ -62,7 +70,7 @@ void Reporter::print_message(const char* message) const {
     assert(file_ptr_ != NULL && "ERROR: reporter file ptr is NULL.\n");
 
     // Print init message
-    fprintf(file_ptr_, "\n-----------------------------\n");
+    line_separator();
     fprintf(file_ptr_, "%s\n", message);
 }
 
@@ -71,7 +79,7 @@ void Reporter::root_scopes(ivl_scope_t* scopes, unsigned int num_scopes) const {
     assert(file_ptr_ != NULL && "ERROR: reporter file ptr is NULL.\n");
 
     // Print number of scopes
-    fprintf(file_ptr_, "Found %d top-level module(s):\n", num_scopes);
+    fprintf(file_ptr_, "\nFound %d top-level module(s):\n", num_scopes);
     
     string scope_name = "UNKONWN";
 
@@ -89,23 +97,21 @@ void Reporter::num_signals(unsigned long num_signals) const {
     assert(file_ptr_ != NULL && "ERROR: reporter file ptr is NULL.\n");
 
     // Print number of signals enumerated in design
-    fprintf(file_ptr_, "Number of signals found: %lu\n", num_signals);
+    fprintf(file_ptr_, "\nNumber of signals found: %lu\n", num_signals);
 }
 
-void Reporter::num_constants(unsigned long num_constants) const {
+void Reporter::graph_stats(SignalGraph* sg) const {
     // Check that file has been opened for writing report
     assert(file_ptr_ != NULL && "ERROR: reporter file ptr is NULL.\n");
+
+    // Print number of signals enumerated in design
+    fprintf(file_ptr_, "\nNumber of signals found:     %lu\n", sg->get_num_signals());
 
     // Print number of constants enumerated in design
-    fprintf(file_ptr_, "Number of constants found: %lu\n", num_constants);
-}
-
-void Reporter::num_connections(unsigned long num_connections) const {
-    // Check that file has been opened for writing report
-    assert(file_ptr_ != NULL && "ERROR: reporter file ptr is NULL.\n");
-
+    fprintf(file_ptr_, "Number of constants found:   %lu\n", sg->get_num_constants());
+    
     // Print number of connections enumerated in design
-    fprintf(file_ptr_, "Number of connections found: %lu\n", num_connections);
+    fprintf(file_ptr_, "Number of connections found: %lu\n", sg->get_num_connections());
 }
 
 void Reporter::signal_names(sig_map_t signals_map) const {
@@ -113,7 +119,7 @@ void Reporter::signal_names(sig_map_t signals_map) const {
     assert(file_ptr_ != NULL && "ERROR: reporter file ptr is NULL.\n");
 
     // Print name of all signals in vector
-    fprintf(file_ptr_, "Signal Names:\n");      
+    fprintf(file_ptr_, "\nSignal Names:\n");      
 
     // Create a signals map iterator
     sig_map_t::iterator it = signals_map.begin();
@@ -121,7 +127,7 @@ void Reporter::signal_names(sig_map_t signals_map) const {
     // Iterate over the map using Iterator till end.
     while (it != signals_map.end()) {   
         // Print signal name
-        fprintf(file_ptr_, "    %s\n", (it->second).get_fullname().c_str());
+        fprintf(file_ptr_, "    %s\n", it->second->get_fullname().c_str());
  
         // Increment the iterator
         it++;

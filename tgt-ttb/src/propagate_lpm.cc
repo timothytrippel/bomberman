@@ -109,7 +109,7 @@ const char* get_lpm_type_as_string(ivl_lpm_t lpm) {
 // ------------------------------- LPM Device Types ---------------------------------
 // ----------------------------------------------------------------------------------
 void process_lpm_basic(ivl_lpm_t    lpm,
-                       Signal       sink_signal,
+                       Signal*      sink_signal,
                        SignalGraph* sg,
                        string       ws) {
 
@@ -129,7 +129,7 @@ void process_lpm_basic(ivl_lpm_t    lpm,
 }
 
 void process_lpm_part_select(ivl_lpm_t    lpm,
-                             Signal       sink_signal,
+                             Signal*      sink_signal,
                              SignalGraph* sg,
                              string       ws) {
 
@@ -167,7 +167,7 @@ void process_lpm_part_select(ivl_lpm_t    lpm,
 }
 
 void process_lpm_concat(ivl_lpm_t    lpm,
-                        Signal       sink_signal,
+                        Signal*      sink_signal,
                         SignalGraph* sg,
                         string       ws) {
 
@@ -230,7 +230,7 @@ void process_lpm_concat(ivl_lpm_t    lpm,
 }
 
 void process_lpm_mux(ivl_lpm_t    lpm,
-                     Signal       sink_signal,
+                     Signal*      sink_signal,
                      SignalGraph* sg,
                      string       ws) {
 
@@ -252,7 +252,7 @@ void process_lpm_mux(ivl_lpm_t    lpm,
 // ----------------------------------------------------------------------------------
 void propagate_lpm(ivl_lpm_t    lpm,
                    ivl_nexus_t  sink_nexus,
-                   Signal       sink_signal,
+                   Signal*      sink_signal,
                    SignalGraph* sg,
                    string       ws) {
 

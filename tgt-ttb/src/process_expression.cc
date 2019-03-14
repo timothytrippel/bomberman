@@ -90,7 +90,7 @@ unsigned int process_expression_signal(ivl_expr_t   expression,
         ivl_expr_signal(expression));
 
     // Get expression signal
-    Signal source_signal = Signal(ivl_expr_signal(expression));
+    Signal* source_signal = sg->get_signal_from_ivl_signal(ivl_expr_signal(expression));
 
     // Push source node to source nodes queue
     sg->push_to_source_signals_queue(source_signal, ws + WS_TAB);
@@ -103,7 +103,7 @@ unsigned int process_expression_number(ivl_expr_t   expression,
                                        string       ws) {
 
     // Get expression signal
-    Signal source_signal = Signal(expression);
+    Signal* source_signal = new Signal(expression);
 
     // Push source node to source nodes queue
     sg->push_to_source_signals_queue(source_signal, ws + WS_TAB);
