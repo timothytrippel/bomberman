@@ -43,6 +43,7 @@ using namespace std;
 #define LOGIC_OUTPUT_PIN_NEXUS_INDEX      0
 #define LPM_PART_SELECT_INPUT_NEXUS_INDEX 0
 #define LPM_PART_SELECT_BASE_NEXUS_INDEX  1
+#define STMT_ASSIGN_LVAL_INDEX            0
 
 // Other Defines
 #define BITSTRING_BASE 2

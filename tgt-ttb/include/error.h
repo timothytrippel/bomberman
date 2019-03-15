@@ -58,7 +58,6 @@ class Error {
         static void check_lval_not_nested(ivl_lval_t lval, ivl_statement_t statement);
         static void check_lval_not_memory(ivl_lval_t lval, ivl_statement_t statement);
         static void check_lval_offset(ivl_obj_type_t obj_type, ivl_statement_t statement);
-        static void check_lval_sink_signal_in_map(Signal* lval_sink_signal);
         static void check_slice_tracking_stack(vector<signal_slice_t> slice_stack);
 
         // Error Reporting Functions
@@ -73,6 +72,7 @@ class Error {
         static void null_ivl_obj_type();
         static void connecting_signal_not_in_graph(sig_map_t signals, ivl_signal_t source_signal);
         static void processing_behavioral_connections();
+        static void non_local_signal_connection();
 };
 
 #endif

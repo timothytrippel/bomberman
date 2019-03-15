@@ -51,7 +51,6 @@ void propagate_nexus(ivl_nexus_t nexus, Signal* sink_signal, SignalGraph* sg, st
             // If connected signal and signal the same, 
             // IGNORE, probably a module hookup
             // @TODO: investigate this
-            // Ignore connections to local (IVL generated) signals.
             if (source_signal != sink_signal->get_ivl_signal()) {
                 sg->add_connection(
                     sink_signal, 

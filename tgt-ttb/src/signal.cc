@@ -333,7 +333,6 @@ bool Signal::is_ivl_generated() const {
 	if (ivl_type_ == IVL_SIGNAL) {
 		return ivl_signal_local(ivl_object_.ivl_signal);
 	} else {
-		printf("IVL Type: %d\n", ivl_type_);
 		return false;
 	}
 }

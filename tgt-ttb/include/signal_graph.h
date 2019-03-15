@@ -52,6 +52,8 @@ class SignalGraph {
                             Signal* source_signal,
                             string  ws);
 
+        void process_local_connections(string ws);
+
         // Graph Stats Getters
         unsigned long get_num_connections() const;
         unsigned long get_num_signals()     const;
@@ -83,6 +85,9 @@ class SignalGraph {
         bool check_if_connection_exists(Signal*     sink_signal, 
                                         Connection* new_conn);
 
+        bool check_if_local_connection_exists(Signal*     sink_signal, 
+                                              Connection* new_conn);
+
         bool check_if_ignore_signal(Signal* signal) const;
 
         bool check_if_ignore_signal(ivl_signal_t signal) const;
@@ -105,6 +110,7 @@ class SignalGraph {
                               string       ws);
 
         // Connection Tracking Setters
+        void track_local_signal_connection(Signal* sink_signal, Signal* source_signal, string ws);
         void add_signal_to_ignore(string signal_basename);
         void load_signals_to_ignore(string file_path);
 
@@ -112,16 +118,18 @@ class SignalGraph {
         void save_dot_graph();
         
     private:
-        unsigned long          num_constants_;        // number of constants enumerated in design
-        unsigned long          num_connections_;      // number of connections enumerated in design
-        sig_map_t              signals_map_;          // IVL signal to Signal object map
-        DotGraph               dg_;                   // dot graph object
-        signals_q_t            source_signals_;       // source signal queue
-        vector<unsigned int>   num_signals_at_depth_; // back is num source nodes at current depth
-        vector<signal_slice_t> source_slices_;        // source signal slice information stack
-        vector<signal_slice_t> sink_slices_;          // sink signal slice information stack
-        conn_map_t             connections_map_;      // sink signal to connections map
-        string_map_t           signals_to_ignore_;    // names of signals to ignore
+        unsigned long          num_constants_;         // number of constants enumerated in design
+        unsigned long          num_connections_;       // number of connections enumerated in design
+        unsigned long          num_local_connections_; // number of local connections to be processed
+        sig_map_t              signals_map_;           // IVL signal to Signal object map
+        DotGraph               dg_;                    // dot graph object
+        signals_q_t            source_signals_;        // source signal queue
+        vector<unsigned int>   num_signals_at_depth_;  // back is num source nodes at current depth
+        vector<signal_slice_t> source_slices_;         // source signal slice information stack
+        vector<signal_slice_t> sink_slices_;           // sink signal slice information stack
+        conn_map_t             connections_map_;       // sink signal to connections map
+        conn_map_t             local_connections_map_; // local signal connections to be processed
+        string_map_t           signals_to_ignore_;     // names of signals to ignore
 
         // Signal Enumeration
         void find_signals(ivl_scope_t scope);

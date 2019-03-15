@@ -19,6 +19,7 @@ i.e. behavioral statement blocks.
 // ----------------------------------------------------------------------------------
 // ------------------------------- Helper Functions ---------------------------------
 // ----------------------------------------------------------------------------------
+
 const char* get_process_type_as_string(ivl_process_t process) {
     switch (ivl_process_type(process)) {
         case IVL_PR_ALWAYS:
@@ -35,6 +36,7 @@ const char* get_process_type_as_string(ivl_process_t process) {
 // ----------------------------------------------------------------------------------
 // --------------------------- Main PROCESSING Function -----------------------------
 // ----------------------------------------------------------------------------------
+
 int process_process(ivl_process_t process, void* sg) {
 
     switch (ivl_process_type(process)) {

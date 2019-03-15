@@ -109,6 +109,10 @@ unsigned int process_expression(ivl_expr_t   expression,
                                 SignalGraph* sg, 
                                 string       ws);
 
+// ivl_signal_t process_expression_local_signal(ivl_signal_t local_signal, 
+//                                              SignalGraph* sg, 
+//                                              string       ws);
+
 unsigned int process_expression_signal(ivl_expr_t   expression, 
                                        SignalGraph* sg, 
                                        string       ws);
@@ -159,6 +163,10 @@ void process_statement_condit(ivl_statement_t statement,
 
 unsigned int process_statement_assign_partselect(Signal*         offset, 
                                                  ivl_statement_t statement);
+
+Signal* process_statement_assign_lval(ivl_statement_t statement,
+                                      SignalGraph*    sg,
+                                      string          ws);
 
 void process_statement_assign(ivl_statement_t statement, 
                               SignalGraph*    sg, 

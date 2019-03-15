@@ -1,6 +1,7 @@
-module basic_delay(output reg out);
+module basic_delay(output reg [1:0] out);
 	reg a;
+	reg b;
 
 	always
-		out = #5 a;
+		out = #5 {a,b};
 endmodule

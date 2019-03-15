@@ -52,6 +52,9 @@ cmd_args_map_t* process_cmd_line_args(ivl_design_t des) {
 
 void find_structural_connections(SignalGraph* sg) {
 
+    // Signal object pointer
+    Signal* current_signal = NULL;
+
     // Get signals adjacency list
     sig_map_t signals_map = sg->get_signals_map();
 
@@ -61,20 +64,27 @@ void find_structural_connections(SignalGraph* sg) {
     // Iterate over all signals in adjacency list
     while (it != signals_map.end()) {  
 
-        // Print signal name -- signal dimensions
-        fprintf(stdout, "%s:\n", it->second->get_fullname().c_str());
+        // Get Signal object
+        current_signal = it->second;
 
-        // Get signal nexus
-        // There is exactly one nexus for each WORD of a signal.
-        // Since we only support non-arrayed signals (above), 
-        // each signal only has one nexus.
-        const ivl_nexus_t sink_nexus = ivl_signal_nex(it->first, 0);
+        // Only find connections to non-ivl-generated signals
+        if (!current_signal->is_ivl_generated()) {
 
-        // Check Nexus IS NOT NULL
-        assert(sink_nexus);
+            // Print signal name -- signal dimensions
+            fprintf(stdout, "%s:\n", current_signal->get_fullname().c_str());
 
-        // Propagate the nexus
-        propagate_nexus(sink_nexus, it->second, sg, WS_TAB);
+            // Get signal nexus
+            // There is exactly one nexus for each WORD of a signal.
+            // Since we only support non-arrayed signals (above), 
+            // each signal only has one nexus.
+            const ivl_nexus_t sink_nexus = ivl_signal_nex(it->first, 0);
+
+            // Check nexus is not NULL
+            assert(sink_nexus && "ERROR: sink nexus is not valid.\n");
+
+            // Propagate the nexus
+            propagate_nexus(sink_nexus, it->second, sg, WS_TAB);
+        }
 
         // Increment the iterator
         it++;

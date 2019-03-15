@@ -68,7 +68,7 @@ class Connection {
         
         // Destructors
         ~Connection();
-        
+
         // Operators
         bool operator==(const Connection& conn) const;
         bool operator!=(const Connection& conn) const;
@@ -83,6 +83,9 @@ class Connection {
 
         // Dot Getters
         string get_dot_label() const;
+
+        // General Setters
+        void set_sink(Signal* new_sink);
 
     private:
         // Type

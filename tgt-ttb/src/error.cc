@@ -187,14 +187,6 @@ void Error::check_lval_offset(ivl_obj_type_t obj_type, ivl_statement_t statement
     }
 }
 
-void Error::check_lval_sink_signal_in_map(Signal* lval_sink_signal) {
-    if (!lval_sink_signal) {
-        fprintf(stderr, "ERROR: lval sink signal not found in design.\n");
-
-        exit(BEHAVIORAL_CONNECTIONS_ERROR);
-    }
-} 
-
 void Error::check_slice_tracking_stack(vector<signal_slice_t> slice_stack) {
     // Check slice info stack size
     if (slice_stack.size() > 1) {
@@ -262,4 +254,10 @@ void Error::processing_behavioral_connections() {
     fprintf(stderr, "ERROR: processing behavioral logic connections.\n");
 
     exit(BEHAVIORAL_CONNECTIONS_ERROR);
+}
+
+void Error::non_local_signal_connection() {
+    fprintf(stderr, "ERROR: cannot to remove local signal between non-local signals.\n");
+
+    exit(NOT_SUPPORTED_ERROR);
 }
