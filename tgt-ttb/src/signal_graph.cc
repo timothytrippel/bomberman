@@ -352,6 +352,42 @@ void SignalGraph::push_to_num_signals_at_depth_queue(unsigned int num_signals) {
     num_signals_at_depth_.push_back(num_signals);
 }
 
+// ------------------------------ Slice Tracking ------------------------------------
+
+void SignalGraph::track_source_slice(unsigned int msb, 
+                                     unsigned int lsb,
+                                     string       ws) {
+
+    // Set signal slice info
+    signal_slice_t slice = {msb, lsb};
+
+    // Debug Print
+    fprintf(stdout, "%sTracking signal slice [%u:%u]\n", 
+        ws.c_str(), msb, lsb);
+
+    // push slice info to stack
+    source_slices_.push_back(slice);
+}
+
+void SignalGraph::track_sink_slice(unsigned int msb, 
+                                   unsigned int lsb,
+                                   string       ws) {
+
+    // Set signal slice info
+    signal_slice_t slice = {msb, lsb};
+
+    // Debug Print
+    fprintf(stdout, "%sTracking signal slice [%u:%u]\n", 
+        ws.c_str(), msb, lsb);
+
+    // push slice info to stack
+    sink_slices_.push_back(slice);
+}
+
+void SignalGraph::erase_index_from_sink_slices(unsigned int index) {
+    sink_slices_.erase(sink_slices_.begin() + index);
+}
+
 // ---------------------------- Connection Tracking ---------------------------------
 
 void SignalGraph::track_local_signal_connection(Signal* sink_signal, 
@@ -608,44 +644,6 @@ void SignalGraph::add_connection(Signal* sink_signal,
             signals_map_, source_signal->get_ivl_signal());
 
     }
-}
-
-void SignalGraph::track_source_slice(unsigned int msb, 
-                                     unsigned int lsb,
-                                     string       ws) {
-
-    // Check that slice-info stacks are empty,
-    // (Stacks should never grow beyond size 1.)
-    Error::check_slice_tracking_stack(source_slices_);
-
-    // Set signal slice info
-    signal_slice_t slice = {msb, lsb};
-
-    // Debug Print
-    fprintf(stdout, "%sTracking signal slice [%u:%u]\n", 
-        ws.c_str(), msb, lsb);
-
-    // push slice info to stack
-    source_slices_.push_back(slice);
-}
-
-void SignalGraph::track_sink_slice(unsigned int msb, 
-                                   unsigned int lsb,
-                                   string       ws) {
-
-    // Check that slice-info stacks are empty,
-    // (Stacks should never grow beyond size 1.)
-    Error::check_slice_tracking_stack(sink_slices_);
-
-    // Set signal slice info
-    signal_slice_t slice = {msb, lsb};
-
-    // Debug Print
-    fprintf(stdout, "%sTracking signal slice [%u:%u]\n", 
-        ws.c_str(), msb, lsb);
-
-    // push slice info to stack
-    sink_slices_.push_back(slice);
 }
 
 void SignalGraph::process_local_connections(string ws) {

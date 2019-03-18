@@ -48,9 +48,10 @@ class SignalGraph {
         void find_all_signals(ivl_scope_t* scopes, unsigned int num_scopes);
 
         // Connection Enumeration
-        void add_connection(Signal* sink_signal,
-                            Signal* source_signal,
-                            string  ws);
+        void add_connection(
+            Signal* sink_signal,
+            Signal* source_signal,
+            string  ws);
 
         void process_local_connections(string ws);
 
@@ -83,11 +84,13 @@ class SignalGraph {
         signal_slice_t pop_from_sink_slices_queue(Signal* sink_signal);
         
         // Connection Tracking Getters
-        bool check_if_connection_exists(Signal*     sink_signal, 
-                                        Connection* new_conn);
+        bool check_if_connection_exists(
+            Signal*     sink_signal, 
+            Connection* new_conn);
 
-        bool check_if_local_connection_exists(Signal*     sink_signal, 
-                                              Connection* new_conn);
+        bool check_if_local_connection_exists(
+            Signal*     sink_signal, 
+            Connection* new_conn);
 
         bool check_if_ignore_signal(Signal* signal) const;
 
@@ -109,6 +112,8 @@ class SignalGraph {
         void track_sink_slice(unsigned int msb, 
                               unsigned int lsb,
                               string       ws);
+
+        void erase_index_from_sink_slices(unsigned int index);
 
         // Connection Tracking Setters
         void track_local_signal_connection(Signal* sink_signal, Signal* source_signal, string ws);

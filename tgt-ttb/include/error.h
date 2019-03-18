@@ -57,8 +57,8 @@ class Error {
         static void check_lvals_not_concatenated(unsigned int num_lvals, ivl_statement_t statement);
         static void check_lval_not_nested(ivl_lval_t lval, ivl_statement_t statement);
         static void check_lval_not_memory(ivl_lval_t lval, ivl_statement_t statement);
-        static void check_lval_offset(ivl_obj_type_t obj_type, ivl_statement_t statement);
-        static void check_slice_tracking_stack(vector<signal_slice_t> slice_stack);
+        static void check_part_select_expr(ivl_obj_type_t obj_type, ivl_statement_t statement);
+        static void check_slice_tracking_stack(unsigned int size, unsigned int size_limit);
 
         // Error Reporting Functions
         // Unknown Types

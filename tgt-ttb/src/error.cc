@@ -176,21 +176,21 @@ void Error::check_lval_not_memory(ivl_lval_t lval, ivl_statement_t statement) {
     }
 }
 
-void Error::check_lval_offset(ivl_obj_type_t obj_type, ivl_statement_t statement) {
-    // Check lval offset expression os only of type IVL_CONST_EXPR,
+void Error::check_part_select_expr(ivl_obj_type_t obj_type, ivl_statement_t statement) {
+    // Check part-select expression is only of type IVL_CONST_EXPR,
     // i.e. it is a constant expression
     if (obj_type != IVL_EXPR) {
-        fprintf(stderr, "NOT-SUPPORTED: non-constant expression lval offset (File: %s -- Line: %d).\n", 
+        fprintf(stderr, "NOT-SUPPORTED: non-constant expression part-select (File: %s -- Line: %d).\n", 
             ivl_stmt_file(statement), ivl_stmt_lineno(statement));
 
         exit(NOT_SUPPORTED_ERROR);
     }
 }
 
-void Error::check_slice_tracking_stack(vector<signal_slice_t> slice_stack) {
+void Error::check_slice_tracking_stack(unsigned int size, unsigned int size_limit) {
     // Check slice info stack size
-    if (slice_stack.size() > 1) {
-        fprintf(stderr, "ERROR: slice info stack size > 1.\n");
+    if (size > size_limit) {
+        fprintf(stderr, "ERROR: slice info stack size (%u) > size limit (%u).\n", size, size_limit);
         exit(SLICE_TRACKING_ERROR);
     }
 }

@@ -197,10 +197,10 @@ void process_lpm_concat(ivl_lpm_t    lpm,
         // 1) one to the LPM device, 2) one to a local signal, and 
         // 3) one to a constant device.
 
-        // assert((ivl_nexus_ptrs(input_nexus) == 2 ||
-        //         ivl_nexus_ptrs(input_nexus) == 3) && 
-        //     "NOT-SUPPORTED: LPM-CONCAT device input \
-        //     nexus with more than 2 nexus pointers.\n");
+        assert((ivl_nexus_ptrs(input_nexus) == 2 ||
+                ivl_nexus_ptrs(input_nexus) == 3) && 
+            "NOT-SUPPORTED: LPM-CONCAT device input \
+            nexus with more than 2 nexus pointers.\n");
 
         // Find input nexus ptr to a signal object
         for (unsigned int j = 0; j < ivl_nexus_ptrs(input_nexus); j++) {

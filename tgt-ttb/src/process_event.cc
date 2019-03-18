@@ -19,10 +19,11 @@ i.e., @(posedge), @(negedge), or @(anyedge).
 // --------------------------- SUB-PROCESSING Functions -----------------------------
 // ----------------------------------------------------------------------------------
 
-unsigned int process_event_nexus(ivl_nexus_t     nexus, 
-                                 ivl_statement_t statement, 
-                                 SignalGraph*    sg, 
-                                 string          ws) {
+unsigned int process_event_nexus(
+    ivl_nexus_t     nexus, 
+    ivl_statement_t statement, 
+    SignalGraph*    sg, 
+    string          ws) {
 
     // Check no more than one nexus pointer for an event nexus
     // Check nexus pointer type is signal object only
@@ -49,10 +50,11 @@ unsigned int process_event_nexus(ivl_nexus_t     nexus,
 // --------------------------- Main PROCESSING Function -----------------------------
 // ----------------------------------------------------------------------------------
 
-unsigned int process_event(ivl_event_t     event, 
-                           ivl_statement_t statement, 
-                           SignalGraph*    sg, 
-                           string          ws) {
+unsigned int process_event(
+    ivl_event_t     event, 
+    ivl_statement_t statement, 
+    SignalGraph*    sg, 
+    string          ws) {
 
     ivl_nexus_t  event_nexus            = NULL;
     unsigned int num_posedge_nexus_ptrs = 0;
