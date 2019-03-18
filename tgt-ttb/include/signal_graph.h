@@ -105,19 +105,26 @@ class SignalGraph {
         void push_to_num_signals_at_depth_queue(unsigned int num_signals);
 
         // Slice Tracking Queues Setters
-        void track_source_slice(unsigned int msb, 
-                                unsigned int lsb,
-                                string       ws);
+        void track_source_slice(
+            unsigned int msb, 
+            unsigned int lsb,
+            string       ws);
 
-        void track_sink_slice(unsigned int msb, 
-                              unsigned int lsb,
-                              string       ws);
+        void track_sink_slice(
+            unsigned int msb, 
+            unsigned int lsb,
+            string       ws);
 
         void erase_index_from_sink_slices(unsigned int index);
 
         // Connection Tracking Setters
-        void track_local_signal_connection(Signal* sink_signal, Signal* source_signal, string ws);
+        void track_local_signal_connection(
+            Signal* sink_signal, 
+            Signal* source_signal, 
+            string  ws);
+
         void add_signal_to_ignore(string signal_basename);
+        
         void load_signals_to_ignore(string file_path);
 
         // Dot Graph Management

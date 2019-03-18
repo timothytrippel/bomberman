@@ -32,10 +32,13 @@ using namespace std;
 
 // Dot Graph Shapes
 #define SIGNAL_NODE_SHAPE       "ellipse"
-#define LOCAL_SIGNAL_NODE_SHAPE "circle"
+#define LOCAL_SIGNAL_NODE_SHAPE "none"
 #define FF_NODE_SHAPE           "square"
-#define INPUT_NODE_SHAPE        "none"
+#define INPUT_NODE_SHAPE        "ellipse"
 #define CONST_NODE_SHAPE        "rectangle"
+
+// Other Defines
+#define BITSTRING_BASE 2
 
 // ------------------------------------------------------------
 // ------------- Underlying IVL Object of Signal --------------
@@ -107,7 +110,8 @@ class Signal {
         string get_dot_shape() const;
 
         // Other
-        bool is_ivl_generated() const;
+        bool         is_ivl_generated() const;
+        unsigned int process_as_partselect_expr(ivl_statement_t statement) const;
 
     private:
         ivl_object_t   ivl_object_;

@@ -227,7 +227,7 @@ Signal* process_statement_assign_lval(
         part_select = sg->pop_from_source_signals_queue();
 
         // Update MSB and LSB of slice
-        part_select_lsb = process_expression_partselect(part_select, statement);
+        part_select_lsb = part_select->process_as_partselect_expr(statement);
         part_select_msb = part_select_lsb + ivl_lval_width(lval) - 1;
 
         // Track connection slice information

@@ -14,10 +14,12 @@ Graphviz .dot file.
 
 // TTB Headers
 #include "signal.h"
+#include "error.h"
 
 // ----------------------------------------------------------------------------------
 // ------------------------------- Constructors -------------------------------------
 // ----------------------------------------------------------------------------------
+
 Signal::Signal():
 	ivl_object_(),
 	ivl_type_(IVL_NONE),
@@ -80,6 +82,7 @@ bool Signal::operator!=(const Signal& sig) const {
 // ----------------------------------------------------------------------------------
 // ---------------------------------- Getters ---------------------------------------
 // ----------------------------------------------------------------------------------
+
 ivl_object_t Signal::get_ivl_obj() const {
 	switch(ivl_type_) {
         case IVL_SIGNAL:
@@ -175,6 +178,7 @@ bool Signal::is_const() const {
 }
 
 // ----------------------------------- Signal ---------------------------------------
+
 string Signal::get_signal_scopename() const {
     return ivl_scope_name(ivl_signal_scope(ivl_object_.ivl_signal));
 }
@@ -212,7 +216,9 @@ unsigned int Signal::get_signal_lsb() const {
 }
 
 // ---------------------------------- Constant --------------------------------------
+
 string Signal::get_const_bitstring() const {
+
 	// Get bitstring
 	string bitstring = string(
     	ivl_const_bits(ivl_object_.ivl_const), 
@@ -225,6 +231,7 @@ string Signal::get_const_bitstring() const {
 }
 
 string Signal::get_const_fullname() const {
+
     // Get (unique) constant prefix
     // string scopename = ivl_scope_name(ivl_const_scope(ivl_object_.ivl_const)); 
     string const_prefix = string("const.") + to_string(id_) + string(".");
@@ -233,6 +240,7 @@ string Signal::get_const_fullname() const {
 }
 
 unsigned int Signal::get_const_msb() const {
+
 	// Check MSB is not negative
     assert((ivl_const_width(ivl_object_.ivl_const) >= 0) && \
         "NOT-SUPPORTED: negative MSB index.\n");
@@ -241,7 +249,9 @@ unsigned int Signal::get_const_msb() const {
 }
 
 // --------------------------------- Expression -------------------------------------
+
 string Signal::get_expr_bitstring() const {
+
 	// Get bitstring
 	string bitstring = string(
     	ivl_expr_bits(ivl_object_.ivl_expr), 
@@ -254,6 +264,7 @@ string Signal::get_expr_bitstring() const {
 }
 
 string Signal::get_expr_fullname() const {
+
     // Get (unique) constant prefix
 	string const_prefix = string("const.") + to_string(id_) + string(".");
 
@@ -267,6 +278,7 @@ unsigned int Signal::get_expr_msb() const {
 // ----------------------------------------------------------------------------------
 // -------------------------------Dot Graph Getters ---------------------------------
 // ----------------------------------------------------------------------------------
+
 string Signal::get_dot_label() const {
 	switch(ivl_type_) {
         case IVL_SIGNAL:
@@ -287,11 +299,16 @@ string Signal::get_dot_shape() const {
             return CONST_NODE_SHAPE;
         case IVL_SIGNAL:
         default:
-            return SIGNAL_NODE_SHAPE;
+        	if (ivl_signal_type(ivl_object_.ivl_signal) == IVL_SIT_REG) {
+        		return FF_NODE_SHAPE;
+        	} else {
+        		return SIGNAL_NODE_SHAPE;	
+        	}
     }
 }
 
 // ----------------------------------- Signal ---------------------------------------
+
 string Signal::get_dot_signal_label() const {
     stringstream ss;
 
@@ -305,6 +322,7 @@ string Signal::get_dot_signal_label() const {
 }
 
 // ---------------------------------- Constant --------------------------------------
+
 string Signal::get_dot_const_label() const {
     stringstream ss;
 
@@ -316,6 +334,7 @@ string Signal::get_dot_const_label() const {
 }
 
 // --------------------------------- Expression -------------------------------------
+
 string Signal::get_dot_expr_label() const {
     stringstream ss;
 
@@ -329,10 +348,26 @@ string Signal::get_dot_expr_label() const {
 // ----------------------------------------------------------------------------------
 // ----------------------------------- Other ----------------------------------------
 // ----------------------------------------------------------------------------------
+
 bool Signal::is_ivl_generated() const {
 	if (ivl_type_ == IVL_SIGNAL) {
 		return ivl_signal_local(ivl_object_.ivl_signal);
 	} else {
 		return false;
 	}
+}
+
+unsigned int Signal::process_as_partselect_expr(ivl_statement_t statement) const {
+
+    // Check part_select is only of type IVL_CONST_EXPR
+    // @TODO: support non-constant part selects,
+    // e.g. signals: signal_a[signal_b] <= signal_c;
+    Error::check_part_select_expr(ivl_type_, statement);
+
+    // Get LSB offset index
+    string bit_string = string(ivl_expr_bits(ivl_object_.ivl_expr));
+    reverse(bit_string.begin(), bit_string.end());
+
+    // Convert bitstring to unsigned long
+    return stoul(bit_string, NULL, BITSTRING_BASE);
 }

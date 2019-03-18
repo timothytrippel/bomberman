@@ -78,26 +78,6 @@ const char* get_expr_type_as_string(ivl_expr_t expression) {
     }
 }
 
-unsigned int process_expression_partselect(
-    Signal*         part_select,                                        
-    ivl_statement_t statement) {
-
-    // Check part_select is only of type IVL_CONST_EXPR
-    // @TODO: support non-constant part selects,
-    // e.g. signals: signal_a[signal_b] <= signal_c;
-    Error::check_part_select_expr(part_select->get_ivl_type(), statement);
-
-    // Get part-select constant expression
-    ivl_expr_t expr = part_select->get_ivl_obj().ivl_expr;
-
-    // Get LSB offset index
-    string bit_string = string(ivl_expr_bits(expr));
-    reverse(bit_string.begin(), bit_string.end());
-
-    // Convert bitstring to unsigned long
-    return stoul(bit_string, NULL, BITSTRING_BASE);
-}
-
 // ----------------------------------------------------------------------------------
 // --------------------------- SUB-PROCESSING Functions -----------------------------
 // ----------------------------------------------------------------------------------
@@ -106,7 +86,6 @@ unsigned int process_expression_partselect(
 
 unsigned int process_expression_signal(
     ivl_expr_t      expression,
-    ivl_statement_t statement,
     SignalGraph*    sg, 
     string          ws) {
 
@@ -135,8 +114,7 @@ unsigned int process_expression_signal(
 // ------------------------------ NUMBER Expression ---------------------------------
 
 unsigned int process_expression_number(
-    ivl_expr_t      expression, 
-    ivl_statement_t statement,
+    ivl_expr_t      expression,
     SignalGraph*    sg, 
     string          ws) {
 
@@ -157,8 +135,7 @@ unsigned int process_expression_select(
     SignalGraph*    sg, 
     string          ws) {
 
-    // Base and Index of select expression
-    Signal* base  = NULL;
+    // Index of select expression
     Signal* index = NULL;
 
     // MSB/LSB slice of base computed from index expression
@@ -185,7 +162,7 @@ unsigned int process_expression_select(
     index = sg->pop_from_source_signals_queue();
 
     // Get LSB and MSB of select
-    lsb = process_expression_partselect(index, statement);
+    lsb = index->process_as_partselect_expr(statement);
     msb = lsb + ivl_expr_width(expression) - 1;
 
     // Add source slice (of base) to queue
@@ -350,7 +327,7 @@ unsigned int process_expression(
             Error::not_supported("expression type (IVL_EX_NULL).");
             break;
         case IVL_EX_NUMBER:
-            return process_expression_number(expression, statement, sg, ws);
+            return process_expression_number(expression, sg, ws);
         case IVL_EX_ARRAY_PATTERN:
             Error::not_supported("expression type (IVL_EX_ARRAY_PATTERN).");
             break;
@@ -372,7 +349,7 @@ unsigned int process_expression(
             Error::not_supported("expression type (IVL_EX_SHALLOWCOPY).");
             break;
         case IVL_EX_SIGNAL:
-            return process_expression_signal(expression, statement, sg, ws);
+            return process_expression_signal(expression, sg, ws);
         case IVL_EX_STRING:
             Error::not_supported("expression type (IVL_EX_STRING).");
             break;

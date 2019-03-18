@@ -47,7 +47,6 @@ using namespace std;
 #define STMT_ASSIGN_LVAL_INDEX            0
 
 // Other Defines
-#define BITSTRING_BASE 2
 #define LINE_SEPARATOR "------------------------------------------------------------"
 #define WS_TAB         "  "
 

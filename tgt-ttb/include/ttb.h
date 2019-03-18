@@ -122,19 +122,13 @@ unsigned int process_expression(
     SignalGraph*    sg,
     string          ws);
 
-unsigned int process_expression_partselect(
-    Signal*         part_select, 
-    ivl_statement_t statement);
-
 unsigned int process_expression_signal(
     ivl_expr_t      expression,
-    ivl_statement_t statement,
     SignalGraph*    sg, 
     string          ws);
 
 unsigned int process_expression_number(
     ivl_expr_t      expression, 
-    ivl_statement_t statement,
     SignalGraph*    sg, 
     string          ws);
 
