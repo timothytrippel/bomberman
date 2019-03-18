@@ -28,7 +28,7 @@ unsigned int process_event_nexus(
     // Check no more than one nexus pointer for an event nexus
     // Check nexus pointer type is signal object only
     // @TODO: propgate other nexus types besides signals
-    Error::check_event_nexus(nexus, statement);
+    // Error::check_event_nexus(nexus, statement);
 
     // Get event nexus pointer IVL signal (source signal)
     ivl_signal_t source_ivl_signal = ivl_nexus_ptr_sig(ivl_nexus_ptr(nexus, 0));

@@ -55,6 +55,34 @@ void propagate_nexus(
     SignalGraph* sg,
     string       ws);
 
+// Signal
+void propagate_signal(
+    ivl_signal_t source_signal,
+    Signal*      sink_signal,
+    SignalGraph* sg,
+    string       ws);
+
+unsigned int get_signal_scope_depth(
+    ivl_signal_t signal);
+
+void process_non_port_signal(
+    ivl_signal_t source_signal,
+    Signal*      sink_signal,
+    SignalGraph* sg,
+    string       ws);
+
+void process_input_port_signal(
+    ivl_signal_t source_signal,
+    Signal*      sink_signal,
+    SignalGraph* sg,
+    string       ws);
+
+void process_output_port_signal(
+    ivl_signal_t source_signal,
+    Signal*      sink_signal,
+    SignalGraph* sg,
+    string       ws);
+
 // Logic
 void propagate_logic(
     ivl_net_logic_t logic,
@@ -220,6 +248,7 @@ void process_statement_delay(
 // -------------------------- Other ---------------------------
 // ------------------------------------------------------------
 
+const char* get_signal_port_type_as_string(ivl_signal_t signal);
 const char* get_logic_type_as_string(ivl_net_logic_t logic);
 const char* get_lpm_type_as_string(ivl_lpm_t lpm);
 const char* get_const_type_as_string(ivl_net_const_t constant);

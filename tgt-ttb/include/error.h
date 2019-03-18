@@ -38,8 +38,9 @@ typedef enum ttb_error_type_e {
     NOT_SUPPORTED_ERROR           = 1,
     FILE_ERROR                    = 2,  
     DUPLICATE_SIGNALS_FOUND_ERROR = 3,
-    BEHAVIORAL_CONNECTIONS_ERROR  = 4,
-    SLICE_TRACKING_ERROR          = 5,
+    STRUCTURAL_CONNECTIONS_ERROR  = 4,
+    BEHAVIORAL_CONNECTIONS_ERROR  = 5,
+    SLICE_TRACKING_ERROR          = 6,
 } ttb_error_type_t;
 
 // ------------------------------------------------------------
@@ -64,6 +65,7 @@ class Error {
         // Unknown Types
         static void unknown_ivl_obj_type(ivl_obj_type_t obj_type);
         static void unknown_nexus_type();
+        static void unknown_signal_port_type(ivl_signal_port_t port_type);
         static void unknown_part_select_lpm_type(ivl_lpm_type_t lpm_type);
         static void unknown_statement_type(ivl_statement_type_t statement_type);
         static void unknown_expression_type(ivl_expr_type_t expression_type);

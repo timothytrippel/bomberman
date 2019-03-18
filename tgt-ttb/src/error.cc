@@ -133,7 +133,7 @@ void Error::check_event_nexus(ivl_nexus_t nexus, ivl_statement_t statement) {
             \n(File: %s -- Line: %d).\n", 
             ivl_nexus_ptrs(nexus), ivl_stmt_file(statement), ivl_stmt_lineno(statement));
 
-        exit(NOT_SUPPORTED_ERROR);
+        exit(BEHAVIORAL_CONNECTIONS_ERROR);
     }
 
     // Check event nexus points only to a signal object
@@ -142,7 +142,7 @@ void Error::check_event_nexus(ivl_nexus_t nexus, ivl_statement_t statement) {
             \n(File: %s -- Line: %d).\n", 
             ivl_stmt_file(statement), ivl_stmt_lineno(statement));
 
-        exit(NOT_SUPPORTED_ERROR);
+        exit(BEHAVIORAL_CONNECTIONS_ERROR);
     }
 }
 
@@ -152,7 +152,7 @@ void Error::check_lvals_not_concatenated(unsigned int num_lvals, ivl_statement_t
         fprintf(stderr, "NOT-SUPPORTED: concatenated lvals (File: %s -- Line: %d).\n", 
             ivl_stmt_file(statement), ivl_stmt_lineno(statement));
 
-        exit(NOT_SUPPORTED_ERROR);
+        exit(BEHAVIORAL_CONNECTIONS_ERROR);
     }
 }
 
@@ -162,7 +162,7 @@ void Error::check_lval_not_nested(ivl_lval_t lval, ivl_statement_t statement) {
         fprintf(stderr, "NOT-SUPPORTED: nested lvals (File: %s -- Line: %d).\n", 
             ivl_stmt_file(statement), ivl_stmt_lineno(statement));
 
-        exit(NOT_SUPPORTED_ERROR);
+        exit(BEHAVIORAL_CONNECTIONS_ERROR);
     }
 }
 
@@ -172,7 +172,7 @@ void Error::check_lval_not_memory(ivl_lval_t lval, ivl_statement_t statement) {
         fprintf(stderr, "NOT-SUPPORTED: memory lvals (File: %s -- Line: %d).\n", 
             ivl_stmt_file(statement), ivl_stmt_lineno(statement));
 
-        exit(NOT_SUPPORTED_ERROR);
+        exit(BEHAVIORAL_CONNECTIONS_ERROR);
     }
 }
 
@@ -183,7 +183,7 @@ void Error::check_part_select_expr(ivl_obj_type_t obj_type, ivl_statement_t stat
         fprintf(stderr, "NOT-SUPPORTED: non-constant expression part-select (File: %s -- Line: %d).\n", 
             ivl_stmt_file(statement), ivl_stmt_lineno(statement));
 
-        exit(NOT_SUPPORTED_ERROR);
+        exit(BEHAVIORAL_CONNECTIONS_ERROR);
     }
 }
 
@@ -207,13 +207,19 @@ void Error::unknown_ivl_obj_type(ivl_obj_type_t obj_type) {
 void Error::unknown_nexus_type() {
     fprintf(stderr, "ERROR: unkown nexus type for nexus.\n");
     
-    exit(NOT_SUPPORTED_ERROR);
+    exit(STRUCTURAL_CONNECTIONS_ERROR);
+}
+
+void Error::unknown_signal_port_type(ivl_signal_port_t port_type) {
+    fprintf(stderr, "ERROR: unkown signal port type (%d).\n", (int) port_type);
+    
+    exit(STRUCTURAL_CONNECTIONS_ERROR); 
 }
 
 void Error::unknown_part_select_lpm_type(ivl_lpm_type_t lpm_type) {
-    fprintf(stderr, "ERROR: unkown part select LPM type (%d).\n", lpm_type);
+    fprintf(stderr, "ERROR: unkown part select LPM type (%d).\n", (int) lpm_type);
     
-    exit(NOT_SUPPORTED_ERROR);
+    exit(STRUCTURAL_CONNECTIONS_ERROR);
 }
 
 void Error::unknown_statement_type(ivl_statement_type_t statement_type) {

@@ -41,33 +41,11 @@ void propagate_nexus(ivl_nexus_t nexus, Signal* sink_signal, SignalGraph* sg, st
         // Determine type of Nexus
         if ((source_signal = ivl_nexus_ptr_sig(nexus_ptr))){
             
-            // Nexus target object is a SIGNAL
-            fprintf(stdout, " -- SIGNAL -- %s\n", 
-                ivl_signal_basename(source_signal));   
-            
-            // propagate_signal(source_signal, sink_signal);
-
-            // BASE-CASE:
-            // If connected signal and signal the same, 
-            // IGNORE, probably a module hookup
-            // @TODO: investigate this
-            if (source_signal != sink_signal->get_ivl_signal()) {
-
-                // Check that slice-info stacks are correct sizes
-                // Source Slices Stack:
-                // (Source slice stack should never grow beyond size N, 
-                //  where N = number of nodes on source signals queue.)
-                Error::check_slice_tracking_stack(sg->get_num_source_slices(), 1);
-                // Sink Slices Stack:
-                // (Sink slice stack should never grow beyond size 1.)
-                Error::check_slice_tracking_stack(sg->get_num_sink_slices(), 1);
-
-                // Add Connection
-                sg->add_connection(
-                    sink_signal, 
-                    sg->get_signal_from_ivl_signal(source_signal), 
-                    ws + WS_TAB);
-            }
+            // BASE-CASE: nexus target object is a SIGNAL
+            fprintf(stdout, " -- SIGNAL -- %s (%s)\n", 
+                sg->get_signal_from_ivl_signal(source_signal)->get_fullname().c_str(), 
+                get_signal_port_type_as_string(source_signal));   
+            propagate_signal(source_signal, sink_signal, sg, ws);
 
         } else if ((source_logic = ivl_nexus_ptr_log(nexus_ptr))) {
             

@@ -70,8 +70,10 @@ void find_structural_connections(SignalGraph* sg) {
         // Only find connections to non-ivl-generated signals
         if (!current_signal->is_ivl_generated()) {
 
-            // Print signal name -- signal dimensions
-            fprintf(stdout, "%s:\n", current_signal->get_fullname().c_str());
+            // Print signal name and port type
+            fprintf(stdout, "%s (%s):\n", 
+                current_signal->get_fullname().c_str(),
+                get_signal_port_type_as_string(current_signal->get_ivl_signal()));
 
             // Get signal nexus
             // There is exactly one nexus for each WORD of a signal.
