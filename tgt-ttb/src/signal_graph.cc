@@ -22,6 +22,8 @@ Graphviz .dot file.
 // ----------------------------------------------------------------------------------
 
 SignalGraph::SignalGraph():
+    num_signals_(0),
+    num_local_signals_(0),
     num_constants_(0),
     num_connections_(0),
     num_local_connections_(0),
@@ -109,7 +111,19 @@ unsigned long SignalGraph::get_num_connections() const {
 }
 
 unsigned long SignalGraph::get_num_signals() const {
-    return signals_map_.size();
+    // Check that number of signal is correct
+    assert((num_signals_ + num_local_signals_) == signals_map_.size() &&
+        "ERROR: number of signals does not match size of signals map.\n");
+
+    return num_signals_;
+}
+
+unsigned long SignalGraph::get_num_local_signals() const {
+    // Check that number of signal is correct
+    assert((num_signals_ + num_local_signals_) == signals_map_.size() &&
+        "ERROR: number of signals does not match size of signals map.\n");
+
+    return num_local_signals_;
 }
 
 unsigned long SignalGraph::get_num_constants() const {
@@ -505,6 +519,13 @@ void SignalGraph::find_signals(ivl_scope_t scope) {
 
                 // Add signal to dot graph
                 dg_.add_node(signals_map_[current_signal], WS_TAB);
+
+                // Increment Signals Counter
+                num_signals_++;
+            } else {
+
+                // Increment Local Signals Counter
+                num_local_signals_++;
             }
         }
     } 
@@ -628,10 +649,9 @@ void SignalGraph::track_sink_slice(unsigned int msb,
 }
 
 void SignalGraph::process_local_connections(string ws) {
-    Signal*     sink_signal   = NULL;
-    Signal*     source_signal = NULL;
-    Signal*     local_signal  = NULL;
-    Connection* current_conn  = NULL;
+    Signal*     sink_signal  = NULL;
+    Signal*     local_signal = NULL;
+    Connection* current_conn = NULL;
 
     conn_map_t::iterator conn_map_it = local_connections_map_.begin();
 
@@ -655,7 +675,7 @@ void SignalGraph::process_local_connections(string ws) {
             // Delete sink connections queue
             local_connections_map_[sink_signal]->pop_back();
             delete(local_connections_map_[sink_signal]);
-            local_connections_map_.erase(sink_signal);
+            // local_connections_map_.erase(sink_signal);
 
             // Iterate over source signals connected to local signal
             while (!local_connections_map_[local_signal]->empty()) {
@@ -668,6 +688,7 @@ void SignalGraph::process_local_connections(string ws) {
 
                 // Add connection to dot graph
                 dg_.add_connection(current_conn, ws);
+                num_connections_++;
 
                 // Remove connection from queue after it is processed
                 local_connections_map_[local_signal]->pop_back();
@@ -678,7 +699,7 @@ void SignalGraph::process_local_connections(string ws) {
 
             // Delete connections queue
             delete(local_connections_map_[local_signal]);
-            local_connections_map_.erase(local_signal);
+            // local_connections_map_.erase(local_signal);
 
         }
 

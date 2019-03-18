@@ -125,13 +125,16 @@ void Reporter::graph_stats(SignalGraph* sg) const {
     assert(file_ptr_ != NULL && "ERROR: reporter file ptr is NULL.\n");
 
     // Print number of signals enumerated in design
-    fprintf(file_ptr_, "\nNumber of signals found:     %lu\n", sg->get_num_signals());
+    fprintf(file_ptr_, "\nNumber of signals found:       %lu\n", sg->get_num_signals());
+
+    // Print number of local signals processed (removed) in design
+    fprintf(file_ptr_, "Number of local signals found: %lu\n", sg->get_num_local_signals());
 
     // Print number of constants enumerated in design
-    fprintf(file_ptr_, "Number of constants found:   %lu\n", sg->get_num_constants());
+    fprintf(file_ptr_, "Number of constants found:     %lu\n", sg->get_num_constants());
     
     // Print number of connections enumerated in design
-    fprintf(file_ptr_, "Number of connections found: %lu\n", sg->get_num_connections());
+    fprintf(file_ptr_, "Number of connections found:   %lu\n", sg->get_num_connections());
 }
 
 void Reporter::signal_names(sig_map_t signals_map) const {

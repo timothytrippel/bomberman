@@ -153,6 +153,10 @@ int target_design(ivl_design_t design) {
     reporter->print_message(BEHAVE_CONNECTION_ENUM_MESSAGE);
     find_behavioral_connections(design, sg);
 
+    // Process connections through local (IVL-generated) signals
+    reporter->print_message(LOCAL_CONNECTION_OPT_MESSAGE);
+    sg->process_local_connections(WS_TAB);
+
     // Report Graph Stats
     reporter->print_message(STATS_MESSAGE);
     reporter->graph_stats(sg);

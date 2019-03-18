@@ -55,9 +55,10 @@ class SignalGraph {
         void process_local_connections(string ws);
 
         // Graph Stats Getters
-        unsigned long get_num_connections() const;
-        unsigned long get_num_signals()     const;
-        unsigned long get_num_constants()   const;
+        unsigned long get_num_connections()   const;
+        unsigned long get_num_signals()       const;
+        unsigned long get_num_local_signals() const;
+        unsigned long get_num_constants()     const;
 
         // Signals Map Getters
         sig_map_t get_signals_map()              const;
@@ -118,6 +119,8 @@ class SignalGraph {
         void save_dot_graph();
         
     private:
+        unsigned long          num_signals_;           // number of signals enumerated in design
+        unsigned long          num_local_signals_;     // number of local signals optimized aways
         unsigned long          num_constants_;         // number of constants enumerated in design
         unsigned long          num_connections_;       // number of connections enumerated in design
         unsigned long          num_local_connections_; // number of local connections to be processed

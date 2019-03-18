@@ -37,6 +37,7 @@ using namespace std;
 #define SIGNAL_ENUM_MESSAGE            "Enumerating signals..."
 #define COMB_CONNECTION_ENUM_MESSAGE   "Enumerating combinational logic connections..."
 #define BEHAVE_CONNECTION_ENUM_MESSAGE "Enumerating behavioral logic connections..."
+#define LOCAL_CONNECTION_OPT_MESSAGE   "Processing local signal connections..."
 #define STATS_MESSAGE                  "Analysis Complete."
 
 // Define Indexes
