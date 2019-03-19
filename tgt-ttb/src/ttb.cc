@@ -31,6 +31,22 @@ cmd_args_map_t* process_cmd_line_args(ivl_design_t des) {
     // Create map to hold cmd line args
     cmd_args_map_t* cmd_args = new cmd_args_map_t();
 
+    // Process output filename
+    string output_filename = string(ivl_design_flag(des, OUTPUT_FILENAME_FLAG));
+    if (!output_filename.empty()) {
+        (*cmd_args)[OUTPUT_FILENAME_FLAG] = output_filename; 
+    } else {
+        Error::not_supported("output filename is required input.\n");
+    } 
+
+    // Process CLK signal basename
+    string clk_basename = string(ivl_design_flag(des, CLK_BASENAME_FLAG));
+    if (!clk_basename.empty()) {
+        (*cmd_args)[CLK_BASENAME_FLAG] = clk_basename; 
+    } else {
+        Error::not_supported("CLK signal name is required input.\n");
+    } 
+
     // Process signals to ignore filepath
     string ignore_filepath = string(ivl_design_flag(des, IGNORE_FILEPATH_FLAG));
     if (!ignore_filepath.empty()) {
@@ -127,9 +143,13 @@ int target_design(ivl_design_t design) {
     // Get IVL design flags (CMD-line args)
     cmd_args = process_cmd_line_args(design);
 
-    // Initialize SignalGraph
-    sg = new SignalGraph(ivl_design_flag(design, "-o"));
+    // Report Output Filename and CLK Basename
+    reporter->print_message(CONFIGS_MESSAGE);
+    reporter->configurations(cmd_args);
 
+    // Initialize SignalGraph
+    sg = new SignalGraph(cmd_args);
+    
     // Load signals to ignore
     if (cmd_args->count(IGNORE_FILEPATH_FLAG)) {
         reporter->print_message(LOADING_SIGS_TO_IGNORE_MESSAGE);

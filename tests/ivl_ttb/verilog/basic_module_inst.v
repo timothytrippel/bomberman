@@ -3,7 +3,7 @@ module mod(
 	output out
 );
 
-assign out = in | 0;
+assign out = in;
 
 endmodule
 

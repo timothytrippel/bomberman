@@ -109,6 +109,9 @@ class Signal {
         string get_dot_label() const;
         string get_dot_shape() const;
 
+        // General Setters
+        void set_is_ff();
+
         // Other
         bool         is_ivl_generated() const;
         unsigned int process_as_partselect_expr(ivl_statement_t statement) const;
@@ -117,6 +120,7 @@ class Signal {
         ivl_object_t   ivl_object_;
         ivl_obj_type_t ivl_type_;
         unsigned int   id_;
+        bool           is_ff_;
 
         // Unique ID for Constants
         static unsigned int const_id; 

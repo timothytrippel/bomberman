@@ -34,13 +34,13 @@ class DotGraph {
     public:
         // Constructors
         DotGraph();
-        DotGraph(const char* p);
+        DotGraph(string p);
 
         // Getters
-        const char* get_file_path() const;
+        string get_file_path() const;
 
         // Setters
-        void set_file_path(const char* p);
+        void set_file_path(string p);
 
         // Graph Construction
         void init_graph();
@@ -49,8 +49,8 @@ class DotGraph {
         void save_graph();
 
     private:
-        const char* file_path_;
-        FILE*       file_ptr_;
+        string file_path_;
+        FILE*  file_ptr_;
 
         // File Operations
         void open_file();

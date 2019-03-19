@@ -21,6 +21,7 @@ Graphviz .dot file.
 
 // TTB Headers
 #include "ttb_typedefs.h"
+#include "ttb.h"
 #include "signal.h"
 #include "signal_graph.h"
 #include "reporter.h"
@@ -72,6 +73,19 @@ void Reporter::print_message(const char* message) const {
     // Print init message
     line_separator();
     fprintf(file_ptr_, "%s\n", message);
+}
+
+void Reporter::configurations(cmd_args_map_t* cmd_args) const {
+    // Check that file has been opened for writing report
+    assert(file_ptr_ != NULL && "ERROR: reporter file ptr is NULL.\n");
+
+    // Print output filename
+    fprintf(file_ptr_, "\nOutput DOT graph filname: %s\n", 
+        cmd_args->at(OUTPUT_FILENAME_FLAG).c_str());
+
+    // Print CLK basename
+    fprintf(file_ptr_, "Clock signal basename:    %s\n", 
+        cmd_args->at(CLK_BASENAME_FLAG).c_str());
 }
 
 void Reporter::root_scopes(ivl_scope_t* scopes, unsigned int num_scopes) const {

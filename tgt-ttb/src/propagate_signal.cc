@@ -34,25 +34,6 @@ const char* get_signal_port_type_as_string(ivl_signal_t signal) {
 	}
 } 
 
-// unsigned int get_signal_scope_depth(ivl_signal_t signal) {
-	
-// 	// Scope depth counter
-// 	unsigned int depth = 0;
-
-// 	// Curren scope
-// 	ivl_scope_t current_scope = ivl_signal_scope(signal);
-
-// 	// Increment depth counter until parent 
-// 	// of current scope is NULL
-// 	while ((current_scope = ivl_scope_parent(current_scope))) {
-
-// 		// Increment depth counter
-// 		depth++;
-// 	}
-
-// 	return depth;
-// }
-
 bool is_signal_in_parent_scope(
 	ivl_signal_t child_signal, 
 	ivl_signal_t parent_signal) {

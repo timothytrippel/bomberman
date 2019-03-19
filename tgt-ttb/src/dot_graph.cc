@@ -28,7 +28,7 @@ Graphviz .dot file.
 
 DotGraph::DotGraph(): file_path_(NULL), file_ptr_(NULL) {}
 
-DotGraph::DotGraph(const char* p): file_ptr_(NULL) {
+DotGraph::DotGraph(string p): file_ptr_(NULL) {
     set_file_path(p);
 }
 
@@ -36,7 +36,7 @@ DotGraph::DotGraph(const char* p): file_ptr_(NULL) {
 // ------------------------- Getters --------------------------
 // ------------------------------------------------------------
 
-const char* DotGraph::get_file_path() const {
+string DotGraph::get_file_path() const {
     return file_path_;
 }
 
@@ -44,7 +44,7 @@ const char* DotGraph::get_file_path() const {
 // ------------------------- Setters --------------------------
 // ------------------------------------------------------------
 
-void DotGraph::set_file_path(const char* p) {
+void DotGraph::set_file_path(string p) {
     file_path_ = p;
 }
 
@@ -75,7 +75,7 @@ void DotGraph::add_node(Signal* signal, string ws) const {
     } else {
 
         fprintf(stderr, "ERROR: dot graph file (%s) not open.\n", 
-            file_path_ ? file_path_ : "stdout");
+            !file_path_.empty() ? file_path_.c_str() : "stdout");
         
         exit(FILE_ERROR);
     }
@@ -83,6 +83,7 @@ void DotGraph::add_node(Signal* signal, string ws) const {
 
 void DotGraph::add_connection(Connection* conn, string ws) const {
     if (file_ptr_) {
+
         // Debug Print
         fprintf(stdout, "%sADDING CONNECTION from %s to %s\n", 
             ws.c_str(), 
@@ -94,9 +95,12 @@ void DotGraph::add_connection(Connection* conn, string ws) const {
             conn->get_source()->get_fullname().c_str(), 
             conn->get_sink()->get_fullname().c_str(), 
             conn->get_dot_label().c_str());
+
     } else {
+
         fprintf(stderr, "ERROR: dot graph file (%s) not open.\n", 
-            file_path_ ? file_path_ : "stdout");
+            !file_path_.empty() ? file_path_.c_str() : "stdout");
+
         exit(FILE_ERROR);
     } 
 }
@@ -114,10 +118,10 @@ void DotGraph::save_graph() {
 // ------------------------------------------------------------
 
 void DotGraph::open_file() {
-    file_ptr_ = fopen(file_path_, "w");
+    file_ptr_ = fopen(file_path_.c_str(), "w");
     if (!file_ptr_) {
         fprintf(stderr, "ERROR: Could not open file %s\n", 
-            file_path_ ? file_path_ : "stdout");
+            !file_path_.empty() ? file_path_.c_str() : "stdout");
         exit(FILE_ERROR);
     }
 }

@@ -23,19 +23,22 @@ Graphviz .dot file.
 Signal::Signal():
 	ivl_object_(),
 	ivl_type_(IVL_NONE),
-	id_(0) {}
+	id_(0),
+	is_ff_(false) {}
 
 // Signal
 Signal::Signal(ivl_signal_t signal):
 	ivl_object_(signal),
 	ivl_type_(IVL_SIGNAL),
-	id_(0) {}
+	id_(0),
+	is_ff_(false) {}
 
 // Net Constant
 Signal::Signal(ivl_net_const_t constant):
 	ivl_object_(constant),
 	ivl_type_(IVL_CONST),
-	id_(const_id) {
+	id_(const_id),
+	is_ff_(false) {
 
 		// Increment Constant ID counter
 		const_id++;
@@ -299,7 +302,7 @@ string Signal::get_dot_shape() const {
             return CONST_NODE_SHAPE;
         case IVL_SIGNAL:
         default:
-        	if (ivl_signal_type(ivl_object_.ivl_signal) == IVL_SIT_REG) {
+        	if (is_ff_) {
         		return FF_NODE_SHAPE;
         	} else {
         		return SIGNAL_NODE_SHAPE;	
@@ -343,6 +346,21 @@ string Signal::get_dot_expr_label() const {
     ss << ":0]";
 
     return ss.str();
+}
+
+// ----------------------------------------------------------------------------------
+// ---------------------------------- Setters ---------------------------------------
+// ----------------------------------------------------------------------------------
+
+void Signal::set_is_ff() {
+	
+	// Check that it is a signal and of reg type
+	assert(this->is_signal() && "ERROR: constants cannot be flagged as a FF.\n");
+	assert((ivl_signal_type(ivl_object_.ivl_signal) == IVL_SIT_REG) && 
+		"ERROR: non-reg type signals cannot be flagged as a FF.\n");
+
+	// Set is_ff_
+	is_ff_ = true;
 }
 
 // ----------------------------------------------------------------------------------

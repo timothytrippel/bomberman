@@ -32,6 +32,7 @@ using namespace std;
 
 // Progress Messages
 #define LAUNCH_MESSAGE                 "Entering TTB Target Module..."
+#define CONFIGS_MESSAGE                "Configurations:"
 #define LOADING_SIGS_TO_IGNORE_MESSAGE "Loading signals to ignore..."
 #define SCOPE_EXPANSION_MESSAGE        "Identifying top-level modules..."
 #define SIGNAL_ENUM_MESSAGE            "Enumerating signals..."
@@ -39,6 +40,12 @@ using namespace std;
 #define BEHAVE_CONNECTION_ENUM_MESSAGE "Enumerating behavioral logic connections..."
 #define LOCAL_CONNECTION_OPT_MESSAGE   "Processing local signal connections..."
 #define STATS_MESSAGE                  "Analysis Complete."
+
+// CMD-Line Argument Flags
+#define OUTPUT_FILENAME_FLAG  "-o"
+#define CLK_BASENAME_FLAG     "clk"
+#define IGNORE_FILEPATH_FLAG  "ignore_filepath"
+#define IGNORE_CONSTANTS_FLAG "ignore_consts" 
 
 // Define Indexes
 #define LOGIC_OUTPUT_PIN_NEXUS_INDEX      0

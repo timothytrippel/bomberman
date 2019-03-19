@@ -121,6 +121,11 @@ void process_statement_wait(
     fprintf(stdout, "%spushed %d source node(s) to queue\n", 
         ws.c_str(), num_nodes_processed);
 
+    // // Check if CLK signal is one of source nodes
+    // if (source_ivl_signal == CLK) {
+    //     sg->get_source_signals_queue().back().
+    // }
+
     // Get/process sub-statement
     if ((sub_statement = ivl_stmt_sub_stmt(statement))) {
         process_statement(sub_statement, sg, ws + WS_TAB);
@@ -131,6 +136,11 @@ void process_statement_wait(
     sg->pop_from_source_signals_queue(num_nodes_processed);
     fprintf(stdout, "%spopped %d source node(s) from queue\n", 
         ws.c_str(), num_nodes_processed);
+
+    // Check if inside ff set, if so clear it
+    if (sg->check_if_inside_ff_block()) {
+        sg->clear_inside_ff_block();
+    }
 }
 
 // ------------------------------ CONDIT Statement ----------------------------------
@@ -215,6 +225,11 @@ Signal* process_statement_assign_lval(
     // Get sink signal
     sink_signal = sg->get_signal_from_ivl_signal(ivl_lval_sig(lval));
     
+    // Set sink signal as FF if inside an FF block
+    if (sg->check_if_inside_ff_block()) {
+        sink_signal->set_is_ff();
+    }
+
     // Process lval part select expression (if necessary)
     if ((part_select_expr = ivl_lval_part_off(lval))) {
         fprintf(stdout, "%sprocessing lval part select ...\n", ws.c_str());

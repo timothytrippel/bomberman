@@ -39,7 +39,7 @@ class SignalGraph {
     public:
         // Constructors
         SignalGraph();
-        SignalGraph(const char* dot_graph_fname);
+        SignalGraph(cmd_args_map_t* cmd_args);
         
         // Destructors
         ~SignalGraph();
@@ -98,6 +98,8 @@ class SignalGraph {
 
         string_map_t get_signals_to_ignore() const;
 
+        bool check_if_inside_ff_block() const;
+
         // Source Signals Queue Setters
         void push_to_source_signals_queue(Signal* source_node, string ws);
 
@@ -124,8 +126,12 @@ class SignalGraph {
             string  ws);
 
         void add_signal_to_ignore(string signal_basename);
-        
+
         void load_signals_to_ignore(string file_path);
+
+        void set_inside_ff_block();
+
+        void clear_inside_ff_block();
 
         // Dot Graph Management
         void save_dot_graph();
@@ -136,8 +142,10 @@ class SignalGraph {
         unsigned long          num_constants_;         // number of constants enumerated in design
         unsigned long          num_connections_;       // number of connections enumerated in design
         unsigned long          num_local_connections_; // number of local connections to be processed
+        bool                   inside_ff_block_;       // indicates if processing inside a FF block
+        string                 clk_basename_;          // indicates if processing inside a FF block
+        DotGraph*              dg_;                    // dot graph object
         sig_map_t              signals_map_;           // IVL signal to Signal object map
-        DotGraph               dg_;                    // dot graph object
         signals_q_t            source_signals_;        // source signal queue
         vector<unsigned int>   num_signals_at_depth_;  // back is num source nodes at current depth
         vector<signal_slice_t> source_slices_;         // source signal slice information stack

@@ -27,8 +27,10 @@ SignalGraph::SignalGraph():
     num_constants_(0),
     num_connections_(0),
     num_local_connections_(0),
+    inside_ff_block_(false),
+    clk_basename_(""),
+    dg_(NULL),
     signals_map_(),
-    dg_(),
     source_signals_(),
     num_signals_at_depth_(),
     source_slices_(),
@@ -37,16 +39,22 @@ SignalGraph::SignalGraph():
     local_connections_map_(),
     signals_to_ignore_() {} 
 
-SignalGraph::SignalGraph(const char* dot_graph_fname) {
-    // Initialize Constants Counter
-    num_constants_ = 0;
-
-    // Initialize Connection Counter
-    num_connections_ = 0;
+SignalGraph::SignalGraph(cmd_args_map_t* cmd_args) {
+    
+    // Intialize Counters
+    num_signals_           = 0;
+    num_local_signals_     = 0;
+    num_constants_         = 0;
+    num_connections_       = 0;
+    num_local_connections_ = 0;
+    inside_ff_block_       = false;
+    
+    // Initialize CLK Basename
+    clk_basename_ = cmd_args->at(CLK_BASENAME_FLAG);
 
     // Initialize DotGraph
-    dg_ = DotGraph(dot_graph_fname);
-    dg_.init_graph();
+    dg_ = new DotGraph(cmd_args->at(OUTPUT_FILENAME_FLAG));
+    dg_->init_graph();
 }
 
 // ----------------------------------------------------------------------------------
@@ -97,7 +105,8 @@ SignalGraph::~SignalGraph() {
     // @TODO: DOUBLE CHECK ALL LOCAL CONNECTIONS HAVE BEEN PROCESSED
 
     // 5. Close DotGraph file if it is still open
-    dg_.save_graph();
+    dg_->save_graph();
+    delete(dg_);
 }
 
 // ----------------------------------------------------------------------------------
@@ -329,6 +338,10 @@ string_map_t SignalGraph::get_signals_to_ignore() const {
     return signals_to_ignore_;
 }
 
+bool SignalGraph::check_if_inside_ff_block() const {
+    return inside_ff_block_;
+}
+
 // ----------------------------------------------------------------------------------
 // ------------------------------- Setters ------------------------------------------
 // ----------------------------------------------------------------------------------
@@ -495,12 +508,20 @@ void SignalGraph::load_signals_to_ignore(string file_path) {
     }
 }   
 
+void SignalGraph::set_inside_ff_block() {
+    inside_ff_block_ = true;
+}
+
+void SignalGraph::clear_inside_ff_block() {
+    inside_ff_block_ = false;
+}
+
 // ----------------------------------------------------------------------------------
 // ------------------------------- Dot Graph Management -----------------------------
 // ----------------------------------------------------------------------------------
 
 void SignalGraph::save_dot_graph() {
-    dg_.save_graph();
+    dg_->save_graph();
 }
 
 // ----------------------------------------------------------------------------------
@@ -554,7 +575,7 @@ void SignalGraph::find_signals(ivl_scope_t scope) {
                 connections_map_[signals_map_[current_signal]] = new conn_q_t();
 
                 // Add signal to dot graph
-                dg_.add_node(signals_map_[current_signal], WS_TAB);
+                dg_->add_node(signals_map_[current_signal], WS_TAB);
 
                 // Increment Signals Counter
                 num_signals_++;
@@ -617,12 +638,12 @@ void SignalGraph::add_connection(Signal* sink_signal,
                 
                 // Add node to graph if it is a CONSTANT
                 if (source_signal->is_const()) {
-                    dg_.add_node(source_signal, ws);
+                    dg_->add_node(source_signal, ws);
                     num_constants_++;
                 }
 
                 // Add connection to dot graph
-                dg_.add_connection(conn, ws);
+                dg_->add_connection(conn, ws);
                 
                 // Save Connection
                 connections_map_[sink_signal]->push_back(conn);
@@ -685,7 +706,7 @@ void SignalGraph::process_local_connections(string ws) {
                 current_conn->set_sink(sink_signal);
 
                 // Add connection to dot graph
-                dg_.add_connection(current_conn, ws);
+                dg_->add_connection(current_conn, ws);
                 num_connections_++;
 
                 // Remove connection from queue after it is processed

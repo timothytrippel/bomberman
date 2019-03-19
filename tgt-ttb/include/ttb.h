@@ -33,9 +33,6 @@ using namespace std;
 // ------------------------- Defines --------------------------
 // ------------------------------------------------------------
 
-#define IGNORE_FILEPATH_FLAG  "ignore_filepath"
-#define IGNORE_CONSTANTS_FLAG "ignore_consts"
-
 // ------------------------------------------------------------
 // -------------- CMD Line Arguments Processing ---------------
 // ------------------------------------------------------------
@@ -62,8 +59,9 @@ void propagate_signal(
     SignalGraph* sg,
     string       ws);
 
-unsigned int get_signal_scope_depth(
-    ivl_signal_t signal);
+bool is_signal_in_parent_scope(
+    ivl_signal_t child_signal, 
+    ivl_signal_t parent_signal);
 
 void process_non_port_signal(
     ivl_signal_t source_signal,
