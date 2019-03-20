@@ -73,7 +73,7 @@ SignalGraph::SignalGraph(cmd_args_map_t* cmd_args) {
 
 SignalGraph::~SignalGraph() {
 
-    fprintf(DEBUG_PRINTS_FILE_PTR, "Executing SignalGraph destructor...\n");
+    fprintf(DESTRUCTOR_PRINTS_FILE_PTR, "Executing SignalGraph destructor...\n");
 
     // 1. Delete Signals in signals_map_
     // Create a signals map iterator

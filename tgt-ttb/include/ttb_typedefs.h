@@ -56,8 +56,9 @@ using namespace std;
 #define STMT_ASSIGN_LVAL_INDEX            0
 
 // File Pointer Defines
-#define REPORTER_PRINTS_FILE_PTR stdout
-#define DEBUG_PRINTS_FILE_PTR    stdout
+#define REPORTER_PRINTS_FILE_PTR   stdout
+#define DEBUG_PRINTS_FILE_PTR      stdout
+#define DESTRUCTOR_PRINTS_FILE_PTR stdout
 
 // Other Defines
 #define LINE_SEPARATOR        "------------------------------------------------------------"

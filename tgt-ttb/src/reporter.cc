@@ -60,7 +60,7 @@ Reporter::Reporter(const char* p) {
 
 Reporter::~Reporter() {
     
-    fprintf(DEBUG_PRINTS_FILE_PTR, "Executing Reporter destructor...\n");
+    fprintf(DESTRUCTOR_PRINTS_FILE_PTR, "Executing Reporter destructor...\n");
 
     // Close file if its open and not STDOUT
     if (file_ptr_ && (file_ptr_ != stdout)) {

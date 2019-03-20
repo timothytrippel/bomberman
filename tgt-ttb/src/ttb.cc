@@ -198,11 +198,11 @@ int target_design(ivl_design_t design) {
     reporter->end_task();
     
     // Delete Objects
-    reporter->start_task(DESTROY_MESSAGE);
+    // reporter->start_task(DESTROY_MESSAGE);
     delete(cmd_args);
     delete(sg);
-    reporter->end_task();
-    reporter->line_separator();
+    // reporter->end_task();
+    // reporter->line_separator();
     delete(reporter);
 
     return 0;

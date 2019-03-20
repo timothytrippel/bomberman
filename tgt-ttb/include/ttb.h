@@ -54,28 +54,27 @@ void propagate_nexus(
 
 // Signal
 void propagate_signal(
+    ivl_signal_t ivl_source_signal,
+    Signal*      sink_signal,
+    SignalGraph* sg,
+    string       ws);
+
+bool is_sig1_parent_of_sig2(
+    ivl_signal_t signal_1, 
+    ivl_signal_t signal_2);
+
+bool in_same_scope(
+    ivl_signal_t signal_1, 
+    ivl_signal_t signal_2);
+
+void process_signal_connect(
     ivl_signal_t source_signal,
     Signal*      sink_signal,
     SignalGraph* sg,
     string       ws);
 
-bool is_signal_in_parent_scope(
-    ivl_signal_t child_signal, 
-    ivl_signal_t parent_signal);
-
-void process_non_port_signal(
-    ivl_signal_t source_signal,
-    Signal*      sink_signal,
-    SignalGraph* sg,
-    string       ws);
-
-void process_input_port_signal(
-    ivl_signal_t source_signal,
-    Signal*      sink_signal,
-    SignalGraph* sg,
-    string       ws);
-
-void process_output_port_signal(
+void process_signal_case(
+    unsigned int case_num,
     ivl_signal_t source_signal,
     Signal*      sink_signal,
     SignalGraph* sg,

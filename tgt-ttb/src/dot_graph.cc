@@ -39,7 +39,7 @@ DotGraph::DotGraph(string p): file_ptr_(NULL) {
 
 DotGraph::~DotGraph() {
 
-    fprintf(DEBUG_PRINTS_FILE_PTR, "Executing DotGraph destructor...\n");
+    fprintf(DESTRUCTOR_PRINTS_FILE_PTR, "Executing DotGraph destructor...\n");
 
     // Close file if its open and not STDOUT
     if (file_ptr_ && (file_ptr_ != stdout)) {
@@ -100,7 +100,7 @@ void DotGraph::add_connection(Connection* conn, string ws) const {
     if (file_ptr_) {
 
         // Debug Print
-        fprintf(DEBUG_PRINTS_FILE_PTR, "%sADDING CONNECTION from %s to %s\n", 
+        fprintf(DEBUG_PRINTS_FILE_PTR, "%sADDING CONNECTION: %s --> %s\n", 
             ws.c_str(), 
             conn->get_source()->get_fullname().c_str(), 
             conn->get_sink()->get_fullname().c_str());
