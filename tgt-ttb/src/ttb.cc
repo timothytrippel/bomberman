@@ -63,10 +63,10 @@ cmd_args_map_t* process_cmd_line_args(ivl_design_t des) {
 }
 
 // ------------------------------------------------------------
-// ------------------ Connection Processing -------------------
+// ----------------- Continuous HDL Processing ----------------
 // ------------------------------------------------------------
 
-void find_structural_connections(SignalGraph* sg) {
+void find_continuous_connections(SignalGraph* sg) {
 
     // Signal object pointer
     Signal* current_signal = NULL;
@@ -87,7 +87,7 @@ void find_structural_connections(SignalGraph* sg) {
         if (!current_signal->is_ivl_generated()) {
 
             // Print signal name and port type
-            fprintf(stdout, "%s (%s):\n", 
+            fprintf(DEBUG_PRINTS_FILE_PTR, "%s (%s):\n", 
                 current_signal->get_fullname().c_str(),
                 get_signal_port_type_as_string(current_signal->get_ivl_signal()));
 
@@ -109,7 +109,11 @@ void find_structural_connections(SignalGraph* sg) {
     }
 }
 
-void find_behavioral_connections(ivl_design_t design, SignalGraph* sg) {
+// ------------------------------------------------------------
+// ----------------- Procedural HDL Processing ----------------
+// ------------------------------------------------------------
+
+void find_procedural_connections(ivl_design_t design, SignalGraph* sg) {
     int result = 0;
 
     // Processes are initial, always, or final blocks
@@ -136,63 +140,70 @@ int target_design(ivl_design_t design) {
     Reporter*       reporter  = NULL; // reporter object (prints messages)
     SignalGraph*    sg        = NULL; // signal graph object
 
-    // Initialize reporter checking objects
-    reporter = new Reporter();
-    reporter->init(LAUNCH_MESSAGE);
+    // Create reporter processing object
+    reporter = new Reporter(REPORTER_PRINTS_FILE_PTR);
+    
+    // Start timer
+    reporter->start_task(LAUNCH_MESSAGE);
 
     // Get IVL design flags (CMD-line args)
+    reporter->start_task(CONFIGS_MESSAGE);
     cmd_args = process_cmd_line_args(design);
-
-    // Report Output Filename and CLK Basename
-    reporter->print_message(CONFIGS_MESSAGE);
     reporter->configurations(cmd_args);
+    reporter->end_task();
 
     // Initialize SignalGraph
+    reporter->start_task(INITIALIZE_SIG_GRAPH_MESSAGE);
     sg = new SignalGraph(cmd_args);
-    
-    // Load signals to ignore
-    if (cmd_args->count(IGNORE_FILEPATH_FLAG)) {
-        reporter->print_message(LOADING_SIGS_TO_IGNORE_MESSAGE);
-        sg->load_signals_to_ignore((*cmd_args)[IGNORE_FILEPATH_FLAG]);
-        reporter->signals_to_ignore(sg->get_signals_to_ignore());
-    }
+    reporter->end_task();
     
     // Get root scopes (top level modules) of design
-    reporter->print_message(SCOPE_EXPANSION_MESSAGE);
+    reporter->start_task(SCOPE_EXPANSION_MESSAGE);
     ivl_design_roots(design, &roots, &num_roots);
     Error::check_scope_types(roots, num_roots);
     reporter->root_scopes(roots, num_roots);
+    reporter->end_task();
 
-    // Find all critical signals and dependencies in the design
-    reporter->print_message(SIGNAL_ENUM_MESSAGE);
+    // Find all SIGNALS in the design
+    reporter->start_task(SIGNAL_ENUM_MESSAGE);
     sg->find_all_signals(roots, num_roots);
     reporter->num_signals(sg->get_num_signals());
     reporter->signal_names(sg->get_signals_map());
+    reporter->end_task();
 
-    // Find signal-to-signal connections
-    reporter->print_message(COMB_CONNECTION_ENUM_MESSAGE);
-    find_structural_connections(sg);
-    reporter->print_message(BEHAVE_CONNECTION_ENUM_MESSAGE);
-    find_behavioral_connections(design, sg);
+    // Find CONTINUOUS signal-to-signal CONNECTIONS
+    reporter->start_task(COMB_CONNECTION_ENUM_MESSAGE);
+    find_continuous_connections(sg);
+    reporter->end_task();
+
+    // Find PROCEDURAL signal-to-signal CONNECTIONS
+    reporter->start_task(BEHAVE_CONNECTION_ENUM_MESSAGE);
+    find_procedural_connections(design, sg);
+    reporter->end_task();
 
     // Process connections through local (IVL-generated) signals
-    reporter->print_message(LOCAL_CONNECTION_OPT_MESSAGE);
+    reporter->start_task(LOCAL_CONNECTION_OPT_MESSAGE);
     sg->process_local_connections(WS_TAB);
+    reporter->end_task();
 
-    // Report Graph Stats
-    reporter->print_message(STATS_MESSAGE);
-    reporter->graph_stats(sg);
-
-    // Save dot graph to file
+    // Write signal nodes to dot graph and save
+    reporter->start_task(SIGNAL_SAVING_MESSAGE);
+    sg->write_signals_to_dot_graph();
     sg->save_dot_graph();
+    reporter->end_task();
 
-    // Report total execution time
-    reporter->end();
-
+    // Report stats/total execution time
+    reporter->print_message(FINAL_STATS_MESSAGE);
+    reporter->graph_stats(sg);
+    reporter->end_task();
+    
     // Delete Objects
-    delete(reporter);
+    reporter->start_task(DESTROY_MESSAGE);
     delete(cmd_args);
     delete(sg);
+    reporter->end_task();
+    reporter->line_separator();
+    delete(reporter);
 
     return 0;
 }

@@ -39,17 +39,6 @@ typedef struct signal_slice_s {
 } signal_slice_t;
 
 // ------------------------------------------------------------
-// ---------------------- Connection Types --------------------
-// ------------------------------------------------------------
-typedef enum conn_type_e {
-    NO_CONNECTION   = 0,
-    FULL_CONNECTION = 1,
-    SOURCE_SLICE    = 2,
-    SINK_SLICE      = 3,
-    BOTH_SLICE      = 4,
-} conn_type_t;
-
-// ------------------------------------------------------------
 // ------------------------- Connection -----------------------
 // ------------------------------------------------------------
 
@@ -88,9 +77,6 @@ class Connection {
         void set_sink(Signal* new_sink);
 
     private:
-        // Type
-        conn_type_t type_;
-
         // Source Signal
         Signal*      source_;
         unsigned int source_msb_;

@@ -32,17 +32,44 @@ Graphviz .dot file.
 
 Reporter::Reporter(): 
     file_path_(NULL), 
-    file_ptr_(NULL) {}
+    file_ptr_(NULL) {
+
+    // Initialize file to print to and times queue
+    init();
+}
+
+Reporter::Reporter(FILE* file_ptr): 
+    file_path_(NULL), 
+    file_ptr_(file_ptr) {
+
+    // Initialize file to print to and times queue
+    init();
+}
 
 Reporter::Reporter(const char* p) {
     file_ptr_ = NULL;
     set_file_path(p);
+
+    // Initialize file to print to and times queue
+    init();
 }
 
+// ------------------------------------------------------------
+// ----------------------- Destructors ------------------------
+// ------------------------------------------------------------
+
 Reporter::~Reporter() {
+    
+    fprintf(DEBUG_PRINTS_FILE_PTR, "Executing Reporter destructor...\n");
+
     // Close file if its open and not STDOUT
-    if (file_ptr_) {
+    if (file_ptr_ && (file_ptr_ != stdout)) {
         close_file();
+    }
+
+    // Delete the start times queue
+    if (start_times_q_) {
+        delete(start_times_q_);
     }
 }
 
@@ -63,6 +90,40 @@ void Reporter::set_file_path(const char* p) {
 }
 
 // ------------------------------------------------------------
+// ---------------------- Task Tracking -----------------------
+// ------------------------------------------------------------
+
+void Reporter::start_task(const char* message) {
+    // Print starting message
+    print_message(message);
+
+    // Check that not more than two timers on the queue
+    assert(start_times_q_->size() < 2 && 
+        "ERROR: cannot track more concurrent task times.\n");
+
+    // Start timer and push to queue
+    start_times_q_->push_back(clock());
+}
+
+void Reporter::end_task() {
+    double start_time     = 0;
+    double execution_time = 0;
+
+    // Check that file has been opened for writing report
+    assert(file_ptr_ != NULL && "ERROR: reporter file ptr is NULL.\n");
+
+    // Get start time
+    start_time = start_times_q_->back();
+    start_times_q_->pop_back();
+
+    // Compute execution time
+    execution_time = (clock() - start_time) / (double) CLOCKS_PER_SEC;
+
+    // Print execution time
+    fprintf(file_ptr_, "\nExecution Time: %f (s)\n", execution_time);
+}
+
+// ------------------------------------------------------------
 // --------------------- Message Printing ---------------------
 // ------------------------------------------------------------
 
@@ -72,7 +133,15 @@ void Reporter::print_message(const char* message) const {
 
     // Print init message
     line_separator();
-    fprintf(file_ptr_, "%s\n", message);
+    fprintf(file_ptr_, "%s\n\n", message);
+}
+
+void Reporter::line_separator() const {
+    // Check that file has been opened for writing report
+    assert(file_ptr_ != NULL && "ERROR: reporter file ptr is NULL.\n");
+
+    // Print line separator
+    fprintf(file_ptr_, "%s\n", LINE_SEPARATOR);
 }
 
 void Reporter::configurations(cmd_args_map_t* cmd_args) const {
@@ -80,7 +149,7 @@ void Reporter::configurations(cmd_args_map_t* cmd_args) const {
     assert(file_ptr_ != NULL && "ERROR: reporter file ptr is NULL.\n");
 
     // Print output filename
-    fprintf(file_ptr_, "\nOutput DOT graph filname: %s\n", 
+    fprintf(file_ptr_, "Output DOT graph filname: %s\n", 
         cmd_args->at(OUTPUT_FILENAME_FLAG).c_str());
 
     // Print CLK basename
@@ -93,7 +162,7 @@ void Reporter::root_scopes(ivl_scope_t* scopes, unsigned int num_scopes) const {
     assert(file_ptr_ != NULL && "ERROR: reporter file ptr is NULL.\n");
 
     // Print number of scopes
-    fprintf(file_ptr_, "\nFound %d top-level module(s):\n", num_scopes);
+    fprintf(file_ptr_, "Found %d top-level module(s):\n", num_scopes);
     
     string scope_name = "UNKONWN";
 
@@ -111,44 +180,7 @@ void Reporter::num_signals(unsigned long num_signals) const {
     assert(file_ptr_ != NULL && "ERROR: reporter file ptr is NULL.\n");
 
     // Print number of signals enumerated in design
-    fprintf(file_ptr_, "\nNumber of signals found: %lu\n", num_signals);
-}
-
-void Reporter::signals_to_ignore(string_map_t signals_to_ignore) const {
-    // Check that file has been opened for writing report
-    assert(file_ptr_ != NULL && "ERROR: reporter file ptr is NULL.\n");
-
-    // Print (base)names of all signals to ignore
-    fprintf(file_ptr_, "\nSignal (Base)Names to Ignore:\n");   
-
-    // Create iterator
-    string_map_t::iterator it = signals_to_ignore.begin();
-
-    // Iterate over the map until the end
-    while (it != signals_to_ignore.end()) {   
-        // Print signal name
-        fprintf(file_ptr_, "    %s\n", it->first.c_str());
- 
-        // Increment the iterator
-        it++;
-    }
-}
-
-void Reporter::graph_stats(SignalGraph* sg) const {
-    // Check that file has been opened for writing report
-    assert(file_ptr_ != NULL && "ERROR: reporter file ptr is NULL.\n");
-
-    // Print number of signals enumerated in design
-    fprintf(file_ptr_, "\nNumber of signals found:       %lu\n", sg->get_num_signals());
-
-    // Print number of local signals processed (removed) in design
-    fprintf(file_ptr_, "Number of local signals found: %lu\n", sg->get_num_local_signals());
-
-    // Print number of constants enumerated in design
-    fprintf(file_ptr_, "Number of constants found:     %lu\n", sg->get_num_constants());
-    
-    // Print number of connections enumerated in design
-    fprintf(file_ptr_, "Number of connections found:   %lu\n", sg->get_num_connections());
+    fprintf(file_ptr_, "Number of signals found: %lu\n", num_signals);
 }
 
 void Reporter::signal_names(sig_map_t signals_map) const {
@@ -156,7 +188,7 @@ void Reporter::signal_names(sig_map_t signals_map) const {
     assert(file_ptr_ != NULL && "ERROR: reporter file ptr is NULL.\n");
 
     // Print name of all signals in vector
-    fprintf(file_ptr_, "\nSignal Names:\n");      
+    fprintf(file_ptr_, "Signal Names:\n");      
 
     // Create iterator
     sig_map_t::iterator it = signals_map.begin();
@@ -171,43 +203,37 @@ void Reporter::signal_names(sig_map_t signals_map) const {
     }
 }
 
-void Reporter::line_separator() const {
+void Reporter::graph_stats(SignalGraph* sg) const {
     // Check that file has been opened for writing report
     assert(file_ptr_ != NULL && "ERROR: reporter file ptr is NULL.\n");
 
-    // Print line separator
-    fprintf(file_ptr_, "\n%s\n", LINE_SEPARATOR);
+    // Print number of signals enumerated in design
+    fprintf(file_ptr_, "Number of signals found:       %lu\n", sg->get_num_signals());
+
+    // Print number of local signals processed (removed) in design
+    fprintf(file_ptr_, "Number of local signals found: %lu\n", sg->get_num_local_signals());
+
+    // Print number of constants enumerated in design
+    fprintf(file_ptr_, "Number of constants found:     %lu\n", sg->get_num_constants());
+    
+    // Print number of connections enumerated in design
+    fprintf(file_ptr_, "Number of connections found:   %lu\n", sg->get_num_connections());
 }
 
 // ------------------------------------------------------------
 // -------------------------- Other ---------------------------
 // ------------------------------------------------------------
 
-void Reporter::init(const char* init_message) {
+void Reporter::init() {
     // Open output file or print to STDOUT
-    if (file_path_ == NULL){
+    if (!file_path_ && !file_ptr_){
         file_ptr_ = stdout;
-    } else {
+    } else if (!file_ptr_) {
         open_file();
     }
 
-    print_message(init_message);
-
-    // Record start time
-    start_time_ = clock();
-}
-
-void Reporter::end(){
-    // Check that file has been opened for writing report
-    assert(file_ptr_ != NULL && "ERROR: reporter file ptr is NULL.\n");
-
-    // Record current execution time
-    execution_time_ = (clock() - start_time_) / (double) CLOCKS_PER_SEC;
-    fprintf(file_ptr_, "\nExecution Time: %f (s)\n", execution_time_);
-    fprintf(file_ptr_, "%s\n", LINE_SEPARATOR);
-
-    // Close output file
-    fclose(file_ptr_);
+    // Create start times queue
+    start_times_q_ = new times_q_t();
 }
 
 void Reporter::open_file(){

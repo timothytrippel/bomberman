@@ -40,10 +40,10 @@ using namespace std;
 cmd_args_map_t* process_cmd_line_args(ivl_design_t des);
 
 // ------------------------------------------------------------
-// ----------------- Structural HDL Processing ----------------
+// ----------------- Continuous HDL Processing ----------------
 // ------------------------------------------------------------
 
-void find_structural_connections();
+void find_continuous_connections();
 
 // Nexus
 void propagate_nexus(
@@ -129,10 +129,10 @@ void propagate_constant(
     string          ws);
 
 // ------------------------------------------------------------
-// ----------------- Behavioral HDL Processing ----------------
+// ----------------- Procedural HDL Processing ----------------
 // ------------------------------------------------------------
 
-void find_behavioral_connections(
+void find_procedural_connections(
     ivl_design_t design,                              
     SignalGraph* sg);
 

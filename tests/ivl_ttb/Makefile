@@ -23,7 +23,7 @@ $(DOT_DIR)/%.dot: $(SRC_DIR)/%.v
 	mkdir -p dot
 	mkdir -p pdf
 	iverilog -o $@ -pclk=$(CLK_BASENAME) -t ttb $<
-	# iverilog -o $@ -pclk=$(CLK_BASENAME) -pignore_filepath=$(patsubst $(SRC_DIR)/%,$(IGNORES_DIR)/%,$(<:.v=.txt)) -t ttb $<
+# 	iverilog -o $@ -pclk=$(CLK_BASENAME) -pignore_filepath=$(patsubst $(SRC_DIR)/%,$(IGNORES_DIR)/%,$(<:.v=.txt)) -t ttb $<
 	dot $@ -Tpdf -o $(patsubst $(SRC_DIR)/%,$(PDF_DIR)/%,$(<:.v=.pdf))
 
 .PHONY: build cleanall clean

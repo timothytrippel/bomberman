@@ -41,28 +41,6 @@ bool is_signal_in_parent_scope(
 	// Get signal scopes
 	ivl_scope_t child_signal_scope  = ivl_signal_scope(child_signal);
 	ivl_scope_t parent_signal_scope = ivl_signal_scope(parent_signal);
-	
-	// if (child_signal_scope && parent_signal_scope && ivl_scope_parent(child_signal_scope)) {
-	// 	fprintf(stdout, "Child Scope: %s, Parent Scope: %s, Parent-of-Child Scope: %s\n", 
-	// 		ivl_scope_basename(child_signal_scope),
-	// 		ivl_scope_basename(parent_signal_scope),
-	// 		ivl_scope_basename(ivl_scope_parent(child_signal_scope)));
-	// } else if (child_signal_scope && parent_signal_scope) {
-	// 	fprintf(stdout, "Child Scope: %s, Parent Scope: %s, Parent-of-Child Scope: %s\n", 
-	// 		ivl_scope_basename(child_signal_scope),
-	// 		ivl_scope_basename(parent_signal_scope),
-	// 		"NULL");
-	// } else if (child_signal_scope && ivl_scope_parent(child_signal_scope)) {
-	// 	fprintf(stdout, "Child Scope: %s, Parent Scope: %s, Parent-of-Child Scope: %s\n", 
-	// 		ivl_scope_basename(child_signal_scope),
-	// 		"NULL",
-	// 		ivl_scope_basename(ivl_scope_parent(child_signal_scope)));
-	// } else if (parent_signal_scope && ivl_scope_parent(child_signal_scope)) {
-	// 	fprintf(stdout, "Child Scope: %s, Parent Scope: %s, Parent-of-Child Scope: %s\n", 
-	// 		"NULL",
-	// 		ivl_scope_basename(parent_signal_scope),
-	// 		ivl_scope_basename(ivl_scope_parent(child_signal_scope)));
-	// }
 
 	// Check if parent of child scope is the parent scope
 	if (ivl_scope_parent(child_signal_scope) == parent_signal_scope) {
@@ -118,7 +96,7 @@ void process_input_port_signal(
 			} else {
 
 				// Ignore signal to signal connection
-				fprintf(stdout, "%signoring connection between two input ports...\n", ws.c_str());	
+				fprintf(DEBUG_PRINTS_FILE_PTR, "%signoring connection between two input ports...\n", ws.c_str());	
 			}
 			
 			break;
@@ -155,7 +133,7 @@ void process_output_port_signal(
 			} else {
 
 				// Ignore signal to signal connection
-				fprintf(stdout, "%signoring connection between two input ports...\n", ws.c_str());	
+				fprintf(DEBUG_PRINTS_FILE_PTR, "%signoring connection between two input ports...\n", ws.c_str());	
 			}
 			
 			break;

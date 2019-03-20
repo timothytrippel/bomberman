@@ -34,15 +34,15 @@ void propagate_nexus(ivl_nexus_t nexus, Signal* sink_signal, SignalGraph* sg, st
 
     // Iterate over Nexus pointers in Nexus
     for (unsigned int nexus_ind = 0; nexus_ind < ivl_nexus_ptrs(nexus); nexus_ind++) {
-        
+
         nexus_ptr = ivl_nexus_ptr(nexus, nexus_ind);
-        fprintf(stdout, "%sNexus %d", ws.c_str(), nexus_ind);
+        fprintf(DEBUG_PRINTS_FILE_PTR, "%sNexus %d", ws.c_str(), nexus_ind);
 
         // Determine type of Nexus
         if ((source_signal = ivl_nexus_ptr_sig(nexus_ptr))){
-            
+
             // BASE-CASE: nexus target object is a SIGNAL
-            fprintf(stdout, " -- SIGNAL -- %s (%s)\n", 
+            fprintf(DEBUG_PRINTS_FILE_PTR, " -- SIGNAL -- %s (%s)\n", 
                 sg->get_signal_from_ivl_signal(source_signal)->get_fullname().c_str(), 
                 get_signal_port_type_as_string(source_signal));   
             propagate_signal(source_signal, sink_signal, sg, ws);
@@ -50,19 +50,19 @@ void propagate_nexus(ivl_nexus_t nexus, Signal* sink_signal, SignalGraph* sg, st
         } else if ((source_logic = ivl_nexus_ptr_log(nexus_ptr))) {
             
             // Nexus target object is a LOGIC
-            fprintf(stdout, " -- LOGIC -- %s\n", get_logic_type_as_string(source_logic));
+            fprintf(DEBUG_PRINTS_FILE_PTR, " -- LOGIC -- %s\n", get_logic_type_as_string(source_logic));
             propagate_logic(source_logic, nexus, sink_signal, sg, ws);
 
         } else if ((source_lpm = ivl_nexus_ptr_lpm(nexus_ptr))) {
             
             // Nexus target object is a LPM
-            fprintf(stdout, " -- LPM -- %s\n", get_lpm_type_as_string(source_lpm));
+            fprintf(DEBUG_PRINTS_FILE_PTR, " -- LPM -- %s\n", get_lpm_type_as_string(source_lpm));
             propagate_lpm(source_lpm, nexus, sink_signal, sg, ws);
 
         } else if ((source_constant = ivl_nexus_ptr_con(nexus_ptr))) {
             
             // Nexus target object is a CONSTANT
-            fprintf(stdout, " -- CONSTANT -- %s\n", get_const_type_as_string(source_constant));
+            fprintf(DEBUG_PRINTS_FILE_PTR, " -- CONSTANT -- %s\n", get_const_type_as_string(source_constant));
             propagate_constant(source_constant, sink_signal, sg, ws);
 
         } else {

@@ -28,11 +28,19 @@ unsigned int process_event_nexus(
     // Check no more than one nexus pointer for an event nexus
     // Check nexus pointer type is signal object only
     // @TODO: propgate other nexus types besides signals
-    // Error::check_event_nexus(nexus, statement);
+    Error::check_event_nexus(nexus, statement);
 
     // Get event nexus pointer IVL signal (source signal)
     ivl_signal_t source_ivl_signal = ivl_nexus_ptr_sig(ivl_nexus_ptr(nexus, 0));
 
+    // Check if CLK signal is one of source signals. If so, 
+    // it means we have entered an always block, and subsequent
+    // sink signals should be marked as FFs.
+    if (sg->check_if_clk_signal(source_ivl_signal)) {
+        fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocess is clocked\n", ws.c_str());
+        sg->set_inside_ff_block();
+    } 
+    
     // Check if signal is to be ignored
     if (!sg->check_if_ignore_signal(source_ivl_signal)) {
 
@@ -64,7 +72,7 @@ unsigned int process_event(
 
     // Iterate through nexi associated with an POS-EDGE event
     if ((num_posedge_nexus_ptrs = ivl_event_npos(event))) {
-        fprintf(stdout, "%sprocessing event @posedge\n", ws.c_str());
+        fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing event @posedge\n", ws.c_str());
         for (unsigned int j = 0; j < num_posedge_nexus_ptrs; j++) {
             event_nexus = ivl_event_pos(event, j);      
             num_nodes_processed += process_event_nexus(
@@ -74,7 +82,7 @@ unsigned int process_event(
 
     // Iterate through nexi associated with an NEG-EDGE event
     if ((num_negedge_nexus_ptrs = ivl_event_nneg(event))) {
-        fprintf(stdout, "%sprocessing event @negedge\n", ws.c_str());
+        fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing event @negedge\n", ws.c_str());
         for (unsigned int j = 0; j < num_negedge_nexus_ptrs; j++) {
             event_nexus = ivl_event_neg(event, j);      
             num_nodes_processed += process_event_nexus(
@@ -84,7 +92,7 @@ unsigned int process_event(
 
     // Iterate through nexi associated with an ANY-EDGE event
      if ((num_anyedge_nexus_ptrs = ivl_event_nany(event))) {
-        fprintf(stdout, "%sprocessing event @anyedge\n", ws.c_str());
+        fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing event @anyedge\n", ws.c_str());
         for (unsigned int j = 0; j < num_anyedge_nexus_ptrs; j++) {
             event_nexus = ivl_event_any(event, j);      
             num_nodes_processed += process_event_nexus(

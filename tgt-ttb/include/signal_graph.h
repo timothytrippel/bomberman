@@ -67,11 +67,12 @@ class SignalGraph {
         Signal*   get_signal_from_ivl_signal(ivl_signal_t ivl_signal);
         
         // Source Signals Queue Getters
-        unsigned long   get_num_source_signals()              const;
-        signals_q_t     get_source_signals_queue()            const;
-        Signal*         get_source_signal(unsigned int index) const;
-        Signal*         pop_from_source_signals_queue();
-        void            pop_from_source_signals_queue(unsigned int num_nodes);
+        unsigned long get_num_source_signals()                        const;
+        signals_q_t   get_source_signals_queue()                      const;
+        Signal*       get_source_signal(unsigned int index)           const;
+        bool          check_if_clk_signal(ivl_signal_t source_signal) const;
+        Signal*       pop_from_source_signals_queue();
+        void          pop_from_source_signals_queue(unsigned int num_nodes);
 
         // Enumeration Depth Queue Getters
         unsigned long get_scope_depth() const;
@@ -92,13 +93,9 @@ class SignalGraph {
             Signal*     sink_signal, 
             Connection* new_conn);
 
-        bool check_if_ignore_signal(Signal* signal) const;
-
+        bool check_if_ignore_signal(Signal* signal)      const;
         bool check_if_ignore_signal(ivl_signal_t signal) const;
-
-        string_map_t get_signals_to_ignore() const;
-
-        bool check_if_inside_ff_block() const;
+        bool check_if_inside_ff_block()                  const;
 
         // Source Signals Queue Setters
         void push_to_source_signals_queue(Signal* source_node, string ws);
@@ -120,29 +117,27 @@ class SignalGraph {
         void erase_index_from_sink_slices(unsigned int index);
 
         // Connection Tracking Setters
+        void set_inside_ff_block();
+        void clear_inside_ff_block();
+
         void track_local_signal_connection(
             Signal* sink_signal, 
             Signal* source_signal, 
             string  ws);
 
-        void add_signal_to_ignore(string signal_basename);
-
-        void load_signals_to_ignore(string file_path);
-
-        void set_inside_ff_block();
-
-        void clear_inside_ff_block();
-
         // Dot Graph Management
+        void write_signals_to_dot_graph();
         void save_dot_graph();
         
     private:
         unsigned long          num_signals_;           // number of signals enumerated in design
-        unsigned long          num_local_signals_;     // number of local signals optimized aways
+        unsigned long          num_signals_ignored_;   // number of signals ignored
+        unsigned long          num_local_signals_;     // number of local signals optimized away
         unsigned long          num_constants_;         // number of constants enumerated in design
         unsigned long          num_connections_;       // number of connections enumerated in design
         unsigned long          num_local_connections_; // number of local connections to be processed
         bool                   inside_ff_block_;       // indicates if processing inside a FF block
+        bool                   ignore_constants_;      // indicates if constants should be ignored
         string                 clk_basename_;          // indicates if processing inside a FF block
         DotGraph*              dg_;                    // dot graph object
         sig_map_t              signals_map_;           // IVL signal to Signal object map
@@ -156,6 +151,13 @@ class SignalGraph {
 
         // Signal Enumeration
         void find_signals(ivl_scope_t scope);
+
+        // Connection Tracking Setters
+        void add_signal_to_ignore(string signal_basename);
+        void load_signals_to_ignore(string file_path);
+
+        // Other
+        void process_cmd_line_args(cmd_args_map_t* cmd_args);
 }; 
 
 #endif

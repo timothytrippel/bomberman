@@ -32,14 +32,16 @@ using namespace std;
 
 // Progress Messages
 #define LAUNCH_MESSAGE                 "Entering TTB Target Module..."
-#define CONFIGS_MESSAGE                "Configurations:"
-#define LOADING_SIGS_TO_IGNORE_MESSAGE "Loading signals to ignore..."
+#define CONFIGS_MESSAGE                "Loading Configurations:"
+#define INITIALIZE_SIG_GRAPH_MESSAGE   "Intializing signals map..."
 #define SCOPE_EXPANSION_MESSAGE        "Identifying top-level modules..."
 #define SIGNAL_ENUM_MESSAGE            "Enumerating signals..."
-#define COMB_CONNECTION_ENUM_MESSAGE   "Enumerating combinational logic connections..."
-#define BEHAVE_CONNECTION_ENUM_MESSAGE "Enumerating behavioral logic connections..."
+#define COMB_CONNECTION_ENUM_MESSAGE   "Enumerating continuous logic connections..."
+#define BEHAVE_CONNECTION_ENUM_MESSAGE "Enumerating procedural logic connections..."
 #define LOCAL_CONNECTION_OPT_MESSAGE   "Processing local signal connections..."
-#define STATS_MESSAGE                  "Analysis Complete."
+#define SIGNAL_SAVING_MESSAGE          "Saving signals to dot graph..."
+#define DESTROY_MESSAGE                "Destroying all objects..."
+#define FINAL_STATS_MESSAGE            "Analysis Complete."
 
 // CMD-Line Argument Flags
 #define OUTPUT_FILENAME_FLAG  "-o"
@@ -53,12 +55,13 @@ using namespace std;
 #define LPM_PART_SELECT_BASE_NEXUS_INDEX  1
 #define STMT_ASSIGN_LVAL_INDEX            0
 
-// Other Defines
-#define LINE_SEPARATOR "------------------------------------------------------------"
-#define WS_TAB         "  "
+// File Pointer Defines
+#define REPORTER_PRINTS_FILE_PTR stdout
+#define DEBUG_PRINTS_FILE_PTR    stdout
 
-// Debugging Switches
-#define DEBUG_PRINTS false
+// Other Defines
+#define LINE_SEPARATOR        "------------------------------------------------------------"
+#define WS_TAB                "  "
 
 // ------------------------------------------------------------
 // ------------------------ String Map ------------------------

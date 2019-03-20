@@ -19,7 +19,6 @@ Graphviz .dot file.
 // ------------------------------- Constructors -------------------------------------
 // ----------------------------------------------------------------------------------
 Connection::Connection():
-    type_(NO_CONNECTION),
 	source_(),
 	source_msb_(0),
     source_lsb_(0),
@@ -28,7 +27,6 @@ Connection::Connection():
     sink_lsb_(0) {}
 
 Connection::Connection(Signal* source, Signal* sink):
-    type_(FULL_CONNECTION),
     source_(source),
     source_msb_(source->get_msb()),
     source_lsb_(source->get_lsb()),
@@ -41,7 +39,6 @@ Connection::Connection(Signal*        source,
                        signal_slice_t source_slice,
                        signal_slice_t sink_slice):
 
-    type_(BOTH_SLICE),
     source_(source),
     source_msb_(source_slice.msb),
     source_lsb_(source_slice.lsb),

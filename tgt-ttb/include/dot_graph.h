@@ -36,6 +36,9 @@ class DotGraph {
         DotGraph();
         DotGraph(string p);
 
+        // Destructors
+        ~DotGraph();
+        
         // Getters
         string get_file_path() const;
 

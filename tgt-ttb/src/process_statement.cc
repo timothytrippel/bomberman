@@ -118,13 +118,8 @@ void process_statement_wait(
 
     // Push number of source nodes processed at this depth
     sg->push_to_num_signals_at_depth_queue(num_nodes_processed);
-    fprintf(stdout, "%spushed %d source node(s) to queue\n", 
+    fprintf(DEBUG_PRINTS_FILE_PTR, "%spushed %d source node(s) to queue\n", 
         ws.c_str(), num_nodes_processed);
-
-    // // Check if CLK signal is one of source nodes
-    // if (source_ivl_signal == CLK) {
-    //     sg->get_source_signals_queue().back().
-    // }
 
     // Get/process sub-statement
     if ((sub_statement = ivl_stmt_sub_stmt(statement))) {
@@ -134,13 +129,9 @@ void process_statement_wait(
     // Pop processed source nodes from queue
     num_nodes_processed = sg->pop_from_num_signals_at_depth_queue();
     sg->pop_from_source_signals_queue(num_nodes_processed);
-    fprintf(stdout, "%spopped %d source node(s) from queue\n", 
+    fprintf(DEBUG_PRINTS_FILE_PTR, "%spopped %d source node(s) from queue\n", 
         ws.c_str(), num_nodes_processed);
 
-    // Check if inside ff set, if so clear it
-    if (sg->check_if_inside_ff_block()) {
-        sg->clear_inside_ff_block();
-    }
 }
 
 // ------------------------------ CONDIT Statement ----------------------------------
@@ -165,7 +156,7 @@ void process_statement_condit(
     
     // Push number of source nodes processed at this depth
     sg->push_to_num_signals_at_depth_queue(num_nodes_processed);
-    fprintf(stdout, "%spushed %d source node(s) to queue\n", 
+    fprintf(DEBUG_PRINTS_FILE_PTR, "%spushed %d source node(s) to queue\n", 
         ws.c_str(), num_nodes_processed);
 
     // Process true/false sub-statements to propagate 
@@ -180,7 +171,7 @@ void process_statement_condit(
     // Pop processed source nodes from queue
     num_nodes_processed = sg->pop_from_num_signals_at_depth_queue();
     sg->pop_from_source_signals_queue(num_nodes_processed);
-    fprintf(stdout, "%spopped %d source node(s) from queue\n", 
+    fprintf(DEBUG_PRINTS_FILE_PTR, "%spopped %d source node(s) from queue\n", 
         ws.c_str(), num_nodes_processed);
 }
 
@@ -232,7 +223,7 @@ Signal* process_statement_assign_lval(
 
     // Process lval part select expression (if necessary)
     if ((part_select_expr = ivl_lval_part_off(lval))) {
-        fprintf(stdout, "%sprocessing lval part select ...\n", ws.c_str());
+        fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing lval part select ...\n", ws.c_str());
 
         // Get part-select as constant expression (Signal).
         // Note: Number of source signals added to queue should be 1,
@@ -253,7 +244,7 @@ Signal* process_statement_assign_lval(
     }
 
     // Print LVal sink signal selects
-    fprintf(stdout, "%ssink signal: %s[%d:%d]\n", 
+    fprintf(DEBUG_PRINTS_FILE_PTR, "%ssink signal: %s[%d:%d]\n", 
         ws.c_str(),
         sink_signal->get_fullname().c_str(),
         part_select_msb,
@@ -272,16 +263,16 @@ void process_statement_assign(
     Signal*      source_signal       = NULL; // source node to connect to
 
     // Process lval expression
-    fprintf(stdout, "%sprocessing lval(s) ...\n", ws.c_str());
+    fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing lval(s) ...\n", ws.c_str());
     sink_signal = process_statement_assign_lval(statement, sg, ws + WS_TAB);
 
     // Process rval expression
-    fprintf(stdout, "%sprocessing rval(s) ...\n", ws.c_str());
+    fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing rval(s) ...\n", ws.c_str());
     num_nodes_processed += process_expression(ivl_stmt_rval(statement), statement, sg, ws + WS_TAB);
 
     // Push number of source nodes processed at this depth
     sg->push_to_num_signals_at_depth_queue(num_nodes_processed);
-    fprintf(stdout, "%spushed %d source node(s) to queue\n", 
+    fprintf(DEBUG_PRINTS_FILE_PTR, "%spushed %d source node(s) to queue\n", 
         ws.c_str(), num_nodes_processed);
 
     // Process Adjustments to LVal slice(s)
@@ -300,7 +291,7 @@ void process_statement_assign(
     Error::check_slice_tracking_stack(sg->get_num_sink_slices(), num_nodes_processed);
 
     // Add connection(s)
-    fprintf(stdout, "%sprocessing connections ...\n", ws.c_str());
+    fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing connections ...\n", ws.c_str());
     for (int i = (sg->get_num_source_signals() - 1); i >= 0; i--) {
 
         source_signal = sg->get_source_signal(i);
@@ -309,10 +300,10 @@ void process_statement_assign(
         // If so, temporarily store the connections and process
         // them later. Otherwise, process normally.
         if (sink_signal->is_ivl_generated()) {
-            fprintf(stdout, "%slval is IVL generated, storing connection...\n", ws.c_str());
+            fprintf(DEBUG_PRINTS_FILE_PTR, "%slval is IVL generated, storing connection...\n", ws.c_str());
             sg->track_local_signal_connection(sink_signal, source_signal, ws + WS_TAB);
         } else if (source_signal->is_ivl_generated()) {
-            fprintf(stdout, "%srval is IVL generated, storing connection...\n", ws.c_str());
+            fprintf(DEBUG_PRINTS_FILE_PTR, "%srval is IVL generated, storing connection...\n", ws.c_str());
             sg->track_local_signal_connection(sink_signal, source_signal, ws + WS_TAB);
         } else {
             sg->add_connection(sink_signal, source_signal, ws + WS_TAB);
@@ -322,7 +313,7 @@ void process_statement_assign(
     // Pop processed source nodes from queue
     num_nodes_processed = sg->pop_from_num_signals_at_depth_queue();
     sg->pop_from_source_signals_queue(num_nodes_processed);
-    fprintf(stdout, "%spopped %d source node(s) from queue\n", 
+    fprintf(DEBUG_PRINTS_FILE_PTR, "%spopped %d source node(s) from queue\n", 
         ws.c_str(), num_nodes_processed);
 }
 
@@ -376,7 +367,7 @@ void process_statement(ivl_statement_t statement,
                        SignalGraph*    sg, 
                        string          ws) {
 
-    fprintf(stdout, "%sprocessing statement (%s)\n", 
+    fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing statement (%s)\n", 
         ws.c_str(), get_statement_type_as_string(statement));
 
     switch (ivl_statement_type(statement)) {
