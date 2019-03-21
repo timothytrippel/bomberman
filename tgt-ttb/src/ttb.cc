@@ -120,7 +120,7 @@ void find_procedural_connections(ivl_design_t design, SignalGraph* sg) {
     // Goes through all assignments in process blocks.
     result = ivl_design_process(design, process_process, sg);
     if (result != 0) {
-        Error::processing_behavioral_connections();
+        Error::processing_procedural_connections();
     }
 }
 

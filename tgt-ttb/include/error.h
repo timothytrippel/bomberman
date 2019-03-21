@@ -38,8 +38,8 @@ typedef enum ttb_error_type_e {
     NOT_SUPPORTED_ERROR           = 1,
     FILE_ERROR                    = 2,  
     DUPLICATE_SIGNALS_FOUND_ERROR = 3,
-    STRUCTURAL_CONNECTIONS_ERROR  = 4,
-    BEHAVIORAL_CONNECTIONS_ERROR  = 5,
+    CONCURRENT_CONNECTIONS_ERROR  = 4,
+    PROCEDURAL_CONNECTIONS_ERROR  = 5,
     SLICE_TRACKING_ERROR          = 6,
 } ttb_error_type_t;
 
@@ -73,7 +73,8 @@ class Error {
         static void not_supported(const char* message);
         static void null_ivl_obj_type();
         static void connecting_signal_not_in_graph(sig_map_t signals, ivl_signal_t source_signal);
-        static void processing_behavioral_connections();
+        static void popping_source_signals_queue();
+        static void processing_procedural_connections();
         static void non_local_signal_connection();
 };
 

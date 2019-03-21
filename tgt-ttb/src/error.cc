@@ -127,23 +127,25 @@ void Error::check_signal_not_multidimensional(sig_map_t signals, ivl_signal_t si
 }
 
 void Error::check_event_nexus(ivl_nexus_t nexus, ivl_statement_t statement) {
-    // Check event nexus is only of size 1
-    if (ivl_nexus_ptrs(nexus) != 1) {
-        fprintf(stderr, "NOT-SUPPORTED: multiple (%d) nexus pointers for event nexus. \
-            \n(File: %s -- Line: %d).\n", 
-            ivl_nexus_ptrs(nexus), ivl_stmt_file(statement), ivl_stmt_lineno(statement));
+    // // Check event nexus is only of size 1
+    // if (ivl_nexus_ptrs(nexus) != 1) {
+    //     fprintf(stderr, "NOT-SUPPORTED: multiple (%d) nexus pointers for event nexus. \
+    //         \n(File: %s -- Line: %d).\n", 
+    //         ivl_nexus_ptrs(nexus), ivl_stmt_file(statement), ivl_stmt_lineno(statement));
 
-        exit(BEHAVIORAL_CONNECTIONS_ERROR);
-    }
+    //     exit(PROCEDURAL_CONNECTIONS_ERROR);
+    // }
 
-    // Check event nexus points only to a signal object
-    if (!ivl_nexus_ptr_sig(ivl_nexus_ptr(nexus, 0))) {
-        fprintf(stderr, "NOT-SUPPORTED: non-signal event nexus pointer. \
-            \n(File: %s -- Line: %d).\n", 
-            ivl_stmt_file(statement), ivl_stmt_lineno(statement));
+    // Check event nexus points only to signal object(s)
+    for (unsigned int i = 0; i < ivl_nexus_ptrs(nexus); i++) {
+        if (!ivl_nexus_ptr_sig(ivl_nexus_ptr(nexus, i))) {
+            fprintf(stderr, "NOT-SUPPORTED: non-signal event nexus pointer. \
+                \n(File: %s -- Line: %d).\n", 
+                ivl_stmt_file(statement), ivl_stmt_lineno(statement));
 
-        exit(BEHAVIORAL_CONNECTIONS_ERROR);
-    }
+            exit(PROCEDURAL_CONNECTIONS_ERROR);
+        }
+    }   
 }
 
 void Error::check_lvals_not_concatenated(unsigned int num_lvals, ivl_statement_t statement) {
@@ -152,7 +154,7 @@ void Error::check_lvals_not_concatenated(unsigned int num_lvals, ivl_statement_t
         fprintf(stderr, "NOT-SUPPORTED: concatenated lvals (File: %s -- Line: %d).\n", 
             ivl_stmt_file(statement), ivl_stmt_lineno(statement));
 
-        exit(BEHAVIORAL_CONNECTIONS_ERROR);
+        exit(PROCEDURAL_CONNECTIONS_ERROR);
     }
 }
 
@@ -162,7 +164,7 @@ void Error::check_lval_not_nested(ivl_lval_t lval, ivl_statement_t statement) {
         fprintf(stderr, "NOT-SUPPORTED: nested lvals (File: %s -- Line: %d).\n", 
             ivl_stmt_file(statement), ivl_stmt_lineno(statement));
 
-        exit(BEHAVIORAL_CONNECTIONS_ERROR);
+        exit(PROCEDURAL_CONNECTIONS_ERROR);
     }
 }
 
@@ -172,7 +174,7 @@ void Error::check_lval_not_memory(ivl_lval_t lval, ivl_statement_t statement) {
         fprintf(stderr, "NOT-SUPPORTED: memory lvals (File: %s -- Line: %d).\n", 
             ivl_stmt_file(statement), ivl_stmt_lineno(statement));
 
-        exit(BEHAVIORAL_CONNECTIONS_ERROR);
+        exit(PROCEDURAL_CONNECTIONS_ERROR);
     }
 }
 
@@ -183,7 +185,7 @@ void Error::check_part_select_expr(ivl_obj_type_t obj_type, ivl_statement_t stat
         fprintf(stderr, "NOT-SUPPORTED: non-constant expression part-select (File: %s -- Line: %d).\n", 
             ivl_stmt_file(statement), ivl_stmt_lineno(statement));
 
-        exit(BEHAVIORAL_CONNECTIONS_ERROR);
+        exit(PROCEDURAL_CONNECTIONS_ERROR);
     }
 }
 
@@ -207,31 +209,31 @@ void Error::unknown_ivl_obj_type(ivl_obj_type_t obj_type) {
 void Error::unknown_nexus_type() {
     fprintf(stderr, "ERROR: unkown nexus type for nexus.\n");
     
-    exit(STRUCTURAL_CONNECTIONS_ERROR);
+    exit(CONCURRENT_CONNECTIONS_ERROR);
 }
 
 void Error::unknown_signal_port_type(ivl_signal_port_t port_type) {
     fprintf(stderr, "ERROR: unkown signal port type (%d).\n", (int) port_type);
     
-    exit(STRUCTURAL_CONNECTIONS_ERROR); 
+    exit(CONCURRENT_CONNECTIONS_ERROR); 
 }
 
 void Error::unknown_part_select_lpm_type(ivl_lpm_type_t lpm_type) {
     fprintf(stderr, "ERROR: unkown part select LPM type (%d).\n", (int) lpm_type);
     
-    exit(STRUCTURAL_CONNECTIONS_ERROR);
+    exit(CONCURRENT_CONNECTIONS_ERROR);
 }
 
 void Error::unknown_statement_type(ivl_statement_type_t statement_type) {
     fprintf(stderr, "ERROR: uknown statement type (%d).\n", (int) statement_type);
     
-    exit(BEHAVIORAL_CONNECTIONS_ERROR);
+    exit(PROCEDURAL_CONNECTIONS_ERROR);
 }
 
 void Error::unknown_expression_type(ivl_expr_type_t expression_type) {
     fprintf(stderr, "ERROR: uknown expression type (%d).\n", (int) expression_type);
 
-    exit(BEHAVIORAL_CONNECTIONS_ERROR);
+    exit(PROCEDURAL_CONNECTIONS_ERROR);
 }
 
 // ------------------------------------------------------------
@@ -256,10 +258,16 @@ void Error::connecting_signal_not_in_graph(sig_map_t signals, ivl_signal_t sourc
     exit(NOT_SUPPORTED_ERROR);
 }
 
-void Error::processing_behavioral_connections() {
+void Error::popping_source_signals_queue() {
+    fprintf(stderr, "ERROR: attempting to pop more source signals from queue than exist.\n");
+
+    exit(PROCEDURAL_CONNECTIONS_ERROR);
+}
+
+void Error::processing_procedural_connections() {
     fprintf(stderr, "ERROR: processing behavioral logic connections.\n");
 
-    exit(BEHAVIORAL_CONNECTIONS_ERROR);
+    exit(PROCEDURAL_CONNECTIONS_ERROR);
 }
 
 void Error::non_local_signal_connection() {

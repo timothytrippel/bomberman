@@ -71,54 +71,116 @@ SignalGraph::SignalGraph(cmd_args_map_t* cmd_args) {
 // -------------------------------- Destructors -------------------------------------
 // ----------------------------------------------------------------------------------
 
+// void print_map(conn_map_t conn_map) {
+//     conn_map_t::iterator conn_map_it = conn_map.begin();
+
+//     printf("\n");
+//     unsigned int i = 0;
+//     printf("Size of Map: %d\n", conn_map.size());
+//     while (conn_map_it != conn_map.end()) {
+//         printf("Item %d: %d --> %d\n", i, conn_map_it->first, conn_map_it->second);
+//         i++;
+//         conn_map_it++;
+//     }
+//     printf("\n");
+// }
+
 SignalGraph::~SignalGraph() {
 
     fprintf(DESTRUCTOR_PRINTS_FILE_PTR, "Executing SignalGraph destructor...\n");
 
-    // 1. Delete Signals in signals_map_
-    // Create a signals map iterator
-    sig_map_t::iterator sig_it = signals_map_.begin();
- 
+
+
+    // 1. Delete Connections in connections_map_
+    fprintf(DESTRUCTOR_PRINTS_FILE_PTR, "   Destroying connections map...\n");
+
+    // Create (constant) Signal pointer
+    Signal* const_signal = NULL;
+
+    // Create connections map iterators
+    conn_map_t::iterator conn_map_it;
+    conn_q_t::iterator   conn_q_it;
+
     // Iterate over the map using iterator till end
-    while (sig_it != signals_map_.end()) {   
-        // Delete signal
-        delete(sig_it->second);
+    while (!connections_map_.empty()) {
 
-        // Increment the iterator
-        sig_it++;
-    }
+        // Get reference to first map item   
+        conn_map_it = connections_map_.begin();
 
-    // 2. Delete Signals in source_signals_ (if any)
-    // Create a signals vector iterator
-    signals_q_t::iterator ssig_it = source_signals_.begin();
- 
-    // Iterate over the map using iterator till end
-    while (ssig_it != source_signals_.end()) {   
-        // Delete signal
-        delete(*ssig_it);
+        // Get reference to connections queue of first map item
+        conn_q_it = conn_map_it->second->begin();
 
-        // Increment the iterator
-        ssig_it++;
-    }
+        // Iterate over connections queue
+        while (conn_q_it != conn_map_it->second->end()) {
 
-    // 3. Delete Connections in connections_map_
-    // Create a signals map iterator
-    conn_map_t::iterator conn_it = connections_map_.begin();
- 
-    // Iterate over the map using iterator till end
-    while (conn_it != connections_map_.end()) {   
+            // Check if any connections have a constant source signal.
+            // If so, free the memory for the (constant) signal.
+            if ((*conn_q_it)->get_source()->is_const()) {
+
+                // Delete constant signal
+                const_signal = (*conn_q_it)->get_source();
+                delete(const_signal);
+                const_signal = NULL;
+            }
+
+            // Delete connection
+            delete(*conn_q_it);
+            (*conn_q_it) = NULL;
+        }
+
         // Delete connections queue
-        delete(conn_it->second);
+        delete(conn_map_it->second);
+        conn_map_it->second = NULL;
 
-        // Increment the iterator
-        conn_it++;
+        // Remove sink signal from connections map
+        connections_map_.erase(conn_map_it->first);
     }
 
-    // 4. Check all local connections have been processed
-    assert(!local_connections_map_.size() && 
-        "ERROR: some local connections remain unprocessed.\n");
+    // Check connections map is empty 
+    assert(!connections_map_.size() && 
+        "ERROR: some connections remain un-deleted.\n");
 
-    // 5. Close DotGraph file if it is still open
+
+
+
+
+
+    // 2. Delete Signals in signals_map_
+    fprintf(DESTRUCTOR_PRINTS_FILE_PTR, "   Destroying signals map...\n");
+
+    // Create a signals map iterator
+    sig_map_t::iterator sig_map_it;
+    
+    // Iterate over the map using iterator till end
+    while (!signals_map_.empty()) {   
+        
+        // Get refence to first map item
+        sig_map_it = signals_map_.begin();
+
+        // Delete signal
+        delete(sig_map_it->second);
+        sig_map_it->second = NULL;
+
+        // Remove signal from map
+        signals_map_.erase(sig_map_it->first);
+    }
+
+    // Check signals map is empty 
+    assert(!signals_map_.size() && 
+        "ERROR: some signals remain un-deleted.\n");
+
+
+
+
+    // 3. Check all source_signals_ have been processed
+    assert(!source_signals_.size() && 
+        "ERROR: some source signals remain unprocessed.\n");
+
+    
+
+
+    // 4. Close DotGraph file if it is still open
+    fprintf(DESTRUCTOR_PRINTS_FILE_PTR, "   Destroying DotGraph...\n");
     dg_->save_graph();
     delete(dg_);
 }
@@ -219,11 +281,11 @@ Signal* SignalGraph::pop_from_source_signals_queue() {
 void SignalGraph::pop_from_source_signals_queue(unsigned int num_signals) {
     for (unsigned int i = 0; i < num_signals; i++) {
         // Check if source signals queue is not empty
-        if (get_num_source_signals() > 0) {
+        if (get_num_source_signals() >= num_signals) {
             // Remove last signal in queue
             source_signals_.pop_back();   
         } else {
-            break;
+            Error::popping_source_signals_queue();
         }
     }
 }
@@ -716,39 +778,55 @@ void SignalGraph::add_connection(Signal* sink_signal,
 }
 
 void SignalGraph::process_local_connections(string ws) {
+    // Signal and Connection pointers
     Signal*     sink_signal  = NULL;
     Signal*     local_signal = NULL;
     Connection* current_conn = NULL;
 
-    conn_map_t::iterator conn_map_it = local_connections_map_.begin();
+    // Sink and Local connection references
+    conn_map_t::iterator sink_conns_it;
+    conn_map_t::iterator local_conns_it;
 
-    while (conn_map_it != local_connections_map_.end()) {
+    // Get reference to non-local (sink) signal connections
+    sink_conns_it = local_connections_map_.begin();
 
-        // Start at sink signals
-        if (!conn_map_it->first->is_ivl_generated()) {
-            sink_signal = conn_map_it->first;
+    // Process the map until its empty
+    while (!local_connections_map_.empty() && 
+           sink_conns_it != local_connections_map_.end()) {
+        
+        // Start at (non-local) sink signals
+        if (!sink_conns_it->first->is_ivl_generated()) {
+
+            // Get sink signal
+            sink_signal = sink_conns_it->first;
 
             // Check that only one connection to sink signal exists
-            assert(local_connections_map_[sink_signal]->size() == 1 &&
+            assert(sink_conns_it->second->size() == 1 &&
                 "ERROR: invalid local connection to sink signal.\n");
 
             // Get local (middle-man) signal
-            local_signal = local_connections_map_[sink_signal]->back()->get_source();
+            local_signal = sink_conns_it->second->back()->get_source();
 
             // Check that the (one) connection to sink signal is local
             assert(local_signal->is_ivl_generated() &&
                 "ERROR: signal connected to sink signal is NOT local.\n");
 
             // Delete sink connections queue
-            local_connections_map_[sink_signal]->pop_back();
-            delete(local_connections_map_[sink_signal]);
-            // local_connections_map_.erase(sink_signal);
+            sink_conns_it->second->pop_back();
+            delete(sink_conns_it->second);
+            sink_conns_it->second = NULL;
 
+            // Remove sink signal from connections map
+            local_connections_map_.erase(sink_signal);
+
+            // Get reference to local (middle-man) signal connections
+            local_conns_it = local_connections_map_.find(local_signal);
+ 
             // Iterate over source signals connected to local signal
-            while (!local_connections_map_[local_signal]->empty()) {
+            while (!local_conns_it->second->empty()) {
                 
                 // Get current connection obj
-                current_conn = local_connections_map_[local_signal]->back();
+                current_conn = local_conns_it->second->back();
 
                 // Modify sink signal of connection obj
                 current_conn->set_sink(sink_signal);
@@ -758,20 +836,33 @@ void SignalGraph::process_local_connections(string ws) {
                 num_connections_++;
 
                 // Remove connection from queue after it is processed
-                local_connections_map_[local_signal]->pop_back();
+                local_conns_it->second->pop_back();
 
                 // Delete connection obj
                 delete(current_conn);
+                current_conn = NULL;
             }
 
-            // Delete connections queue
-            delete(local_connections_map_[local_signal]);
-            // local_connections_map_.erase(local_signal);
+            // Delete local signal connections queue
+            delete(local_conns_it->second);
+            local_conns_it->second = NULL;
+            
+            // Remove local signal from connections map
+            local_connections_map_.erase(local_signal);
 
+            // Reset sink signal connections reference
+            sink_conns_it = local_connections_map_.begin();
+        
+        } else {
+            
+            // Increment sink signal connections reference
+            sink_conns_it++;
         }
-
-        conn_map_it++;
     }
+
+    // Check all local connections have been processed
+    assert(!local_connections_map_.size() && 
+        "ERROR: some local connections remain unprocessed.\n");
 }
 
 // ----------------------------------------------------------------------------------

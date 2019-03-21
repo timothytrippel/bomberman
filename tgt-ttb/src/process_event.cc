@@ -25,8 +25,7 @@ unsigned int process_event_nexus(
     SignalGraph*    sg, 
     string          ws) {
 
-    // Check no more than one nexus pointer for an event nexus
-    // Check nexus pointer type is signal object only
+    // Check nexus pointer type(s) are signal object(s) only
     // @TODO: propgate other nexus types besides signals
     Error::check_event_nexus(nexus, statement);
 
