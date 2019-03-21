@@ -71,82 +71,36 @@ SignalGraph::SignalGraph(cmd_args_map_t* cmd_args) {
 // -------------------------------- Destructors -------------------------------------
 // ----------------------------------------------------------------------------------
 
-// void print_map(conn_map_t conn_map) {
-//     conn_map_t::iterator conn_map_it = conn_map.begin();
-
-//     printf("\n");
-//     unsigned int i = 0;
-//     printf("Size of Map: %d\n", conn_map.size());
-//     while (conn_map_it != conn_map.end()) {
-//         printf("Item %d: %d --> %d\n", i, conn_map_it->first, conn_map_it->second);
-//         i++;
-//         conn_map_it++;
-//     }
-//     printf("\n");
-// }
-
+// void delete_signals_queue(signals_q_t sigs_q)
 SignalGraph::~SignalGraph() {
 
     fprintf(DESTRUCTOR_PRINTS_FILE_PTR, "Executing SignalGraph destructor...\n");
 
-
-
     // 1. Delete Connections in connections_map_
     fprintf(DESTRUCTOR_PRINTS_FILE_PTR, "   Destroying connections map...\n");
-
-    // Create (constant) Signal pointer
-    Signal* const_signal = NULL;
-
-    // Create connections map iterators
-    conn_map_t::iterator conn_map_it;
-    conn_q_t::iterator   conn_q_it;
-
-    // Iterate over the map using iterator till end
-    while (!connections_map_.empty()) {
-
-        // Get reference to first map item   
-        conn_map_it = connections_map_.begin();
-
-        // Get reference to connections queue of first map item
-        conn_q_it = conn_map_it->second->begin();
-
-        // Iterate over connections queue
-        while (conn_q_it != conn_map_it->second->end()) {
-
-            // Check if any connections have a constant source signal.
-            // If so, free the memory for the (constant) signal.
-            if ((*conn_q_it)->get_source()->is_const()) {
-
-                // Delete constant signal
-                const_signal = (*conn_q_it)->get_source();
-                delete(const_signal);
-                const_signal = NULL;
-            }
-
-            // Delete connection
-            delete(*conn_q_it);
-            (*conn_q_it) = NULL;
-        }
-
-        // Delete connections queue
-        delete(conn_map_it->second);
-        conn_map_it->second = NULL;
-
-        // Remove sink signal from connections map
-        connections_map_.erase(conn_map_it->first);
-    }
-
-    // Check connections map is empty 
+    delete_connections_map();
     assert(!connections_map_.size() && 
         "ERROR: some connections remain un-deleted.\n");
 
 
-
-
-
-
     // 2. Delete Signals in signals_map_
     fprintf(DESTRUCTOR_PRINTS_FILE_PTR, "   Destroying signals map...\n");
+    delete_signals_map();
+    assert(!signals_map_.size() && 
+        "ERROR: some signals remain un-deleted.\n");
+
+    // 3. Check all source_signals_ have been processed
+    assert(!source_signals_.size() && 
+        "ERROR: some source signals remain unprocessed.\n");
+
+    // 4. Close DotGraph file if it is still open
+    fprintf(DESTRUCTOR_PRINTS_FILE_PTR, "   Destroying DotGraph...\n");
+    dg_->save_graph();
+    delete(dg_);
+    dg_ = NULL;
+}
+
+void SignalGraph::delete_signals_map() {
 
     // Create a signals map iterator
     sig_map_t::iterator sig_map_it;
@@ -164,26 +118,50 @@ SignalGraph::~SignalGraph() {
         // Remove signal from map
         signals_map_.erase(sig_map_it->first);
     }
-
-    // Check signals map is empty 
-    assert(!signals_map_.size() && 
-        "ERROR: some signals remain un-deleted.\n");
-
-
-
-
-    // 3. Check all source_signals_ have been processed
-    assert(!source_signals_.size() && 
-        "ERROR: some source signals remain unprocessed.\n");
-
-    
-
-
-    // 4. Close DotGraph file if it is still open
-    fprintf(DESTRUCTOR_PRINTS_FILE_PTR, "   Destroying DotGraph...\n");
-    dg_->save_graph();
-    delete(dg_);
 }
+
+void SignalGraph::delete_connections_queue(conn_q_t* conn_q) {
+
+    // Connection pointer
+    Connection* conn;
+
+    // Delete each connection in queue
+    while (!conn_q->empty()) {
+
+        // Get pointer to last connection in queue
+        conn = conn_q->back();
+
+        // delete connection
+        delete(conn);
+        conn = NULL;
+
+        // remove connection from queue
+        conn_q->pop_back();
+    }
+
+    // Delete connections queue
+    delete(conn_q);
+    conn_q = NULL;
+}
+
+void SignalGraph::delete_connections_map() {
+    
+    // Create connections map iterator
+    conn_map_t::iterator conn_map_it;
+
+    // Iterate over the map using iterator till end
+    while (!connections_map_.empty()) {
+
+        // Get reference to first map item   
+        conn_map_it = connections_map_.begin();
+
+        // Delete connections queue
+        delete_connections_queue(conn_map_it->second);
+
+        // Remove item from connections map
+        connections_map_.erase(conn_map_it->first);
+    }
+} 
 
 // ----------------------------------------------------------------------------------
 // ------------------------------- Getters ------------------------------------------
@@ -272,6 +250,8 @@ Signal* SignalGraph::pop_from_source_signals_queue() {
 
         // Remove last signal in queue
         source_signals_.pop_back();   
+    } else {
+        Error::popping_source_signals_queue(1, get_num_source_signals());
     }
 
     // Return removed node
@@ -279,14 +259,19 @@ Signal* SignalGraph::pop_from_source_signals_queue() {
 }
 
 void SignalGraph::pop_from_source_signals_queue(unsigned int num_signals) {
-    for (unsigned int i = 0; i < num_signals; i++) {
-        // Check if source signals queue is not empty
-        if (get_num_source_signals() >= num_signals) {
+    
+    // Check if source signals queue is large enough
+    if (get_num_source_signals() >= num_signals) {
+        
+        // Pop num_signals from queue
+        for (unsigned int i = 0; i < num_signals; i++) {
+            
             // Remove last signal in queue
             source_signals_.pop_back();   
-        } else {
-            Error::popping_source_signals_queue();
-        }
+        } 
+    } else {
+
+        Error::popping_source_signals_queue(num_signals, get_num_source_signals());
     }
 }
 

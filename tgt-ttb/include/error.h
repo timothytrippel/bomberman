@@ -54,7 +54,6 @@ class Error {
         static void check_signal_exists_in_map(sig_map_t signals, ivl_signal_t signal);
         static void check_signal_not_arrayed(sig_map_t signals, ivl_signal_t signal);
         static void check_signal_not_multidimensional(sig_map_t signals, ivl_signal_t signal);
-        static void check_event_nexus(ivl_nexus_t nexus, ivl_statement_t statement);
         static void check_lvals_not_concatenated(unsigned int num_lvals, ivl_statement_t statement);
         static void check_lval_not_nested(ivl_lval_t lval, ivl_statement_t statement);
         static void check_lval_not_memory(ivl_lval_t lval, ivl_statement_t statement);
@@ -73,9 +72,12 @@ class Error {
         static void not_supported(const char* message);
         static void null_ivl_obj_type();
         static void connecting_signal_not_in_graph(sig_map_t signals, ivl_signal_t source_signal);
-        static void popping_source_signals_queue();
+        static void popping_source_signals_queue(unsigned int num_signals, unsigned int queue_size);
         static void processing_procedural_connections();
         static void non_local_signal_connection();
+        static void multiple_valid_event_nexus_ptrs(ivl_statement_t stmt);
+        static void zero_event_nexus_ptrs(ivl_statement_t stmt);
+        static void non_signal_event_nexus_ptr(ivl_statement_t stmt);
 };
 
 #endif

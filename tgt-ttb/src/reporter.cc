@@ -70,6 +70,7 @@ Reporter::~Reporter() {
     // Delete the start times queue
     if (start_times_q_) {
         delete(start_times_q_);
+        start_times_q_ = NULL;
     }
 }
 

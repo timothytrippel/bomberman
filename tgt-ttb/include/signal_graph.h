@@ -156,6 +156,11 @@ class SignalGraph {
         void add_signal_to_ignore(string signal_basename);
         void load_signals_to_ignore(string file_path);
 
+        // Destructor Helpers
+        void delete_signals_map();
+        void delete_connections_queue(conn_q_t* conn_q);
+        void delete_connections_map();
+
         // Other
         void process_cmd_line_args(cmd_args_map_t* cmd_args);
 }; 

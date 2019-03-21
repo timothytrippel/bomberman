@@ -126,28 +126,6 @@ void Error::check_signal_not_multidimensional(sig_map_t signals, ivl_signal_t si
     }
 }
 
-void Error::check_event_nexus(ivl_nexus_t nexus, ivl_statement_t statement) {
-    // // Check event nexus is only of size 1
-    // if (ivl_nexus_ptrs(nexus) != 1) {
-    //     fprintf(stderr, "NOT-SUPPORTED: multiple (%d) nexus pointers for event nexus. \
-    //         \n(File: %s -- Line: %d).\n", 
-    //         ivl_nexus_ptrs(nexus), ivl_stmt_file(statement), ivl_stmt_lineno(statement));
-
-    //     exit(PROCEDURAL_CONNECTIONS_ERROR);
-    // }
-
-    // Check event nexus points only to signal object(s)
-    for (unsigned int i = 0; i < ivl_nexus_ptrs(nexus); i++) {
-        if (!ivl_nexus_ptr_sig(ivl_nexus_ptr(nexus, i))) {
-            fprintf(stderr, "NOT-SUPPORTED: non-signal event nexus pointer. \
-                \n(File: %s -- Line: %d).\n", 
-                ivl_stmt_file(statement), ivl_stmt_lineno(statement));
-
-            exit(PROCEDURAL_CONNECTIONS_ERROR);
-        }
-    }   
-}
-
 void Error::check_lvals_not_concatenated(unsigned int num_lvals, ivl_statement_t statement) {
     // Check for concatenated lvals
     if (num_lvals > 1) {
@@ -258,8 +236,9 @@ void Error::connecting_signal_not_in_graph(sig_map_t signals, ivl_signal_t sourc
     exit(NOT_SUPPORTED_ERROR);
 }
 
-void Error::popping_source_signals_queue() {
-    fprintf(stderr, "ERROR: attempting to pop more source signals from queue than exist.\n");
+void Error::popping_source_signals_queue(unsigned int num_signals, unsigned int queue_size) {
+    fprintf(stderr, "ERROR: attempting to pop %d signals from queue of size %d.\n",
+        num_signals, queue_size);
 
     exit(PROCEDURAL_CONNECTIONS_ERROR);
 }
@@ -274,4 +253,28 @@ void Error::non_local_signal_connection() {
     fprintf(stderr, "ERROR: cannot to remove local signal between non-local signals.\n");
 
     exit(NOT_SUPPORTED_ERROR);
+}
+
+void Error::zero_event_nexus_ptrs(ivl_statement_t stmt) {
+    fprintf(stderr, "NOT-SUPPORTED: 0 event nexus pointers. \
+        \n(File: %s -- Line: %d).\n", 
+        ivl_stmt_file(stmt), ivl_stmt_lineno(stmt));
+
+    exit(PROCEDURAL_CONNECTIONS_ERROR);
+}
+
+void Error::non_signal_event_nexus_ptr(ivl_statement_t stmt) {
+    fprintf(stderr, "NOT-SUPPORTED: non-signal event nexus pointer. \
+        \n(File: %s -- Line: %d).\n", 
+        ivl_stmt_file(stmt), ivl_stmt_lineno(stmt));
+
+    exit(PROCEDURAL_CONNECTIONS_ERROR);
+}
+
+void Error::multiple_valid_event_nexus_ptrs(ivl_statement_t stmt) {
+    fprintf(stderr, "NOT-SUPPORTED: >1 valid event nexus pointer candidate. \
+        \n(File: %s -- Line: %d).\n", 
+        ivl_stmt_file(stmt), ivl_stmt_lineno(stmt));
+
+    exit(PROCEDURAL_CONNECTIONS_ERROR);
 }

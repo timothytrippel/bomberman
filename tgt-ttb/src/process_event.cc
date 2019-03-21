@@ -20,17 +20,48 @@ i.e., @(posedge), @(negedge), or @(anyedge).
 // ----------------------------------------------------------------------------------
 
 unsigned int process_event_nexus(
+    ivl_event_t     event,
     ivl_nexus_t     nexus, 
     ivl_statement_t statement, 
     SignalGraph*    sg, 
     string          ws) {
 
-    // Check nexus pointer type(s) are signal object(s) only
-    // @TODO: propgate other nexus types besides signals
-    Error::check_event_nexus(nexus, statement);
+    // Source IVL signal
+    ivl_signal_t temp_sig          = NULL;
+    ivl_signal_t source_ivl_signal = NULL;
 
     // Get event nexus pointer IVL signal (source signal)
-    ivl_signal_t source_ivl_signal = ivl_nexus_ptr_sig(ivl_nexus_ptr(nexus, 0));
+    if (ivl_nexus_ptrs(nexus) == 1) {
+
+        // IVL source signal is at index 0
+        source_ivl_signal = ivl_nexus_ptr_sig(ivl_nexus_ptr(nexus, 0));
+
+    } else if (ivl_nexus_ptrs(nexus) > 1) {
+
+        // Find IVL source signal whose scope matches that of the event itself
+        for (unsigned int i = 0; i < ivl_nexus_ptrs(nexus); i++) {
+
+            // Check nexus pointer type(s) are signal object(s) only
+            // @TODO: propgate other nexus types besides signals 
+            if ((temp_sig = ivl_nexus_ptr_sig(ivl_nexus_ptr(nexus, i)))) {
+                
+                // Check if scope of source signal matches scope of event
+                if (ivl_signal_scope(temp_sig) == ivl_event_scope(event)) {
+
+                    // Check if source signal already found
+                    if (!source_ivl_signal) {
+                        source_ivl_signal = temp_sig;
+                    } else {
+                        Error::multiple_valid_event_nexus_ptrs(statement);
+                    }
+                }
+            } else {
+                Error::non_signal_event_nexus_ptr(statement);
+            }
+        } 
+    } else {
+        Error::zero_event_nexus_ptrs(statement);
+    }
 
     // Check if CLK signal is one of source signals. If so, 
     // it means we have entered an always block, and subsequent
@@ -75,7 +106,7 @@ unsigned int process_event(
         for (unsigned int j = 0; j < num_posedge_nexus_ptrs; j++) {
             event_nexus = ivl_event_pos(event, j);      
             num_nodes_processed += process_event_nexus(
-                event_nexus, statement, sg, ws);
+                event, event_nexus, statement, sg, ws);
         }
     }
 
@@ -85,7 +116,7 @@ unsigned int process_event(
         for (unsigned int j = 0; j < num_negedge_nexus_ptrs; j++) {
             event_nexus = ivl_event_neg(event, j);      
             num_nodes_processed += process_event_nexus(
-                event_nexus, statement, sg, ws);
+                event, event_nexus, statement, sg, ws);
         }
     }
 
@@ -95,7 +126,7 @@ unsigned int process_event(
         for (unsigned int j = 0; j < num_anyedge_nexus_ptrs; j++) {
             event_nexus = ivl_event_any(event, j);      
             num_nodes_processed += process_event_nexus(
-                event_nexus, statement, sg, ws);
+                event, event_nexus, statement, sg, ws);
         }
     }
 
