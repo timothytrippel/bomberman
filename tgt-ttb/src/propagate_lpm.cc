@@ -153,17 +153,30 @@ void process_lpm_part_select(ivl_lpm_t    lpm,
 
     // Determine LPM type and track connection slice 
     if (ivl_lpm_type(lpm) == IVL_LPM_PART_VP) {
+
         // part select: vector to part (VP: part select in rval)
         sg->track_source_slice(msb, lsb, ws);
+
+        // Propagate nexus
+        propagate_nexus(input_nexus, sink_signal, sg, ws + WS_TAB);
+
+        // Pop slice info from stack
+        sg->pop_from_source_slices_queue();
+
     } else if (ivl_lpm_type(lpm) == IVL_LPM_PART_PV) {
+
         // part select: part to vector (PV: part select in lval)
         sg->track_sink_slice(msb, lsb, ws);
+
+        // Propagate nexus
+        propagate_nexus(input_nexus, sink_signal, sg, ws + WS_TAB);
+
+        // Pop slice info from stack
+        sg->pop_from_sink_slices_queue();
+
     } else {
         Error::unknown_part_select_lpm_type(ivl_lpm_type(lpm));
-    }
-
-    // Propagate nexus
-    propagate_nexus(input_nexus, sink_signal, sg, ws + WS_TAB);
+    }    
 }
 
 void process_lpm_concat(ivl_lpm_t    lpm,
@@ -218,6 +231,9 @@ void process_lpm_concat(ivl_lpm_t    lpm,
                 // Propagate input nexus
                 propagate_nexus(input_nexus, sink_signal, sg, ws + WS_TAB);
 
+                // Pop slice info from stack
+                sg->pop_from_sink_slices_queue();
+
                 // Update current LSB of sink signal slice
                 current_lsb += ivl_signal_width(source_signal);
                 break;
@@ -251,7 +267,6 @@ void process_lpm_mux(ivl_lpm_t    lpm,
 // --------------------------- Main LPM Progation Switch ----------------------------
 // ----------------------------------------------------------------------------------
 void propagate_lpm(ivl_lpm_t    lpm,
-                   ivl_nexus_t  sink_nexus,
                    Signal*      sink_signal,
                    SignalGraph* sg,
                    string       ws) {
@@ -260,38 +275,14 @@ void propagate_lpm(ivl_lpm_t    lpm,
     switch (ivl_lpm_type(lpm)) {
         case IVL_LPM_CONCAT:
         case IVL_LPM_CONCATZ:
-            // ivl_lpm_q() returns the output nexus. If the 
-            // output nexus is NOT the same as the root nexus, 
-            // then we do not propagate because this nexus is an 
-            // to input to an LPM, not an output.
-
-            if (ivl_lpm_q(lpm) == sink_nexus) {
-                process_lpm_concat(lpm, sink_signal, sg, ws);
-            }
-
+            process_lpm_concat(lpm, sink_signal, sg, ws);
             break;
         case IVL_LPM_MUX:
-            // ivl_lpm_q() returns the output nexus. If the 
-            // output nexus is NOT the same as the root nexus, 
-            // then we do not propagate because this nexus is an 
-            // to input to an LPM, not an output.
-
-            if (ivl_lpm_q(lpm) == sink_nexus) {
-                process_lpm_mux(lpm, sink_signal, sg, ws);
-            }
-
+            process_lpm_mux(lpm, sink_signal, sg, ws);
             break;
         case IVL_LPM_PART_VP:
         case IVL_LPM_PART_PV:
-
-            // ivl_lpm_q() returns the output nexus. If the 
-            // output nexus is NOT the same as the root nexus, 
-            // then we do not propagate because this nexus is an 
-            // to input to an LPM, not an output.
-            if (ivl_lpm_q(lpm) == sink_nexus) {
-                process_lpm_part_select(lpm, sink_signal, sg, ws);
-            }
-
+            process_lpm_part_select(lpm, sink_signal, sg, ws);
             break;
         case IVL_LPM_ADD:
         case IVL_LPM_CMP_EEQ:
@@ -314,15 +305,7 @@ void propagate_lpm(ivl_lpm_t    lpm,
         case IVL_LPM_SHIFTL:
         case IVL_LPM_SHIFTR:
         case IVL_LPM_SUB:
-            // ivl_lpm_q() returns the output nexus. If the 
-            // output nexus is NOT the same as the root nexus, 
-            // then we do not propagate because this nexus is an 
-            // to input to an LPM, not an output.
-
-            if (ivl_lpm_q(lpm) == sink_nexus) {
-                process_lpm_basic(lpm, sink_signal, sg, ws);
-            }
-
+            process_lpm_basic(lpm, sink_signal, sg, ws);
             break;
         case IVL_LPM_ABS:
             Error::not_supported("LPM device type (IVL_LPM_ABS)");

@@ -262,6 +262,9 @@ void process_statement_assign(
     Signal*      sink_signal         = NULL; // sink signal to connect to
     Signal*      source_signal       = NULL; // source node to connect to
 
+    // Set slice tracking flags
+    sg->set_all_slice_tracking_flags();
+
     // Process lval expression
     fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing lval(s) ...\n", ws.c_str());
     sink_signal = process_statement_assign_lval(statement, sg, ws + WS_TAB);
@@ -275,7 +278,8 @@ void process_statement_assign(
     fprintf(DEBUG_PRINTS_FILE_PTR, "%spushed %d source node(s) to queue\n", 
         ws.c_str(), num_nodes_processed);
 
-    // Process Adjustments to LVal slice(s)
+    // Process Adjustments to LVal slice(s), in the case
+    // that the RVal expression contains a concat.
     if (sg->get_num_sink_slices() > num_nodes_processed) {
         sg->erase_index_from_sink_slices(0);
     }
@@ -286,7 +290,7 @@ void process_statement_assign(
     //  where N = number of nodes on source signals queue.)
     Error::check_slice_tracking_stack(sg->get_num_source_slices(), num_nodes_processed);
     // Sink Slices Stack:
-    // (Sink slice stack should never grow beyond size N+1, 
+    // (Sink slice stack should never grow beyond size N, 
     //  where N = number of nodes on source signals queue.)
     Error::check_slice_tracking_stack(sg->get_num_sink_slices(), num_nodes_processed);
 
@@ -308,6 +312,10 @@ void process_statement_assign(
         } else {
             sg->add_connection(sink_signal, source_signal, ws + WS_TAB);
         }
+
+        // Pop slices from stacks
+        sg->pop_from_source_slices_queue();
+        sg->pop_from_sink_slices_queue();
     }
 
     // Pop processed source nodes from queue
@@ -315,6 +323,9 @@ void process_statement_assign(
     sg->pop_from_source_signals_queue(num_nodes_processed);
     fprintf(DEBUG_PRINTS_FILE_PTR, "%spopped %d source node(s) from queue\n", 
         ws.c_str(), num_nodes_processed);
+
+    // Clear slice tracking flags
+    sg->clear_all_slice_tracking_flags();
 }
 
 // ------------------------------- BLOCK Statement ----------------------------------

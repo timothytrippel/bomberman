@@ -47,13 +47,13 @@ void find_continuous_connections();
 
 // Nexus
 void propagate_nexus(
-    ivl_nexus_t  nexus,
-    Signal*      sink_signal,
-    SignalGraph* sg,
-    string       ws);
+    ivl_nexus_t    nexus,
+    Signal*        sink_signal,
+    SignalGraph*   sg,
+    string         ws);
 
 // Signal
-void propagate_signal(
+bool propagate_signal(
     ivl_signal_t ivl_source_signal,
     Signal*      sink_signal,
     SignalGraph* sg,
@@ -67,13 +67,13 @@ bool in_same_scope(
     ivl_signal_t signal_1, 
     ivl_signal_t signal_2);
 
-void process_signal_connect(
+bool process_signal_connect(
     ivl_signal_t source_signal,
     Signal*      sink_signal,
     SignalGraph* sg,
     string       ws);
 
-void process_signal_case(
+bool process_signal_case(
     unsigned int case_num,
     ivl_signal_t source_signal,
     Signal*      sink_signal,
@@ -91,7 +91,6 @@ void propagate_logic(
 // LPM
 void propagate_lpm(
     ivl_lpm_t    lpm,
-    ivl_nexus_t  sink_nexus,
     Signal*      sink_signal,
     SignalGraph* sg,
     string       ws);

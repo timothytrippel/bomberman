@@ -32,6 +32,9 @@ void propagate_nexus(ivl_nexus_t nexus, Signal* sink_signal, SignalGraph* sg, st
     ivl_lpm_t       source_lpm       = NULL;
     ivl_net_const_t source_constant  = NULL;
 
+    // Processed non-local signal flag
+    bool proccessed_signal = false;
+
     // Iterate over Nexus pointers in Nexus
     for (unsigned int nexus_ind = 0; nexus_ind < ivl_nexus_ptrs(nexus); nexus_ind++) {
 
@@ -45,19 +48,29 @@ void propagate_nexus(ivl_nexus_t nexus, Signal* sink_signal, SignalGraph* sg, st
             fprintf(DEBUG_PRINTS_FILE_PTR, " -- SIGNAL -- %s (%s)\n", 
                 sg->get_signal_from_ivl_signal(source_signal)->get_fullname().c_str(), 
                 get_signal_port_type_as_string(source_signal));   
-            propagate_signal(source_signal, sink_signal, sg, ws);
+            proccessed_signal = propagate_signal(source_signal, sink_signal, sg, ws);
 
         } else if ((source_logic = ivl_nexus_ptr_log(nexus_ptr))) {
             
             // Nexus target object is a LOGIC
             fprintf(DEBUG_PRINTS_FILE_PTR, " -- LOGIC -- %s\n", get_logic_type_as_string(source_logic));
-            propagate_logic(source_logic, nexus, sink_signal, sg, ws);
+            if (!proccessed_signal) {
+                propagate_logic(source_logic, nexus, sink_signal, sg, ws);
+            }
 
         } else if ((source_lpm = ivl_nexus_ptr_lpm(nexus_ptr))) {
             
             // Nexus target object is a LPM
             fprintf(DEBUG_PRINTS_FILE_PTR, " -- LPM -- %s\n", get_lpm_type_as_string(source_lpm));
-            propagate_lpm(source_lpm, nexus, sink_signal, sg, ws);
+            if (!proccessed_signal) {
+                // ivl_lpm_q() returns the output nexus. If the 
+                // output nexus is NOT the same as the root nexus, 
+                // then we do not propagate because this nexus is an 
+                // to input to an LPM, not an output.
+                if (ivl_lpm_q(source_lpm) == nexus) {
+                    propagate_lpm(source_lpm, sink_signal, sg, ws);
+                }
+            }
 
         } else if ((source_constant = ivl_nexus_ptr_con(nexus_ptr))) {
             

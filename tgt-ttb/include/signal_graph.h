@@ -48,7 +48,7 @@ class SignalGraph {
         void find_all_signals(ivl_scope_t* scopes, unsigned int num_scopes);
 
         // Connection Enumeration
-        void add_connection(
+        bool add_connection(
             Signal* sink_signal,
             Signal* source_signal,
             string  ws);
@@ -81,8 +81,8 @@ class SignalGraph {
         // Slice Tracking Queues Getters
         unsigned int   get_num_source_slices() const;
         unsigned int   get_num_sink_slices()   const;
-        signal_slice_t pop_from_source_slices_queue(Signal* source_signal);
-        signal_slice_t pop_from_sink_slices_queue(Signal* sink_signal);
+        signal_slice_t get_source_slice(Signal* source_signal) const;
+        signal_slice_t get_sink_slice(Signal* sink_signal) const;
         
         // Connection Tracking Getters
         bool check_if_connection_exists(
@@ -114,6 +114,14 @@ class SignalGraph {
             unsigned int lsb,
             string       ws);
 
+        void pop_from_source_slices_queue();
+        void pop_from_sink_slices_queue();
+        void set_track_source_slices_flag();
+        void set_track_sink_slices_flag();
+        void set_all_slice_tracking_flags();
+        void clear_track_source_slices_flag();
+        void clear_track_sink_slices_flag();
+        void clear_all_slice_tracking_flags();
         void erase_index_from_sink_slices(unsigned int index);
 
         // Connection Tracking Setters
@@ -138,6 +146,8 @@ class SignalGraph {
         unsigned long          num_local_connections_; // number of local connections to be processed
         bool                   inside_ff_block_;       // indicates if processing inside a FF block
         bool                   ignore_constants_;      // indicates if constants should be ignored
+        bool                   track_source_slices_;   //
+        bool                   track_sink_slices_;     //
         string                 clk_basename_;          // indicates if processing inside a FF block
         DotGraph*              dg_;                    // dot graph object
         sig_map_t              signals_map_;           // IVL signal to Signal object map

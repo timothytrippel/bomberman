@@ -30,6 +30,8 @@ SignalGraph::SignalGraph():
     num_local_connections_(0),
     inside_ff_block_(false),
     ignore_constants_(false),
+    track_source_slices_(false),
+    track_sink_slices_(false),
     clk_basename_(""),
     dg_(NULL),
     signals_map_(),
@@ -52,8 +54,10 @@ SignalGraph::SignalGraph(cmd_args_map_t* cmd_args) {
     num_local_connections_ = 0;
 
     // Intialize Flags
-    inside_ff_block_  = false;
-    ignore_constants_ = false;
+    inside_ff_block_     = false;
+    ignore_constants_    = false;
+    track_source_slices_ = false;
+    track_sink_slices_   = false;
 
     // Intialize Data
     clk_basename_ = string("");
@@ -307,31 +311,29 @@ unsigned int SignalGraph::get_num_sink_slices() const {
     return sink_slices_.size();
 }
 
-signal_slice_t SignalGraph::pop_from_source_slices_queue(Signal* source_signal) {
+signal_slice_t SignalGraph::get_source_slice(Signal* source_signal) const {
     // Source slice information
     signal_slice_t source_slice = {
             source_signal->get_msb(), 
             source_signal->get_lsb()
         };
 
-    if (get_num_source_slices() > 0) {
+    if (track_source_slices_ && get_num_source_slices() > 0) {
         source_slice = source_slices_.back();
-        source_slices_.pop_back();
     }
 
     return source_slice;
 }
 
-signal_slice_t SignalGraph::pop_from_sink_slices_queue(Signal* sink_signal) {
+signal_slice_t SignalGraph::get_sink_slice(Signal* sink_signal) const {
     // Sink slice information
     signal_slice_t sink_slice = {
             sink_signal->get_msb(),
             sink_signal->get_lsb()
         };
 
-    if (get_num_sink_slices() > 0) {
+    if (track_sink_slices_ && get_num_sink_slices() > 0) {
         sink_slice = sink_slices_.back();
-        sink_slices_.pop_back();
     }
 
     return sink_slice;
@@ -431,12 +433,15 @@ void SignalGraph::track_source_slice(unsigned int msb,
     // Set signal slice info
     signal_slice_t slice = {msb, lsb};
 
-    // Debug Print
-    fprintf(DEBUG_PRINTS_FILE_PTR, "%sTracking signal slice [%u:%u]\n", 
-        ws.c_str(), msb, lsb);
+    if (track_source_slices_) {
 
-    // push slice info to stack
-    source_slices_.push_back(slice);
+        // Debug Print
+        fprintf(DEBUG_PRINTS_FILE_PTR, "%sTracking signal slice [%u:%u]\n", 
+            ws.c_str(), msb, lsb);
+
+        // push slice info to stack
+        source_slices_.push_back(slice);
+    }
 }
 
 void SignalGraph::track_sink_slice(unsigned int msb, 
@@ -446,12 +451,53 @@ void SignalGraph::track_sink_slice(unsigned int msb,
     // Set signal slice info
     signal_slice_t slice = {msb, lsb};
 
-    // Debug Print
-    fprintf(DEBUG_PRINTS_FILE_PTR, "%sTracking signal slice [%u:%u]\n", 
-        ws.c_str(), msb, lsb);
+    if (track_sink_slices_) {
 
-    // push slice info to stack
-    sink_slices_.push_back(slice);
+        // Debug Print
+        fprintf(DEBUG_PRINTS_FILE_PTR, "%sTracking signal slice [%u:%u]\n", 
+            ws.c_str(), msb, lsb);
+
+        // push slice info to stack
+        sink_slices_.push_back(slice);
+    }
+}
+
+void SignalGraph::pop_from_source_slices_queue() {
+    if (track_source_slices_ && get_num_source_slices() > 0) {
+        source_slices_.pop_back();
+    }
+}
+
+void SignalGraph::pop_from_sink_slices_queue() {
+    if (track_sink_slices_ && get_num_sink_slices() > 0) {
+        sink_slices_.pop_back();
+    }
+}
+
+void SignalGraph::set_track_source_slices_flag() {
+    track_source_slices_ = true;
+}
+
+void SignalGraph::set_track_sink_slices_flag() {
+    track_sink_slices_ = true;
+}
+
+void SignalGraph::clear_track_source_slices_flag() {
+    track_source_slices_ = false;
+}
+
+void SignalGraph::clear_track_sink_slices_flag() {
+    track_sink_slices_ = false;
+}
+
+void SignalGraph::set_all_slice_tracking_flags() {
+    set_track_source_slices_flag();
+    set_track_sink_slices_flag();
+}
+
+void SignalGraph::clear_all_slice_tracking_flags() {
+    clear_track_source_slices_flag();
+    clear_track_sink_slices_flag();
 }
 
 void SignalGraph::erase_index_from_sink_slices(unsigned int index) {
@@ -497,8 +543,8 @@ void SignalGraph::track_local_signal_connection(Signal* sink_signal,
         if (source_signal->is_ivl_generated() || sink_signal->is_ivl_generated()) {
 
             // Get signal slices
-            source_slice = pop_from_source_slices_queue(source_signal);
-            sink_slice   = pop_from_sink_slices_queue(sink_signal);
+            source_slice = get_source_slice(source_signal);
+            sink_slice   = get_sink_slice(sink_signal);
 
             // Create connection object
             conn = new Connection(source_signal, sink_signal, source_slice, sink_slice);
@@ -683,7 +729,7 @@ void SignalGraph::find_signals(ivl_scope_t scope) {
 // ------------------------------- Connection Enumeration ---------------------------
 // ----------------------------------------------------------------------------------
 
-void SignalGraph::add_connection(Signal* sink_signal, 
+bool SignalGraph::add_connection(Signal* sink_signal, 
                                  Signal* source_signal, 
                                  string  ws) {
 
@@ -721,8 +767,8 @@ void SignalGraph::add_connection(Signal* sink_signal,
             if (!source_signal->is_ivl_generated()) {
 
                 // Get signal slices
-                source_slice = pop_from_source_slices_queue(source_signal);
-                sink_slice   = pop_from_sink_slices_queue(sink_signal);
+                source_slice = get_source_slice(source_signal);
+                sink_slice   = get_sink_slice(sink_signal);
 
                 // Create connection object
                 conn = new Connection(source_signal, sink_signal, source_slice, sink_slice);
@@ -751,6 +797,10 @@ void SignalGraph::add_connection(Signal* sink_signal,
                         conn->get_source()->get_fullname().c_str(),
                         conn->get_sink()->get_fullname().c_str());
                 }
+
+                return true;
+            } else {
+                return false;
             }
         }
 
@@ -760,6 +810,8 @@ void SignalGraph::add_connection(Signal* sink_signal,
             signals_map_, source_signal->get_ivl_signal());
 
     }
+
+    return false;
 }
 
 void SignalGraph::process_local_connections(string ws) {

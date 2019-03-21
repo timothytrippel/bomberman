@@ -75,7 +75,9 @@ typedef enum ivl_obj_type_e {
     IVL_NONE   = 0,
     IVL_SIGNAL = 1,
     IVL_CONST  = 2,
-    IVL_EXPR   = 3,
+    IVL_EXPR   = 3
+    // IVL_LPM    = 4,
+    // IVL_LOGIC  = 5,
 } ivl_obj_type_t;
 
 // ------------------------------------------------------------

@@ -74,6 +74,6 @@ typedef map<string, bool> string_map_t;
 // --------------------- CMD-Line Args Map --------------------
 // ------------------------------------------------------------
 
-typedef map<string, string> cmd_args_map_t;
+typedef map<string, string> cmd_args_map_t; 
 
 #endif

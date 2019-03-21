@@ -76,7 +76,10 @@ void find_continuous_connections(SignalGraph* sg) {
 
     // Create a signals map iterator
     sig_map_t::iterator it = signals_map.begin();
- 
+    
+    // Set slice tracking flags
+    sg->set_all_slice_tracking_flags();
+
     // Iterate over all signals in adjacency list
     while (it != signals_map.end()) {  
 
@@ -107,6 +110,9 @@ void find_continuous_connections(SignalGraph* sg) {
         // Increment the iterator
         it++;
     }
+
+    // Clear slice tracking flags
+    sg->clear_all_slice_tracking_flags();
 }
 
 // ------------------------------------------------------------

@@ -66,7 +66,7 @@ bool in_same_scope(
 	}
 }
 
-void process_signal_connect(
+bool process_signal_connect(
 	ivl_signal_t source_signal,
 	Signal* 	 sink_signal,
 	SignalGraph* sg,
@@ -82,13 +82,13 @@ void process_signal_connect(
     Error::check_slice_tracking_stack(sg->get_num_sink_slices(), 1);
 
     // Add Connection
-    sg->add_connection(
-        sink_signal, 
-        sg->get_signal_from_ivl_signal(source_signal), 
-        ws + WS_TAB);
+    return (sg->add_connection(
+        		sink_signal, 
+        		sg->get_signal_from_ivl_signal(source_signal), 
+        		ws + WS_TAB));
 }
 
-void process_signal_case(
+bool process_signal_case(
 	unsigned int case_num,
 	ivl_signal_t source_signal,
 	Signal* 	 sink_signal,
@@ -98,21 +98,21 @@ void process_signal_case(
 	// Get SOURCE signal port direction
 	switch (case_num) {
 		case 1:
-			process_signal_connect(source_signal, sink_signal, sg, ws);
+			return process_signal_connect(source_signal, sink_signal, sg, ws);
 			break;
 		case 2:
 			break;
 		case 3:
-			process_signal_connect(source_signal, sink_signal, sg, ws);
+			return process_signal_connect(source_signal, sink_signal, sg, ws);
 			break;
 		case 4:
 			break;
 		case 5:
-			break;
+			return process_signal_connect(source_signal, sink_signal, sg, ws);
 		case 6:
 			// SOURCE MUST BE CHILD OF SINK
 			if (is_sig1_parent_of_sig2(sink_signal->get_ivl_signal(), source_signal)) {
-				process_signal_connect(source_signal, sink_signal, sg, ws);
+				return process_signal_connect(source_signal, sink_signal, sg, ws);
 			}
 			break;
 		case 7:
@@ -120,7 +120,7 @@ void process_signal_case(
 		case 8:
 			// SOURCE MUST BE PARENT OF SINK
 			if (is_sig1_parent_of_sig2(source_signal, sink_signal->get_ivl_signal())) {
-				process_signal_connect(source_signal, sink_signal, sg, ws);
+				return process_signal_connect(source_signal, sink_signal, sg, ws);
 			}
 			break;
 		case 9:
@@ -128,7 +128,7 @@ void process_signal_case(
 		case 10:
 			// SOURCE MUST BE PARENT OF SINK
 			if (is_sig1_parent_of_sig2(source_signal, sink_signal->get_ivl_signal())) {
-				process_signal_connect(source_signal, sink_signal, sg, ws);
+				return process_signal_connect(source_signal, sink_signal, sg, ws);
 			}
 			break;
 		case 11:
@@ -136,12 +136,12 @@ void process_signal_case(
 		case 12:
 			break;
 		case 13:
-			process_signal_connect(source_signal, sink_signal, sg, ws);
+			return process_signal_connect(source_signal, sink_signal, sg, ws);
 			break;
 		case 14:
 			break;
 		case 15:
-			process_signal_connect(source_signal, sink_signal, sg, ws);
+			return process_signal_connect(source_signal, sink_signal, sg, ws);
 			break;
 		case 16:
 			break;
@@ -150,16 +150,18 @@ void process_signal_case(
 		case 18:
 			// SOURCE MUST BE CHILD OF SINK
 			if (is_sig1_parent_of_sig2(sink_signal->get_ivl_signal(), source_signal)) {
-				process_signal_connect(source_signal, sink_signal, sg, ws);
+				return process_signal_connect(source_signal, sink_signal, sg, ws);
 			}
 			break;
 		default:
 			// ERROR
 			break;
 	}
+
+	return false;
 }
 
-void propagate_signal(
+bool propagate_signal(
 	ivl_signal_t ivl_source_signal,
 	Signal* 	 sink_signal,
 	SignalGraph* sg,
@@ -181,11 +183,11 @@ void propagate_signal(
 			if (in_same_scope(ivl_source_signal, ivl_sink_signal)) {
 
 				// CASE 1 --> SOURCE-NONE -- SINK-NONE -- SAME MODULE
-				process_signal_case(1, ivl_source_signal, sink_signal, sg, ws);
+				return process_signal_case(1, ivl_source_signal, sink_signal, sg, ws);
 			} else {
 
 				// CASE 2 --> SOURCE-NONE -- SINK-NONE -- DIFF MODULE
-				process_signal_case(2, ivl_source_signal, sink_signal, sg, ws);
+				return process_signal_case(2, ivl_source_signal, sink_signal, sg, ws);
 			}
 
 		} else if (source_port == IVL_SIP_INPUT && sink_port == IVL_SIP_NONE) {
@@ -194,11 +196,11 @@ void propagate_signal(
 			if (in_same_scope(ivl_source_signal, ivl_sink_signal)) {
 				
 				// CASE 3 --> SOURCE-INPUT -- SINK-NONE -- SAME MODULE
-				process_signal_case(3, ivl_source_signal, sink_signal, sg, ws);
+				return process_signal_case(3, ivl_source_signal, sink_signal, sg, ws);
 			} else {
 
 				// CASE 4 --> SOURCE-INPUT -- SINK-NONE -- DIFF MODULE
-				process_signal_case(4, ivl_source_signal, sink_signal, sg, ws);
+				return process_signal_case(4, ivl_source_signal, sink_signal, sg, ws);
 			}
 		} else if (source_port == IVL_SIP_OUTPUT && sink_port == IVL_SIP_NONE) {
 			
@@ -206,11 +208,11 @@ void propagate_signal(
 			if (in_same_scope(ivl_source_signal, ivl_sink_signal)) {
 
 				// CASE 5 --> SOURCE-OUTPUT -- SINK-NONE -- SAME MODULE
-				process_signal_case(5, ivl_source_signal, sink_signal, sg, ws);
+				return process_signal_case(5, ivl_source_signal, sink_signal, sg, ws);
 			} else {
 
 				// CASE 6 --> SOURCE-OUTPUT -- SINK-NONE -- DIFF MODULE
-				process_signal_case(6, ivl_source_signal, sink_signal, sg, ws);
+				return process_signal_case(6, ivl_source_signal, sink_signal, sg, ws);
 			}
 
 		} else if (source_port == IVL_SIP_NONE && sink_port == IVL_SIP_INPUT) {
@@ -219,11 +221,11 @@ void propagate_signal(
 			if (in_same_scope(ivl_source_signal, ivl_sink_signal)) {
 
 				// CASE 7 --> SOURCE-NONE -- SINK-INPUT -- SAME MODULE
-				process_signal_case(7, ivl_source_signal, sink_signal, sg, ws);
+				return process_signal_case(7, ivl_source_signal, sink_signal, sg, ws);
 			} else {
 
 				// CASE 8 --> SOURCE-NONE -- SINK-INPUT -- DIFF MODULE
-				process_signal_case(8, ivl_source_signal, sink_signal, sg, ws);
+				return process_signal_case(8, ivl_source_signal, sink_signal, sg, ws);
 			}
 
 		} else if (source_port == IVL_SIP_INPUT && sink_port == IVL_SIP_INPUT) {
@@ -232,11 +234,11 @@ void propagate_signal(
 			if (in_same_scope(ivl_source_signal, ivl_sink_signal)) {
 
 				// CASE 9 --> SOURCE-INPUT -- SINK-INPUT -- SAME MODULE
-				process_signal_case(9, ivl_source_signal, sink_signal, sg, ws);
+				return process_signal_case(9, ivl_source_signal, sink_signal, sg, ws);
 			} else {
 
 				// CASE 10 --> SOURCE-INPUT -- SINK-INPUT -- DIFF MODULE
-				process_signal_case(10, ivl_source_signal, sink_signal, sg, ws);
+				return process_signal_case(10, ivl_source_signal, sink_signal, sg, ws);
 			}
 
 		} else if (source_port == IVL_SIP_OUTPUT && sink_port == IVL_SIP_INPUT) {
@@ -245,11 +247,11 @@ void propagate_signal(
 			if (in_same_scope(ivl_source_signal, ivl_sink_signal)) {
 
 				// CASE 11 --> SOURCE-OUTPUT -- SINK-INPUT -- SAME MODULE
-				process_signal_case(11, ivl_source_signal, sink_signal, sg, ws);
+				return process_signal_case(11, ivl_source_signal, sink_signal, sg, ws);
 			} else {
 
 				// CASE 12 --> SOURCE-OUTPUT -- SINK-INPUT -- DIFF MODULE
-				process_signal_case(12, ivl_source_signal, sink_signal, sg, ws);
+				return process_signal_case(12, ivl_source_signal, sink_signal, sg, ws);
 			}
 
 		} else if (source_port == IVL_SIP_NONE && sink_port == IVL_SIP_OUTPUT) {
@@ -258,11 +260,11 @@ void propagate_signal(
 			if (in_same_scope(ivl_source_signal, ivl_sink_signal)) {
 
 				// CASE 13 --> SOURCE-NONE -- SINK-OUTPUT -- SAME MODULE
-				process_signal_case(13, ivl_source_signal, sink_signal, sg, ws);
+				return process_signal_case(13, ivl_source_signal, sink_signal, sg, ws);
 			} else {
 
 				// CASE 14 --> SOURCE-NONE -- SINK-OUTPUT -- DIFF MODULE
-				process_signal_case(14, ivl_source_signal, sink_signal, sg, ws);
+				return process_signal_case(14, ivl_source_signal, sink_signal, sg, ws);
 			}
 
 		} else if (source_port == IVL_SIP_INPUT && sink_port == IVL_SIP_OUTPUT) {
@@ -271,11 +273,11 @@ void propagate_signal(
 			if (in_same_scope(ivl_source_signal, ivl_sink_signal)) {
 
 				// CASE 15 --> SOURCE-INPUT -- SINK-OUTPUT -- SAME MODULE
-				process_signal_case(15, ivl_source_signal, sink_signal, sg, ws);
+				return process_signal_case(15, ivl_source_signal, sink_signal, sg, ws);
 			} else {
 
 				// CASE 16 --> SOURCE-INPUT -- SINK-OUTPUT -- DIFF MODULE
-				process_signal_case(16, ivl_source_signal, sink_signal, sg, ws);
+				return process_signal_case(16, ivl_source_signal, sink_signal, sg, ws);
 			}
 
 		} else if (source_port == IVL_SIP_OUTPUT && sink_port == IVL_SIP_OUTPUT) {
@@ -284,11 +286,11 @@ void propagate_signal(
 			if (in_same_scope(ivl_source_signal, ivl_sink_signal)) {
 
 				// CASE 17 --> SOURCE-OUTPUT -- SINK-OUTPUT -- SAME MODULE
-				process_signal_case(17, ivl_source_signal, sink_signal, sg, ws);
+				return process_signal_case(17, ivl_source_signal, sink_signal, sg, ws);
 			} else {
 
 				// CASE 18 --> SOURCE-OUTPUT -- SINK-OUTPUT -- DIFF MODULE
-				process_signal_case(18, ivl_source_signal, sink_signal, sg, ws);
+				return process_signal_case(18, ivl_source_signal, sink_signal, sg, ws);
 			}
 
 		} else if (source_port == IVL_SIP_INOUT || sink_port == IVL_SIP_INOUT) {
@@ -299,4 +301,6 @@ void propagate_signal(
 			Error::unknown_signal_port_type(ivl_signal_port(ivl_source_signal));
 		}
 	}
+
+	return false;
 }
