@@ -1,11 +1,11 @@
 module d_ff_tb;
  
-reg clock, reset, d;
+reg clk, reset, d;
 wire q, q_bar;
 
 d_ff d0(
 	.d (d),
-	.clk (clock),
+	.clk (clk),
 	.q (q),
 	.q_bar (q_bar)
 );
@@ -13,15 +13,15 @@ d_ff d0(
 initial begin
 	$dumpfile("d_ff.vcd");
 	$dumpvars(0, d0);
-	$monitor("clock=%b, d=%b, q=%b, q_bar=%b", clock, d, q, q_bar);
-	clock = 0;
+	$monitor("clk=%b, d=%b, q=%b, q_bar=%b", clk, d, q, q_bar);
+	clk = 0;
 	d = 1;
 	#10 d = 0;
 	#20 $finish;
 end
  
 always begin
-	#5 clock = !clock;
+	#5 clk = !clk;
 end
 
 endmodule

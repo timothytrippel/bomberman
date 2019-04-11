@@ -47,9 +47,6 @@ int process_process(ivl_process_t process, void* sg) {
 
     switch (ivl_process_type(process)) {
         case IVL_PR_ALWAYS:
-        case IVL_PR_INITIAL:
-        case IVL_PR_FINAL:
-
             // Check if already in process block. 
             // Nested process blocks are not supported.
             if (signal_graph->check_if_inside_ff_block()) {
@@ -71,7 +68,12 @@ int process_process(ivl_process_t process, void* sg) {
             }
 
             break;
-
+        case IVL_PR_INITIAL:
+            fprintf(DEBUG_PRINTS_FILE_PTR, "WARNING: Ignoring INITIAL block...\n");
+            break;
+        case IVL_PR_FINAL:
+            fprintf(DEBUG_PRINTS_FILE_PTR, "WARNING: Ignoring FINAL block...\n");
+            break;
         default:
             Error::not_supported("process statement type (UNKOWN).");
             break;

@@ -432,9 +432,9 @@ void process_statement(ivl_statement_t statement,
         case IVL_ST_FORK_JOIN_NONE:
         case IVL_ST_FREE:
         case IVL_ST_RELEASE:
-        case IVL_ST_REPEAT:
-        case IVL_ST_STASK:
+        case IVL_ST_REPEAT: 
         case IVL_ST_TRIGGER:
+        case IVL_ST_STASK:
         case IVL_ST_UTASK:
         case IVL_ST_WHILE:
         default:
