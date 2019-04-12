@@ -34,8 +34,8 @@ using namespace std;
 #define SIGNAL_NODE_SHAPE       "ellipse"
 #define LOCAL_SIGNAL_NODE_SHAPE "none"
 #define FF_NODE_SHAPE           "square"
-#define INPUT_NODE_SHAPE        "ellipse"
-#define CONST_NODE_SHAPE        "rectangle"
+#define INPUT_NODE_SHAPE        "rectangle"
+#define CONST_NODE_SHAPE        "none"
 
 // Other Defines
 #define BITSTRING_BASE 2
@@ -113,6 +113,7 @@ class Signal {
 
         // General Setters
         void set_is_ff();
+        void set_is_input();
 
         // Other
         bool         is_ivl_generated() const;
@@ -123,6 +124,7 @@ class Signal {
         ivl_obj_type_t ivl_type_;
         unsigned int   id_;
         bool           is_ff_;
+        bool           is_input_;
 
         // Unique ID for Constants
         static unsigned int const_id; 

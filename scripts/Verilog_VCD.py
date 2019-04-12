@@ -186,7 +186,7 @@ def calc_mult (statement, opt_timescale=''):
 		return 1
 	
 
-	mult = 0
+	mult  = 0
 	units = 0
 	ts_match = re.compile(r"(\d+)([a-z]+)")
 	if ts_match.match(tscale):

@@ -61,7 +61,7 @@ def main():
 	##
 	# Set Program Switches
 	##
-	DEBUG_PRINTS = True
+	DEBUG_PRINTS = False
 
 	##
 	# Check argv
@@ -105,9 +105,9 @@ def main():
 	##
 	# Checked loaded Dot/VCD file data
 	##
-	print "-------------------------------------------------"
-	print "All Signals:"
 	if DEBUG_PRINTS:
+		print "-------------------------------------------------"
+		print "All Signals:"
 		for signal_name in signals:
 			signals[signal_name].debug_print()
 	print
@@ -121,12 +121,10 @@ def main():
 	dist_counters = generate_distributed_counters(signals)
 	end_time      = time.time()
 	print "Found " + str(len(dist_counters)) + " possible distributed counters."
-	print "	============================================="
-	if DEBUG_PRINTS:
+	if DEBUG_PRINTS and dist_counters:
 		for dist_counter in dist_counters:
 			print "	Distributed Counter: %s (Size: %d)" % (dist_counter.name, dist_counter.width)
 			dist_counter.debug_print()
-			print "	============================================="
 	calculate_and_print_time(start_time, end_time)
 	print
 
@@ -139,7 +137,7 @@ def main():
 	coal_counters = generate_coalesced_counters(signals)
 	end_time      = time.time()
 	print "Found " + str(len(coal_counters)) + " possible coalesced counters."
-	if DEBUG_PRINTS:
+	if DEBUG_PRINTS and coal_counters:
 		for counter in coal_counters:
 			print "	Coalesced Counter: %s (Size: %d)" % (counter.name, counter.width)
 			counter.debug_print()

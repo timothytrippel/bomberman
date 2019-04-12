@@ -55,10 +55,10 @@ class HDL_Signal:
 		assert self.msb == int(vcd_data['msb'])
 		assert self.width == int(net_dict['size'])
 
-		self.debug_print()
+		# self.debug_print()
+
 		# Check wire type and isff/isinput match
-		assert self.type == 'reg' or self.type == 'wire'
-		assert (self.type == 'reg'  and self.isff) or \
+		assert (self.type == 'reg') or \
 			   (self.type == 'wire' and not self.isff)
 
 	# Check that this signal has been exercised by the test bench

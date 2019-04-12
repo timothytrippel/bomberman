@@ -24,21 +24,30 @@ Signal::Signal():
 	ivl_object_(),
 	ivl_type_(IVL_NONE),
 	id_(0),
-	is_ff_(false) {}
+	is_ff_(false),
+	is_input_(false) {}
 
 // Signal
 Signal::Signal(ivl_signal_t signal):
 	ivl_object_(signal),
 	ivl_type_(IVL_SIGNAL),
 	id_(0),
-	is_ff_(false) {}
+	is_ff_(false),
+	is_input_(false) {
+
+		// Check if the signal is an input
+		if (ivl_signal_port(signal) == IVL_SIP_INPUT) {
+			set_is_input();
+		}
+}
 
 // Net Constant
 Signal::Signal(ivl_net_const_t constant):
 	ivl_object_(constant),
 	ivl_type_(IVL_CONST),
 	id_(const_id),
-	is_ff_(false) {
+	is_ff_(false),
+	is_input_(false) {
 
 		// Increment Constant ID counter
 		const_id++;
@@ -49,7 +58,9 @@ Signal::Signal(ivl_net_const_t constant):
 Signal::Signal(ivl_expr_t expression):
 	ivl_object_(expression),
 	ivl_type_(IVL_EXPR),
-	id_(const_id) {
+	id_(const_id),
+	is_ff_(false),
+	is_input_(false) {
 
 		// Increment Constant ID counter
 		const_id++;
@@ -304,6 +315,8 @@ string Signal::get_dot_shape() const {
         default:
         	if (is_ff_) {
         		return FF_NODE_SHAPE;
+        	} else if (is_input_) {
+        		return INPUT_NODE_SHAPE;
         	} else {
         		return SIGNAL_NODE_SHAPE;	
         	}
@@ -361,6 +374,15 @@ void Signal::set_is_ff() {
 
 	// Set is_ff_
 	is_ff_ = true;
+}
+
+void Signal::set_is_input() {
+	
+	// Check that it is a signal and of reg type
+	assert(this->is_signal() && "ERROR: constants cannot be flagged as an INPUT.\n");
+
+	// Set is_input_
+	is_input_ = true;
 }
 
 // ----------------------------------------------------------------------------------

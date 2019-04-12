@@ -46,9 +46,9 @@ test: tgt-ttb $(DOTS) $(TESTS)
 $(SRC_DIR)/%.test: $(DOT_DIR)/%.dot
 	@$(eval gold_dot_file:=$(patsubst $(DOT_DIR)/%,$(GOLD_DOT_DIR)/%,$<)) \
 	dot -Tplain $< | sed -ne $(DOT_NODE_LABEL_REGEX) | sort > $<.tmp && \
-	dot -Tplain $(patsubst $(DOT_DIR)/%,$(GOLD_DOT_DIR)/%,$<) | sed -ne $(DOT_NODE_LABEL_REGEX) | sort > $(gold_dot_file).tmp && \
 	dot -Tplain $< | sed -ne $(DOT_EDGE_LABEL_REGEX) | sort >> $<.tmp && \
-	dot -Tplain $(patsubst $(DOT_DIR)/%,$(GOLD_DOT_DIR)/%,$<) | sed -ne $(DOT_EDGE_LABEL_REGEX) | sort >> $(gold_dot_file).tmp && \
+	dot -Tplain $(gold_dot_file) | sed -ne $(DOT_NODE_LABEL_REGEX) | sort > $(gold_dot_file).tmp && \
+	dot -Tplain $(gold_dot_file) | sed -ne $(DOT_EDGE_LABEL_REGEX) | sort >> $(gold_dot_file).tmp && \
 	if diff -q $<.tmp $(gold_dot_file).tmp > /dev/null; then \
 		echo "Test $(PASS_STRING): $(basename $@)"; \
 	else \
