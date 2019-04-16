@@ -129,7 +129,8 @@ void process_statement_wait(
     // Pop processed source nodes from queue
     num_nodes_processed = sg->pop_from_num_signals_at_depth_queue();
     sg->pop_from_source_signals_queue(num_nodes_processed);
-    fprintf(DEBUG_PRINTS_FILE_PTR, "%spopped %d source node(s) from queue\n", 
+    sg->pop_from_source_signals_ids_queue();
+    fprintf(DEBUG_PRINTS_FILE_PTR, "%spopped %d source signal(s) from queue\n", 
         ws.c_str(), num_nodes_processed);
 
 }
@@ -171,7 +172,8 @@ void process_statement_condit(
     // Pop processed source nodes from queue
     num_nodes_processed = sg->pop_from_num_signals_at_depth_queue();
     sg->pop_from_source_signals_queue(num_nodes_processed);
-    fprintf(DEBUG_PRINTS_FILE_PTR, "%spopped %d source node(s) from queue\n", 
+    sg->pop_from_source_signals_ids_queue();
+    fprintf(DEBUG_PRINTS_FILE_PTR, "%spopped %d source signal(s) from queue\n", 
         ws.c_str(), num_nodes_processed);
 }
 
@@ -288,7 +290,7 @@ void process_statement_assign(
 
     // Push number of source nodes processed at this depth
     sg->push_to_num_signals_at_depth_queue(num_nodes_processed);
-    fprintf(DEBUG_PRINTS_FILE_PTR, "%spushed %d source node(s) to queue\n", 
+    fprintf(DEBUG_PRINTS_FILE_PTR, "%spushed %d source signal(s) to queue\n", 
         ws.c_str(), num_nodes_processed);
 
     // Process Adjustments to LVal slice(s), in the case
@@ -341,7 +343,7 @@ void process_statement_assign(
     num_nodes_processed = sg->pop_from_num_signals_at_depth_queue();
     sg->pop_from_source_signals_queue(num_nodes_processed);
     sg->pop_from_source_signals_ids_queue(num_nodes_processed);
-    fprintf(DEBUG_PRINTS_FILE_PTR, "%spopped %d source node(s) from queue\n", 
+    fprintf(DEBUG_PRINTS_FILE_PTR, "%spopped %d source signal(s) from queue\n", 
         ws.c_str(), num_nodes_processed);
 
     // Clear slice tracking flags
