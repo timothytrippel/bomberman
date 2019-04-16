@@ -22,7 +22,8 @@ YELLOW_COLOR="\x1b[33;01m"
 NODE_NAME_REGEX=\"\([a-zA-Z0-9\_\.]*\)\"
 BIT_SLICE_REGEX=\(\[[0-9]\:[0-9]\]\)
 NODE_LABEL_REGEX=\"\([a-zA-Z0-9\.\_]*\[[0-9]\:[0-9]\]\)\"
-DOT_NODE_LABEL_REGEX:='s/^node $(NODE_NAME_REGEX).*$(NODE_LABEL_REGEX).*/\2/p'
+NODE_SHAPE_REGEX=solid\ \([[:alnum:]]*\)
+DOT_NODE_LABEL_REGEX:='s/^node $(NODE_NAME_REGEX).*$(NODE_LABEL_REGEX)\ $(NODE_SHAPE_REGEX).*/\2\-\-\3/p'
 DOT_EDGE_LABEL_REGEX:='s/^edge $(NODE_NAME_REGEX)\ $(NODE_NAME_REGEX).*\"$(BIT_SLICE_REGEX)\-\>$(BIT_SLICE_REGEX)\".*/\1\3\-\>\2\4/p'
 
 # Message Strings
