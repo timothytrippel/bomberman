@@ -100,20 +100,63 @@ void Error::check_signal_exists_in_map(sig_map_t signals, ivl_signal_t signal) {
 } 
 
 void Error::check_signal_not_arrayed(sig_map_t signals, ivl_signal_t signal) {
-    // Check if signal is arrayed
-    if (ivl_signal_dimensions(signal) > 0) {
-        fprintf(stderr, "NOT-SUPPORTED: arrayed signal (%s -- %d) encountered.\n", 
-            signals[signal]->get_fullname().c_str(), ivl_signal_dimensions(signal));
-        
-        exit(NOT_SUPPORTED_ERROR);
-    } else {
-        // Confirm that ARRAY_BASE is 0 (should be for non-arrayed signals)
-        assert(ivl_signal_array_base(signal) == 0 && 
-            "NOT-SUPPORTED: non-arrayed signal with non-zero ARRAY_BASE.");
 
-        // Confirm that ARRAY_COUNT is a (should be for non-arrayed signals)
-        assert(ivl_signal_array_count(signal) == 1 && 
-            "NOT-SUPPORTED: non-arrayed signal with ARRAY_COUNT != 1.");
+    // Check if signal valid
+    if (signal) {
+
+        // Check if signal is arrayed
+        if (signals[signal]->is_arrayed()) {
+
+            fprintf(stderr, "NOT-SUPPORTED: arrayed signal (%s -- %d) encountered.\n", 
+                signals[signal]->get_fullname().c_str(), 
+                ivl_signal_dimensions(signal));
+
+            fprintf(stderr, "(base = %d; count = %d; addr_swapped = %d)\n", 
+                ivl_signal_array_base(signal),
+                ivl_signal_array_count(signal),
+                ivl_signal_array_addr_swapped(signal));
+            
+            exit(NOT_SUPPORTED_ERROR);
+
+        } else {
+
+            // Confirm that ARRAY_BASE is 0 (should be for non-arrayed signals)
+            assert(ivl_signal_array_base(signal) == 0 && 
+                "NOT-SUPPORTED: non-arrayed signal with non-zero ARRAY_BASE.");
+
+            // Confirm that ARRAY_COUNT is a (should be for non-arrayed signals)
+            assert(ivl_signal_array_count(signal) == 1 && 
+                "NOT-SUPPORTED: non-arrayed signal with ARRAY_COUNT != 1.");
+        }
+    }
+}
+
+void Error::check_arrayed_signal(sig_map_t signals, ivl_signal_t signal) {
+    
+    // Check if signal valid
+    if (signal) {
+    
+        // Check if signal is arrayed
+        if (signals[signal]->is_arrayed()) {
+
+            // Check if array base is negative
+            if (ivl_signal_array_base(signal) < 0) {
+             
+                fprintf(stderr, "NOT-SUPPORTED: arrayed signal (%s) with negative base encountered.",
+                    signals[signal]->get_fullname().c_str());
+
+                exit(NOT_SUPPORTED_ERROR);
+            }
+        } else {
+
+            // Confirm that ARRAY_BASE is 0 (should be for non-arrayed signals)
+            assert(ivl_signal_array_base(signal) == 0 && 
+                "NOT-SUPPORTED: non-arrayed signal with non-zero ARRAY_BASE.");
+
+            // Confirm that ARRAY_COUNT is a (should be for non-arrayed signals)
+            assert(ivl_signal_array_count(signal) == 1 && 
+                "NOT-SUPPORTED: non-arrayed signal with ARRAY_COUNT != 1.");
+        }
     }
 }
 
@@ -140,16 +183,6 @@ void Error::check_lval_not_nested(ivl_lval_t lval, ivl_statement_t statement) {
     // Check if lval is nested
     if (ivl_lval_nest(lval)) {
         fprintf(stderr, "NOT-SUPPORTED: nested lvals (File: %s -- Line: %d).\n", 
-            ivl_stmt_file(statement), ivl_stmt_lineno(statement));
-
-        exit(PROCEDURAL_CONNECTIONS_ERROR);
-    }
-}
-
-void Error::check_lval_not_memory(ivl_lval_t lval, ivl_statement_t statement) {
-    // Check if lval is a memory
-    if (ivl_lval_idx(lval)) {
-        fprintf(stderr, "NOT-SUPPORTED: memory lvals (File: %s -- Line: %d).\n", 
             ivl_stmt_file(statement), ivl_stmt_lineno(statement));
 
         exit(PROCEDURAL_CONNECTIONS_ERROR);

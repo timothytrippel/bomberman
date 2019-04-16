@@ -23,6 +23,7 @@ IVL data-structures it connects.
 #include "error.h"
 
 void propagate_nexus(ivl_nexus_t nexus, Signal* sink_signal, SignalGraph* sg, string ws) {
+    
     // Nexus Pointer
     ivl_nexus_ptr_t nexus_ptr = NULL;
 
@@ -39,6 +40,7 @@ void propagate_nexus(ivl_nexus_t nexus, Signal* sink_signal, SignalGraph* sg, st
     for (unsigned int nexus_ind = 0; nexus_ind < ivl_nexus_ptrs(nexus); nexus_ind++) {
 
         nexus_ptr = ivl_nexus_ptr(nexus, nexus_ind);
+        // printf("***********   NEXUR PTR PIN = %d    ************\n", ivl_nexus_ptr_pin(nexus_ptr));
         fprintf(DEBUG_PRINTS_FILE_PTR, "%sNexus %d", ws.c_str(), nexus_ind);
 
         // Determine type of Nexus
@@ -48,6 +50,11 @@ void propagate_nexus(ivl_nexus_t nexus, Signal* sink_signal, SignalGraph* sg, st
             fprintf(DEBUG_PRINTS_FILE_PTR, " -- SIGNAL -- %s (%s)\n", 
                 sg->get_signal_from_ivl_signal(source_signal)->get_fullname().c_str(), 
                 get_signal_port_type_as_string(source_signal));   
+
+            // Set ID of (potential) source signal (arrayed signals)
+            sg->get_signal_from_ivl_signal(source_signal)->set_id(ivl_nexus_ptr_pin(nexus_ptr));
+
+            // Process (potential) source signal
             proccessed_signal = propagate_signal(source_signal, sink_signal, sg, ws);
 
         } else if ((source_logic = ivl_nexus_ptr_log(nexus_ptr))) {

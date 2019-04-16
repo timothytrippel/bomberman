@@ -65,6 +65,8 @@ class Connection {
         // General Getters
         Signal*      get_source()     const;
         Signal*      get_sink()       const;
+        unsigned int get_source_id()  const;
+        unsigned int get_sink_id()    const;
         unsigned int get_source_msb() const;
         unsigned int get_source_lsb() const;
         unsigned int get_sink_msb()   const;
@@ -81,11 +83,13 @@ class Connection {
         Signal*      source_;
         unsigned int source_msb_;
         unsigned int source_lsb_;
+        unsigned int source_id_;  // for arrayed signals
 
         // Sink Signal
         Signal*      sink_;
         unsigned int sink_msb_;
         unsigned int sink_lsb_;
+        unsigned int sink_id_;  // for arrayed signals
 };
 
 // ------------------------------------------------------------

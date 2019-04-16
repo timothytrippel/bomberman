@@ -76,8 +76,6 @@ typedef enum ivl_obj_type_e {
     IVL_SIGNAL = 1,
     IVL_CONST  = 2,
     IVL_EXPR   = 3
-    // IVL_LPM    = 4,
-    // IVL_LOGIC  = 5,
 } ivl_obj_type_t;
 
 // ------------------------------------------------------------
@@ -97,15 +95,19 @@ class Signal {
         bool operator!=(const Signal& sig) const;
 
         // General Getters
-        string         get_fullname()   const;
-        string         get_basename()   const;
-        ivl_object_t   get_ivl_obj()    const;
-        ivl_obj_type_t get_ivl_type()   const;
-        ivl_signal_t   get_ivl_signal() const;
-        unsigned       get_msb()        const;
-        unsigned       get_lsb()        const;
-        bool 		   is_signal()      const;
-		bool 		   is_const()       const;
+        string         get_fullname()    const;
+        string         get_basename()    const;
+        ivl_object_t   get_ivl_obj()     const;
+        ivl_obj_type_t get_ivl_type()    const;
+        ivl_signal_t   get_ivl_signal()  const;
+        unsigned int   get_msb()         const;
+        unsigned int   get_lsb()         const;
+        unsigned int   get_id()          const;
+        unsigned int   get_array_base()  const;
+        unsigned int   get_array_count() const;
+        bool 		   is_signal()       const;
+		bool 		   is_const()        const;
+        bool           is_arrayed()      const;
 
         // Dot Getters
         string get_dot_label() const;
@@ -114,6 +116,7 @@ class Signal {
         // General Setters
         void set_is_ff();
         void set_is_input();
+        void set_id(unsigned int value);
 
         // Other
         bool         is_ivl_generated() const;

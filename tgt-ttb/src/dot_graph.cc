@@ -82,7 +82,7 @@ void DotGraph::add_node(Signal* signal, string ws) const {
 
         // Print to dot file
         fprintf(file_ptr_, "\t\"%s\" [shape=%s, label=\"%s%s\"];\n", 
-            signal->get_fullname().c_str(), 
+            signal->get_fullname().c_str(),
             signal->get_dot_shape().c_str(), 
             signal->get_fullname().c_str(), 
             signal->get_dot_label().c_str());

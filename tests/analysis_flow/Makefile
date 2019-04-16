@@ -1,6 +1,6 @@
 # Directory Structure
-TGT_TTB_DIR=../../tgt-ttb
-SCRIPTS := ../../scripts
+TGT_TTB_DIR :=../../tgt-ttb
+SCRIPTS     := ../../scripts
 
 # Configurations
 CLK_BASENAME := clk
@@ -17,7 +17,7 @@ d_ff:
 split:
 	$(MAKE) script TGT=split
 
-# VCD Analysis Script
+# VCD/Dot Analysis Script
 script: tgt-ttb $(TGT)/$(TGT).vcd $(TGT)/$(TGT).dot
 	python2 $(SCRIPTS)/analyze.py $(TGT)/$(TGT).dot $(TGT)/$(TGT).vcd
 

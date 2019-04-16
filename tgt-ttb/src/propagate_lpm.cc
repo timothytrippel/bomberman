@@ -141,7 +141,7 @@ void process_lpm_part_select(ivl_lpm_t    lpm,
     input_nexus = ivl_lpm_data(lpm, LPM_PART_SELECT_INPUT_NEXUS_INDEX);
 
     // Get base pin (1) nexus for part-select LPM device, which
-    // may be NULL if not used is non-constant base is used.
+    // may be NULL if non-constant base is used.
     base_nexus = ivl_lpm_data(lpm, LPM_PART_SELECT_BASE_NEXUS_INDEX);
     if (base_nexus) {
         Error::not_supported("non-constant base for LPM part select device.");

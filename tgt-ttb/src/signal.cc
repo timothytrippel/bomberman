@@ -35,10 +35,10 @@ Signal::Signal(ivl_signal_t signal):
 	is_ff_(false),
 	is_input_(false) {
 
-		// Check if the signal is an input
-		if (ivl_signal_port(signal) == IVL_SIP_INPUT) {
-			set_is_input();
-		}
+	// Check if the signal is an input
+	if (ivl_signal_port(signal) == IVL_SIP_INPUT) {
+		set_is_input();
+	}
 }
 
 // Net Constant
@@ -49,10 +49,9 @@ Signal::Signal(ivl_net_const_t constant):
 	is_ff_(false),
 	is_input_(false) {
 
-		// Increment Constant ID counter
-		const_id++;
-
-	}
+	// Increment Constant ID counter
+	const_id++;
+}
 
 // Constant Expression
 Signal::Signal(ivl_expr_t expression):
@@ -62,10 +61,9 @@ Signal::Signal(ivl_expr_t expression):
 	is_ff_(false),
 	is_input_(false) {
 
-		// Increment Constant ID counter
-		const_id++;
-
-	}
+	// Increment Constant ID counter
+	const_id++;
+}
 
 // ----------------------------------------------------------------------------------
 // --------------------------------- Operators --------------------------------------
@@ -166,12 +164,30 @@ unsigned int Signal::get_lsb() const {
         case IVL_SIGNAL:
             return get_signal_lsb();
         case IVL_CONST:
-            return 0;
         case IVL_EXPR:
-            return 0;
         default:
             return 0;
     }
+}
+
+unsigned int Signal::get_id() const {
+	return id_;
+}
+
+unsigned int Signal::get_array_base() const {
+	if (ivl_type_ == IVL_SIGNAL) {
+		return ivl_signal_array_base(ivl_object_.ivl_signal);
+	} else {
+		return 0;
+	}
+}
+
+unsigned int Signal::get_array_count() const {
+	if (ivl_type_ == IVL_SIGNAL) {
+		return ivl_signal_array_count(ivl_object_.ivl_signal);
+	} else {
+		return 1;
+	}
 }
 
 bool Signal::is_signal() const {
@@ -191,6 +207,16 @@ bool Signal::is_const() const {
 	}
 }
 
+bool Signal::is_arrayed() const {
+	if (ivl_type_ == IVL_SIGNAL) {
+		if (ivl_signal_dimensions(ivl_object_.ivl_signal) > 0) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
 // ----------------------------------- Signal ---------------------------------------
 
 string Signal::get_signal_scopename() const {
@@ -202,7 +228,15 @@ string Signal::get_signal_basename() const {
 }
 
 string Signal::get_signal_fullname() const {
-    return (get_signal_scopename() + string(".") + get_signal_basename());
+	if (this->is_arrayed()) {
+		return (get_signal_scopename() + 
+			string(".") + 
+			to_string(id_) + 
+			string(".") + 
+			get_signal_basename());	
+	} else {
+		return (get_signal_scopename() + string(".") + get_signal_basename());	
+	}
 }
 
 unsigned int Signal::get_signal_msb() const {
@@ -378,11 +412,20 @@ void Signal::set_is_ff() {
 
 void Signal::set_is_input() {
 	
-	// Check that it is a signal and of reg type
+	// Check that it is a signal
 	assert(this->is_signal() && "ERROR: constants cannot be flagged as an INPUT.\n");
 
 	// Set is_input_
 	is_input_ = true;
+}
+
+void Signal::set_id(unsigned int value) {
+	
+	// Check that it is a signal
+	assert(this->is_signal() && "ERROR: ID of constants cannot be manipulated.\n");
+
+	// Set the id_ value
+	id_ = value;
 }
 
 // ----------------------------------------------------------------------------------

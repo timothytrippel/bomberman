@@ -199,7 +199,6 @@ Signal* process_statement_assign_lval(
     Error::check_lvals_not_concatenated(num_lvals, statement);
 
     // Get lval object
-    // @TODO: support concatenated lvals
     lval = ivl_stmt_lval(statement, STMT_ASSIGN_LVAL_INDEX);
 
     // Get MSB of lval
@@ -209,12 +208,25 @@ Signal* process_statement_assign_lval(
     // @TODO: support nested lvals
     Error::check_lval_not_nested(lval, statement);
 
-    // Check for (NON-SUPPORTED) memory lvals
-    // @TODO: support memory lvals
-    Error::check_lval_not_memory(lval, statement);
-
     // Get sink signal
     sink_signal = sg->get_signal_from_ivl_signal(ivl_lval_sig(lval));
+
+    // Check if memory lval (i.e. lval is an arrayed signal)
+    if ((part_select_expr = ivl_lval_idx(lval))) {
+        fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing lval array index ...\n", ws.c_str());
+
+        // Get LVAL signal array index as constant expression (Signal).
+        // Note: Number of source signals added to queue should be 1,
+        // because non-constant lval offsets are NOT supported.
+        part_select_sources = process_expression(part_select_expr, statement, sg, ws + WS_TAB);
+        assert(part_select_sources == 1 && "ERROR: more than one LVAL part select expr. processed.\n");
+        part_select = sg->pop_from_source_signals_queue();
+        sg->pop_from_source_signals_ids_queue();
+
+        // Set sink signal ID (arrayed sink signals)
+        sink_signal->set_id(part_select->process_as_partselect_expr(statement));
+        fprintf(DEBUG_PRINTS_FILE_PTR, "%slval array index is: %u\n", ws.c_str(), sink_signal->get_id());
+    }
     
     // Set sink signal as FF if inside an FF block
     if (sg->check_if_inside_ff_block()) {
@@ -227,10 +239,11 @@ Signal* process_statement_assign_lval(
 
         // Get part-select as constant expression (Signal).
         // Note: Number of source signals added to queue should be 1,
-        // because non-constant lval offsets are not supported.
+        // because non-constant lval offsets are NOT supported.
         part_select_sources = process_expression(part_select_expr, statement, sg, ws + WS_TAB);
-        assert(part_select_sources == 1 && "ERROR: more than one part select expr. processed.\n");
+        assert(part_select_sources == 1 && "ERROR: more than one LVAL part select expr. processed.\n");
         part_select = sg->pop_from_source_signals_queue();
+        sg->pop_from_source_signals_ids_queue();
 
         // Update MSB and LSB of slice
         part_select_lsb = part_select->process_as_partselect_expr(statement);
@@ -298,7 +311,13 @@ void process_statement_assign(
     fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing connections ...\n", ws.c_str());
     for (int i = (sg->get_num_source_signals() - 1); i >= 0; i--) {
 
+        // Get source signal
         source_signal = sg->get_source_signal(i);
+
+        // Set source signal ID (arrayed source signals)
+        if (source_signal->is_signal()) {
+            source_signal->set_id(sg->get_source_signal_id(i));
+        }
 
         // Check if connection contains IVL generated signals.
         // If so, temporarily store the connections and process
@@ -321,6 +340,7 @@ void process_statement_assign(
     // Pop processed source nodes from queue
     num_nodes_processed = sg->pop_from_num_signals_at_depth_queue();
     sg->pop_from_source_signals_queue(num_nodes_processed);
+    sg->pop_from_source_signals_ids_queue(num_nodes_processed);
     fprintf(DEBUG_PRINTS_FILE_PTR, "%spopped %d source node(s) from queue\n", 
         ws.c_str(), num_nodes_processed);
 
@@ -382,6 +402,7 @@ void process_statement(ivl_statement_t statement,
         ws.c_str(), get_statement_type_as_string(statement));
 
     switch (ivl_statement_type(statement)) {
+
         case IVL_ST_NOOP:
             // DO NOTHING
             break;
@@ -419,7 +440,6 @@ void process_statement(ivl_statement_t statement,
             process_statement_wait(statement, sg, ws);
             break;
 
-        case IVL_ST_NONE:
         case IVL_ST_ALLOC:
         case IVL_ST_CONTRIB:
         case IVL_ST_DEASSIGN:

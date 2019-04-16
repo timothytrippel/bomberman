@@ -86,26 +86,48 @@ const char* get_expr_type_as_string(ivl_expr_t expression) {
 
 unsigned int process_expression_signal(
     ivl_expr_t      expression,
+    ivl_statement_t statement,
     SignalGraph*    sg, 
     string          ws) {
 
     // Source signal object
     Signal* source_signal = NULL;
 
+    // Signal array index expression (arrayed signals)
+    unsigned int num_index_exprs = 0;
+    unsigned int array_index     = 0;
+    Signal*      index_expr      = NULL;
+
     // Get expression IVL signal (source signal)
     ivl_signal_t source_ivl_signal = ivl_expr_signal(expression);
 
+    // Get arrayed index expression
+    num_index_exprs = process_expression(ivl_expr_oper1(expression), statement, sg, ws + WS_TAB);
+    
+    // Check that array index consists of (only) one expression
+    if (num_index_exprs == 1) {
+
+        // Get array index (i.e. source signal ID)
+        index_expr  = sg->pop_from_source_signals_queue();
+        sg->pop_from_source_signals_ids_queue();
+        array_index = index_expr->process_as_partselect_expr(statement);
+
+    } else {
+
+        // If there is not EXACTLY 1 base expression, there must be none
+        assert(num_index_exprs == 0 && 
+            "ERROR: non-zero number of signal word index expressions encountered.\n");
+    }
+
     // Check if signal is to be ignored
     if (!sg->check_if_ignore_signal(source_ivl_signal)) {
-        
-        // Check if signal is arrayed
-        Error::check_signal_not_arrayed(sg->get_signals_map(), source_ivl_signal);
 
         // Get signal object
         source_signal = sg->get_signal_from_ivl_signal(source_ivl_signal);
 
         // Push source node to source nodes queue
         sg->push_to_source_signals_queue(source_signal, ws + WS_TAB);
+        sg->push_to_source_signals_ids_queue(array_index, ws + WS_TAB);
     }
 
     return 1;
@@ -123,6 +145,7 @@ unsigned int process_expression_number(
 
     // Push source node to source nodes queue
     sg->push_to_source_signals_queue(source_signal, ws + WS_TAB);
+    sg->push_to_source_signals_ids_queue(0, ws + WS_TAB);
 
     return 1;
 }
@@ -158,11 +181,18 @@ unsigned int process_expression_select(
     num_index_exprs = process_expression(ivl_expr_oper2(expression), statement, sg, ws + WS_TAB);
 
     // Check that index consists of (only) one IVL expression
-    assert(num_index_exprs == 1 && "ERROR: more than one index expr. processed.\n");
-    index = sg->pop_from_source_signals_queue();
+    assert((num_index_exprs == 0 || num_index_exprs == 1) && "ERROR: more than one index expr. processed.\n");
+    if (num_index_exprs) {
+        
+        // Get index
+        index = sg->pop_from_source_signals_queue();
+        sg->pop_from_source_signals_ids_queue();
 
-    // Get LSB and MSB of select
-    lsb = index->process_as_partselect_expr(statement);
+        // Get LSB of select
+        lsb = index->process_as_partselect_expr(statement);
+    }
+
+    // Get MSB of select
     msb = lsb + ivl_expr_width(expression) - 1;
 
     // Add source slice (of base) to queue
@@ -295,7 +325,7 @@ unsigned int process_expression(
 
     switch (ivl_expr_type(expression)) {
         case IVL_EX_NONE:
-            Error::not_supported("expression type (IVL_EX_NONE).");
+            // do nothing
             break;
         case IVL_EX_ARRAY:
             Error::not_supported("expression type (IVL_EX_ARRAY).");
@@ -349,7 +379,7 @@ unsigned int process_expression(
             Error::not_supported("expression type (IVL_EX_SHALLOWCOPY).");
             break;
         case IVL_EX_SIGNAL:
-            return process_expression_signal(expression, sg, ws);
+            return process_expression_signal(expression, statement, sg, ws);
         case IVL_EX_STRING:
             Error::not_supported("expression type (IVL_EX_STRING).");
             break;

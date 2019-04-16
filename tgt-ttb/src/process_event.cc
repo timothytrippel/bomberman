@@ -79,6 +79,7 @@ unsigned int process_event_nexus(
 
         // Push signal to source signals queue
         sg->push_to_source_signals_queue(source_signal, ws + WS_TAB);
+        sg->push_to_source_signals_ids_queue(0, ws + WS_TAB);
     }
 
     return 1;

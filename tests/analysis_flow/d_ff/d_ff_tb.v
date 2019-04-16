@@ -4,6 +4,7 @@ reg clk, reset, d;
 wire q, q_bar;
 
 d_ff d0(
+	.reset(reset),
 	.d (d),
 	.clk (clk),
 	.q (q),

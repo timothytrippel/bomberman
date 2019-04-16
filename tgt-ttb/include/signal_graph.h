@@ -68,11 +68,15 @@ class SignalGraph {
         
         // Source Signals Queue Getters
         unsigned long get_num_source_signals()                        const;
+        unsigned long get_num_source_signals_ids()                    const;
         signals_q_t   get_source_signals_queue()                      const;
         Signal*       get_source_signal(unsigned int index)           const;
+        unsigned int  get_source_signal_id(unsigned int index)        const;
         bool          check_if_clk_signal(ivl_signal_t source_signal) const;
         Signal*       pop_from_source_signals_queue();
         void          pop_from_source_signals_queue(unsigned int num_nodes);
+        unsigned int  pop_from_source_signals_ids_queue();
+        void          pop_from_source_signals_ids_queue(unsigned int num_ids);
 
         // Enumeration Depth Queue Getters
         unsigned long get_scope_depth() const;
@@ -99,6 +103,7 @@ class SignalGraph {
 
         // Source Signals Queue Setters
         void push_to_source_signals_queue(Signal* source_node, string ws);
+        void push_to_source_signals_ids_queue(unsigned int id, string ws);
 
         // Enumeration Depth Queue Setters
         void push_to_num_signals_at_depth_queue(unsigned int num_signals);
@@ -146,12 +151,13 @@ class SignalGraph {
         unsigned long          num_local_connections_; // number of local connections to be processed
         bool                   inside_ff_block_;       // indicates if processing inside a FF block
         bool                   ignore_constants_;      // indicates if constants should be ignored
-        bool                   track_source_slices_;   //
-        bool                   track_sink_slices_;     //
+        bool                   track_source_slices_;   // indicates if source slices should be tracked
+        bool                   track_sink_slices_;     // indicates if sink slices should be tracked
         string                 clk_basename_;          // indicates if processing inside a FF block
         DotGraph*              dg_;                    // dot graph object
         sig_map_t              signals_map_;           // IVL signal to Signal object map
         signals_q_t            source_signals_;        // source signal queue
+        vector<unsigned int>   source_signals_ids_;    // source signal ID's queue
         vector<unsigned int>   num_signals_at_depth_;  // back is num source nodes at current depth
         vector<signal_slice_t> source_slices_;         // source signal slice information stack
         vector<signal_slice_t> sink_slices_;           // sink signal slice information stack
@@ -161,6 +167,7 @@ class SignalGraph {
 
         // Signal Enumeration
         void find_signals(ivl_scope_t scope);
+        void add_signal(ivl_signal_t signal);
 
         // Connection Tracking Setters
         void add_signal_to_ignore(string signal_basename);

@@ -62,7 +62,7 @@ tgt-ttb:
 	$(MAKE) -C $(TGT_TTB_DIR)
 
 # IVL Target TTB Module Analysis
-$(DOT_DIR)/%.dot: $(SRC_DIR)/%.v
+$(DOT_DIR)/%.dot: $(SRC_DIR)/%.v tgt-ttb
 	mkdir -p dot
 	mkdir -p pdf
 	iverilog -o $@ -pclk=$(CLK_BASENAME) -t ttb $<

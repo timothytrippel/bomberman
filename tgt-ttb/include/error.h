@@ -53,10 +53,10 @@ class Error {
         static void check_scope_types(ivl_scope_t* scopes, unsigned int num_scopes);
         static void check_signal_exists_in_map(sig_map_t signals, ivl_signal_t signal);
         static void check_signal_not_arrayed(sig_map_t signals, ivl_signal_t signal);
+        static void check_arrayed_signal(sig_map_t signals, ivl_signal_t signal);
         static void check_signal_not_multidimensional(sig_map_t signals, ivl_signal_t signal);
         static void check_lvals_not_concatenated(unsigned int num_lvals, ivl_statement_t statement);
         static void check_lval_not_nested(ivl_lval_t lval, ivl_statement_t statement);
-        static void check_lval_not_memory(ivl_lval_t lval, ivl_statement_t statement);
         static void check_part_select_expr(ivl_obj_type_t obj_type, ivl_statement_t statement);
         static void check_slice_tracking_stack(unsigned int size, unsigned int size_limit);
 

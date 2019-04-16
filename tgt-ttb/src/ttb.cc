@@ -71,6 +71,9 @@ void find_continuous_connections(SignalGraph* sg) {
     // Signal object pointer
     Signal* current_signal = NULL;
 
+    // (Current) sink signal nexus
+    ivl_nexus_t sink_nexus = NULL;
+
     // Get signals adjacency list
     sig_map_t signals_map = sg->get_signals_map();
 
@@ -94,17 +97,33 @@ void find_continuous_connections(SignalGraph* sg) {
                 current_signal->get_fullname().c_str(),
                 get_signal_port_type_as_string(current_signal->get_ivl_signal()));
 
-            // Get signal nexus
-            // There is exactly one nexus for each WORD of a signal.
-            // Since we only support non-arrayed signals (above), 
-            // each signal only has one nexus.
-            const ivl_nexus_t sink_nexus = ivl_signal_nex(it->first, 0);
+            // fprintf(DEBUG_PRINTS_FILE_PTR, "Dims = %d, Base = %d; Count = %d; Swapped = %d\n", 
+            //     ivl_signal_dimensions(it->first),
+            //     ivl_signal_array_base(it->first), 
+            //     ivl_signal_array_count(it->first),
+            //     ivl_signal_array_addr_swapped(it->first));
+            
+            // Iterate over signal nexi
+            for (unsigned int i = ivl_signal_array_base(it->first); i < ivl_signal_array_count(it->first); i++) {
+                
+                // Get signal nexus
+                // There is exactly one nexus for each WORD of a signal.
+                sink_nexus = ivl_signal_nex(it->first, i);
 
-            // Check nexus is not NULL
-            assert(sink_nexus && "ERROR: sink nexus is not valid.\n");
+                // Check nexus is not NULL
+                if (sink_nexus) {
 
-            // Propagate the nexus
-            propagate_nexus(sink_nexus, it->second, sg, WS_TAB);
+                    // Set sink signal ID to nexus index (arrayed)
+                    current_signal->set_id(i);
+
+                    // Propagate the nexus
+                    propagate_nexus(sink_nexus, it->second, sg, WS_TAB);
+                } else {
+
+                    // Nexus is NULL --> skip it
+                    fprintf(DEBUG_PRINTS_FILE_PTR, "%sskipping (NULL) nexus for signal word %d\n", WS_TAB, i);
+                }
+            }
         }
 
         // Increment the iterator

@@ -174,9 +174,11 @@ def main():
 	num_skipped_signals   = len(skipped.keys())
 	num_malicious_signals = len(malicious.keys())
 	num_constant_signals  = len(constants.keys())
-	print "	Num. Not Simulated: " + str(num_skipped_signals)
-	print "	Num. Malicous:      " + str(num_malicious_signals)
-	print "	Num. Constants:     " + str(num_constant_signals)
+	print "	Num. Possible Coalesced:   " + str(len(dist_counters))
+	print "	Num. Possible Distributed: " + str(len(coal_counters))
+	print "	Num. Not Simulated:        " + str(num_skipped_signals)
+	print "	Num. Malicous:             " + str(num_malicious_signals)
+	print "	Num. Constants:            " + str(num_constant_signals)
 	print
 
 	##

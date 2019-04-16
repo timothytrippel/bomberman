@@ -36,6 +36,7 @@ SignalGraph::SignalGraph():
     dg_(NULL),
     signals_map_(),
     source_signals_(),
+    source_signals_ids_(),
     num_signals_at_depth_(),
     source_slices_(),
     sink_slices_(),
@@ -221,27 +222,49 @@ unsigned long SignalGraph::get_num_source_signals() const {
     return source_signals_.size();
 }
 
+unsigned long SignalGraph::get_num_source_signals_ids() const {
+    return source_signals_ids_.size();
+}
+
 signals_q_t SignalGraph::get_source_signals_queue() const {
     return source_signals_;   
 }
 
 Signal* SignalGraph::get_source_signal(unsigned int index) const {
+    
     // Check index is within vector bounds and 
     // vector is NOT empty
     assert(index >= 0 && 
         index < get_num_source_signals() &&
         get_num_source_signals() != 0 &&
-        "ERROR: index is outside bounds of source_nodes_ vector.\n");
+        "ERROR: index is outside bounds of source_signals_ vector.\n");
 
     return source_signals_[index];
 }
 
+unsigned int SignalGraph::get_source_signal_id(unsigned int index) const {
+    
+    // Check index is within vector bounds and 
+    // vector is NOT empty
+    assert(index >= 0 && 
+        index < get_num_source_signals_ids() &&
+        get_num_source_signals_ids() != 0 &&
+        "ERROR: index is outside bounds of source_signals_ids_ vector.\n");
+
+    return source_signals_ids_[index];
+}
+
 bool SignalGraph::check_if_clk_signal(ivl_signal_t source_signal) const {
-    if (strcmp(clk_basename_.c_str(), ivl_signal_basename(source_signal))) {
-        return false;
-    } else {
+    if (string(ivl_signal_basename(source_signal)).find(clk_basename_) != string::npos) {
         return true;
+    } else {
+        return false;
     }
+    // if (strcmp(clk_basename_.c_str(), ivl_signal_basename(source_signal))) {
+    //     return false;
+    // } else {
+    //     return true;
+    // }
 }
 
 Signal* SignalGraph::pop_from_source_signals_queue() {
@@ -249,6 +272,7 @@ Signal* SignalGraph::pop_from_source_signals_queue() {
 
     // Check if source nodes queue is not empty
     if (get_num_source_signals() > 0) {
+
         // Get last signal in queue
         source_signal = source_signals_.back();
 
@@ -276,6 +300,42 @@ void SignalGraph::pop_from_source_signals_queue(unsigned int num_signals) {
     } else {
 
         Error::popping_source_signals_queue(num_signals, get_num_source_signals());
+    }
+}
+
+unsigned int SignalGraph::pop_from_source_signals_ids_queue() {
+    unsigned int id = 0;
+
+    // Check if source nodes queue is not empty
+    if (get_num_source_signals_ids() > 0) {
+
+        // Get last signal ID in queue
+        id = source_signals_ids_.back();
+
+        // Remove last signal in queue
+        source_signals_ids_.pop_back();   
+    } else {
+        Error::popping_source_signals_queue(1, get_num_source_signals_ids());
+    }
+
+    // Return removed node
+    return id;
+}
+
+void SignalGraph::pop_from_source_signals_ids_queue(unsigned int num_ids) {
+    
+    // Check if source signals queue is large enough
+    if (get_num_source_signals_ids() >= num_ids) {
+        
+        // Pop num_signals from queue
+        for (unsigned int i = 0; i < num_ids; i++) {
+            
+            // Remove last signal in queue
+            source_signals_ids_.pop_back();   
+        } 
+    } else {
+
+        Error::popping_source_signals_queue(num_ids, get_num_source_signals_ids());
     }
 }
 
@@ -416,6 +476,19 @@ void SignalGraph::push_to_source_signals_queue(Signal* source_signal, string ws)
         source_signal->get_fullname().c_str());
 
     source_signals_.push_back(source_signal);
+}
+
+void SignalGraph::push_to_source_signals_ids_queue(unsigned int id, string ws) {
+    // Check that source signal queue is one longer than the IDs queue
+    // (i.e., the source signal has already been added to the sources queue.)
+    assert(get_num_source_signals_ids() == (get_num_source_signals() - 1) && 
+        "ERROR: push sources signal to queue BEFORE ID.\n");
+
+    fprintf(DEBUG_PRINTS_FILE_PTR, "%sadding source node ID (%d) to connection queue\n", 
+        ws.c_str(), 
+        id);
+
+    source_signals_ids_.push_back(id);
 }
 
 // ------------------------- Enumeration Depth Queue --------------------------------
@@ -647,8 +720,17 @@ void SignalGraph::write_signals_to_dot_graph() {
                 // Check if signal is local (IVL generated)
                 if (!sig_it->second->is_ivl_generated()) {
 
-                    // Add signal to dot graph
-                    dg_->add_node(sig_it->second, "");
+                    // Iterate over all words in signal
+                    for (unsigned int i = sig_it->second->get_array_base(); 
+                                      i < sig_it->second->get_array_count(); 
+                                      i++) {
+
+                        // Set ID of signal
+                        sig_it->second->set_id(i);
+
+                        // Add signal to dot graph
+                        dg_->add_node(sig_it->second, "");   
+                    }
                 }
             }
         }
@@ -684,45 +766,51 @@ void SignalGraph::find_signals(ivl_scope_t scope) {
     // Scope is a base scope
     unsigned int num_signals = ivl_scope_sigs(scope);
     for (unsigned int i = 0; i < num_signals; i++) {
+    
         // Get current signal
         current_signal = ivl_scope_sig(scope, i);
-
-        // Check if signal is arrayed
-        // @TODO: support arrayed signals 
-        // (i.e. signals with more than one nexus)
-        Error::check_signal_not_arrayed(signals_map_, current_signal);
-
-        // Check if signal is multi-dimensional
-        // @TODO: support multi-dimensional signals 
-        // (i.e. signals packed dimensions like memories)
-        Error::check_signal_not_multidimensional(signals_map_, current_signal);
 
         // Check if signal already exists in map
         Error::check_signal_exists_in_map(signals_map_, current_signal);
 
-        // Add signal to map
-        signals_map_[current_signal] = new Signal(current_signal);
-
-        // Check if signal is to be ignored
-        if (!check_if_ignore_signal(current_signal)) {
-
-            // Initialize signal connections queue
-            // Ignore local (IVL) generated signals.
-            if (!ivl_signal_local(current_signal)) {
-                // Intialize connections queue for signal
-                connections_map_[signals_map_[current_signal]] = new conn_q_t();
-
-                // Increment Signals Counter
-                num_signals_++;
-            } else {
-
-                // Increment Local Signals Counter
-                num_local_signals_++;
-            }
-        } else {
-            num_signals_ignored_++;
-        }
+        // Add signal to graph
+        add_signal(current_signal);
     } 
+}
+
+void SignalGraph::add_signal(ivl_signal_t signal) {
+
+    // Add signal to map
+    signals_map_[signal] = new Signal(signal);
+
+    // Check if arrayed signal has negative array base
+    // @TODO: support arrayed signals with negative bases
+    Error::check_arrayed_signal(signals_map_, signal);
+
+    // Check if signal is multi-dimensional
+    // @TODO: support multi-dimensional signals 
+    // (i.e. signals packed dimensions like memories)
+    Error::check_signal_not_multidimensional(signals_map_, signal);
+
+    // Check if signal is to be ignored
+    if (!check_if_ignore_signal(signal)) {
+
+        // Initialize signal connections queue
+        // Ignore local (IVL) generated signals.
+        if (!ivl_signal_local(signal)) {
+            // Intialize connections queue for signal
+            connections_map_[signals_map_[signal]] = new conn_q_t();
+
+            // Increment Signals Counter
+            num_signals_++;
+        } else {
+
+            // Increment Local Signals Counter
+            num_local_signals_++;
+        }
+    } else {
+        num_signals_ignored_++;
+    }
 }
 
 // ----------------------------------------------------------------------------------

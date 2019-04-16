@@ -148,6 +148,7 @@ unsigned int process_expression(
 
 unsigned int process_expression_signal(
     ivl_expr_t      expression,
+    ivl_statement_t statement,
     SignalGraph*    sg, 
     string          ws);
 
