@@ -17,13 +17,13 @@ nexus is connected to the INPUT of a LOGIC device.
 
 // TTB Headers
 #include "ttb_typedefs.h"
-#include "ttb.h"
+#include "tracker.h"
 #include "error.h"
 
 // ----------------------------------------------------------------------------------
 // ------------------------------- Helper Functions ---------------------------------
 // ----------------------------------------------------------------------------------
-const char* get_logic_type_as_string(ivl_net_logic_t logic) {
+const char* Tracker::get_logic_type_as_string(ivl_net_logic_t logic) {
     switch (ivl_logic_type(logic)) {
         case IVL_LO_NONE:
             return "IVL_LO_NONE";
@@ -81,11 +81,12 @@ const char* get_logic_type_as_string(ivl_net_logic_t logic) {
 // ----------------------------------------------------------------------------------
 // --------------------------- Main LOGIC Progation ---------------------------------
 // ----------------------------------------------------------------------------------
-void propagate_logic(ivl_net_logic_t logic, 
-                     ivl_nexus_t  sink_nexus,
-                     Signal*      sink_signal,
-                     SignalGraph* sg,
-                     string       ws) {
+
+void Tracker::propagate_logic(
+    ivl_net_logic_t logic, 
+    ivl_nexus_t     sink_nexus,
+    Signal*         sink_signal,
+    string          ws) {
 
     // LOGIC device pin nexus
     ivl_nexus_t pin_nexus = NULL;
@@ -105,7 +106,7 @@ void propagate_logic(ivl_net_logic_t logic,
             pin_nexus = ivl_logic_pin(logic, i);
 
             // Propagate the nexus
-            propagate_nexus(pin_nexus, sink_signal, sg, ws + WS_TAB);
+            propagate_nexus(pin_nexus, sink_signal, ws + WS_TAB);
         }
     }
 }

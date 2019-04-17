@@ -34,6 +34,7 @@ using namespace std;
 #define LAUNCH_MESSAGE                 "Entering TTB Target Module..."
 #define CONFIGS_MESSAGE                "Loading Configurations:"
 #define INITIALIZE_SIG_GRAPH_MESSAGE   "Intializing signals map..."
+#define INITIALIZE_TRACKERS_MESSAGE    "Intializing connection trackers..."
 #define SCOPE_EXPANSION_MESSAGE        "Identifying top-level modules..."
 #define SIGNAL_ENUM_MESSAGE            "Enumerating signals..."
 #define COMB_CONNECTION_ENUM_MESSAGE   "Enumerating continuous logic connections..."

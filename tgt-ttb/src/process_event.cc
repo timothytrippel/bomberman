@@ -12,18 +12,17 @@ i.e., @(posedge), @(negedge), or @(anyedge).
 
 // TTB Headers
 #include "ttb_typedefs.h"
-#include "ttb.h"
+#include "tracker.h"
 #include "error.h"
 
 // ----------------------------------------------------------------------------------
 // --------------------------- SUB-PROCESSING Functions -----------------------------
 // ----------------------------------------------------------------------------------
 
-unsigned int process_event_nexus(
+unsigned int Tracker::process_event_nexus(
     ivl_event_t     event,
     ivl_nexus_t     nexus, 
     ivl_statement_t statement, 
-    SignalGraph*    sg, 
     string          ws) {
 
     // Source IVL signal
@@ -66,20 +65,19 @@ unsigned int process_event_nexus(
     // Check if CLK signal is one of source signals. If so, 
     // it means we have entered an always block, and subsequent
     // sink signals should be marked as FFs.
-    if (sg->check_if_clk_signal(source_ivl_signal)) {
+    if (check_if_clk_signal(source_ivl_signal)) {
         fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocess is clocked\n", ws.c_str());
-        sg->set_inside_ff_block();
+        set_inside_ff_block();
     } 
     
     // Check if signal is to be ignored
-    if (!sg->check_if_ignore_signal(source_ivl_signal)) {
+    if (!sg_->check_if_ignore_signal(source_ivl_signal)) {
 
         // Get signal object from IVL source signal
-        Signal* source_signal = sg->get_signal_from_ivl_signal( source_ivl_signal );
+        Signal* source_signal = sg_->get_signal_from_ivl_signal(source_ivl_signal);
 
         // Push signal to source signals queue
-        sg->push_to_source_signals_queue(source_signal, ws + WS_TAB);
-        sg->push_to_source_signals_ids_queue(0, ws + WS_TAB);
+        push_source_signal(source_signal, 0, ws + WS_TAB);
     }
 
     return 1;
@@ -89,10 +87,9 @@ unsigned int process_event_nexus(
 // --------------------------- Main PROCESSING Function -----------------------------
 // ----------------------------------------------------------------------------------
 
-unsigned int process_event(
+unsigned int Tracker::process_event(
     ivl_event_t     event, 
     ivl_statement_t statement, 
-    SignalGraph*    sg, 
     string          ws) {
 
     ivl_nexus_t  event_nexus            = NULL;
@@ -107,7 +104,7 @@ unsigned int process_event(
         for (unsigned int j = 0; j < num_posedge_nexus_ptrs; j++) {
             event_nexus = ivl_event_pos(event, j);      
             num_nodes_processed += process_event_nexus(
-                event, event_nexus, statement, sg, ws);
+                event, event_nexus, statement, ws);
         }
     }
 
@@ -117,7 +114,7 @@ unsigned int process_event(
         for (unsigned int j = 0; j < num_negedge_nexus_ptrs; j++) {
             event_nexus = ivl_event_neg(event, j);      
             num_nodes_processed += process_event_nexus(
-                event, event_nexus, statement, sg, ws);
+                event, event_nexus, statement, ws);
         }
     }
 
@@ -127,7 +124,7 @@ unsigned int process_event(
         for (unsigned int j = 0; j < num_anyedge_nexus_ptrs; j++) {
             event_nexus = ivl_event_any(event, j);      
             num_nodes_processed += process_event_nexus(
-                event, event_nexus, statement, sg, ws);
+                event, event_nexus, statement, ws);
         }
     }
 

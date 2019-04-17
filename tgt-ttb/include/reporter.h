@@ -25,6 +25,7 @@ Graphviz .dot file.
 
 // TTB Headers
 #include "signal.h"
+#include "signal_graph.h"
 
 // Import STD Namespace
 using namespace std;

@@ -12,13 +12,13 @@ IVL process blocks include initial, always, and final blocks.
 
 // TTB Headers
 #include "ttb_typedefs.h"
-#include "ttb.h"
+#include "tracker.h"
 #include "error.h"
 
 // ----------------------------------------------------------------------------------
 // ------------------------------- Helper Functions ---------------------------------
 // ----------------------------------------------------------------------------------
-const char* get_statement_type_as_string(ivl_statement_t statement) {
+const char* Tracker::get_statement_type_as_string(ivl_statement_t statement) {
     switch (ivl_statement_type(statement)) {
         case IVL_ST_NONE:
             return "IVL_ST_NONE";
@@ -93,9 +93,8 @@ const char* get_statement_type_as_string(ivl_statement_t statement) {
 
 // ------------------------------- WAIT Statement -----------------------------------
 
-void process_statement_wait(
+void Tracker::process_statement_wait(
     ivl_statement_t statement, 
-    SignalGraph*    sg, 
     string          ws) {
 
     ivl_event_t     event               = NULL; // event to be processed
@@ -113,23 +112,22 @@ void process_statement_wait(
         event = ivl_stmt_events(statement, i);
 
         // Process event
-        num_nodes_processed += process_event(event, statement, sg, ws + WS_TAB);
+        num_nodes_processed += process_event(event, statement, ws + WS_TAB);
     }
 
     // Push number of source nodes processed at this depth
-    sg->push_to_num_signals_at_depth_queue(num_nodes_processed);
+    push_scope_depth(num_nodes_processed);
     fprintf(DEBUG_PRINTS_FILE_PTR, "%spushed %d source node(s) to queue\n", 
         ws.c_str(), num_nodes_processed);
 
     // Get/process sub-statement
     if ((sub_statement = ivl_stmt_sub_stmt(statement))) {
-        process_statement(sub_statement, sg, ws + WS_TAB);
+        process_statement(sub_statement, ws + WS_TAB);
     }
 
     // Pop processed source nodes from queue
-    num_nodes_processed = sg->pop_from_num_signals_at_depth_queue();
-    sg->pop_from_source_signals_queue(num_nodes_processed);
-    sg->pop_from_source_signals_ids_queue();
+    num_nodes_processed = pop_scope_depth();
+    pop_source_signals(num_nodes_processed);
     fprintf(DEBUG_PRINTS_FILE_PTR, "%spopped %d source signal(s) from queue\n", 
         ws.c_str(), num_nodes_processed);
 
@@ -137,9 +135,8 @@ void process_statement_wait(
 
 // ------------------------------ CONDIT Statement ----------------------------------
 
-void process_statement_condit(
-    ivl_statement_t statement, 
-    SignalGraph*    sg, 
+void Tracker::process_statement_condit(
+    ivl_statement_t statement,
     string          ws) {
 
     // Source nodes processed at this here
@@ -153,35 +150,33 @@ void process_statement_condit(
     ivl_statement_t false_statement = ivl_stmt_cond_false(statement);
     
     // Process conditional expression to get source signals
-    num_nodes_processed += process_expression(condit_expr, statement, sg, ws + WS_TAB);
+    num_nodes_processed += process_expression(condit_expr, statement, ws + WS_TAB);
     
     // Push number of source nodes processed at this depth
-    sg->push_to_num_signals_at_depth_queue(num_nodes_processed);
+    push_scope_depth(num_nodes_processed);
     fprintf(DEBUG_PRINTS_FILE_PTR, "%spushed %d source node(s) to queue\n", 
         ws.c_str(), num_nodes_processed);
 
     // Process true/false sub-statements to propagate 
     // source signals to sink signals
     if (true_statement) {
-        process_statement(true_statement, sg, ws + WS_TAB);
+        process_statement(true_statement, ws + WS_TAB);
     }
     if (false_statement) {
-        process_statement(false_statement, sg, ws + WS_TAB);
+        process_statement(false_statement, ws + WS_TAB);
     }
 
     // Pop processed source nodes from queue
-    num_nodes_processed = sg->pop_from_num_signals_at_depth_queue();
-    sg->pop_from_source_signals_queue(num_nodes_processed);
-    sg->pop_from_source_signals_ids_queue();
+    num_nodes_processed = pop_scope_depth();
+    pop_source_signals(num_nodes_processed);
     fprintf(DEBUG_PRINTS_FILE_PTR, "%spopped %d source signal(s) from queue\n", 
         ws.c_str(), num_nodes_processed);
 }
 
 // ------------------------------ ASSIGN Statement ----------------------------------
 
-Signal* process_statement_assign_lval(
+Signal* Tracker::process_statement_assign_lval(
     ivl_statement_t statement,
-    SignalGraph*    sg,
     string          ws) {
 
     ivl_lval_t   lval                = NULL; // lval that contains sink signal
@@ -211,7 +206,7 @@ Signal* process_statement_assign_lval(
     Error::check_lval_not_nested(lval, statement);
 
     // Get sink signal
-    sink_signal = sg->get_signal_from_ivl_signal(ivl_lval_sig(lval));
+    sink_signal = sg_->get_signal_from_ivl_signal(ivl_lval_sig(lval));
 
     // Check if memory lval (i.e. lval is an arrayed signal)
     if ((part_select_expr = ivl_lval_idx(lval))) {
@@ -220,10 +215,9 @@ Signal* process_statement_assign_lval(
         // Get LVAL signal array index as constant expression (Signal).
         // Note: Number of source signals added to queue should be 1,
         // because non-constant lval offsets are NOT supported.
-        part_select_sources = process_expression(part_select_expr, statement, sg, ws + WS_TAB);
+        part_select_sources = process_expression(part_select_expr, statement, ws + WS_TAB);
         assert(part_select_sources == 1 && "ERROR: more than one LVAL part select expr. processed.\n");
-        part_select = sg->pop_from_source_signals_queue();
-        sg->pop_from_source_signals_ids_queue();
+        part_select = pop_source_signal();
 
         // Set sink signal ID (arrayed sink signals)
         sink_signal->set_id(part_select->process_as_partselect_expr(statement));
@@ -231,7 +225,7 @@ Signal* process_statement_assign_lval(
     }
     
     // Set sink signal as FF if inside an FF block
-    if (sg->check_if_inside_ff_block()) {
+    if (check_if_inside_ff_block()) {
         sink_signal->set_is_ff();
     }
 
@@ -242,17 +236,16 @@ Signal* process_statement_assign_lval(
         // Get part-select as constant expression (Signal).
         // Note: Number of source signals added to queue should be 1,
         // because non-constant lval offsets are NOT supported.
-        part_select_sources = process_expression(part_select_expr, statement, sg, ws + WS_TAB);
+        part_select_sources = process_expression(part_select_expr, statement, ws + WS_TAB);
         assert(part_select_sources == 1 && "ERROR: more than one LVAL part select expr. processed.\n");
-        part_select = sg->pop_from_source_signals_queue();
-        sg->pop_from_source_signals_ids_queue();
+        part_select = pop_source_signal();
 
         // Update MSB and LSB of slice
         part_select_lsb = part_select->process_as_partselect_expr(statement);
         part_select_msb = part_select_lsb + ivl_lval_width(lval) - 1;
 
         // Track connection slice information
-        sg->track_sink_slice(part_select_msb, part_select_lsb, ws + WS_TAB);
+        track_sink_slice(part_select_msb, part_select_lsb, ws + WS_TAB);
 
         // Free memory
         delete(part_select);
@@ -268,9 +261,8 @@ Signal* process_statement_assign_lval(
     return sink_signal;
 }
 
-void process_statement_assign(
+void Tracker::process_statement_assign(
     ivl_statement_t statement, 
-    SignalGraph*    sg, 
     string          ws) {
 
     unsigned int num_nodes_processed = 0;    // source nodes processed here
@@ -278,109 +270,125 @@ void process_statement_assign(
     Signal*      source_signal       = NULL; // source node to connect to
 
     // Set slice tracking flags
-    sg->set_all_slice_tracking_flags();
+    enable_slice_tracking();
 
     // Process lval expression
     fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing lval(s) ...\n", ws.c_str());
-    sink_signal = process_statement_assign_lval(statement, sg, ws + WS_TAB);
+    sink_signal = process_statement_assign_lval(statement, ws + WS_TAB);
 
     // Process rval expression
     fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing rval(s) ...\n", ws.c_str());
-    num_nodes_processed += process_expression(ivl_stmt_rval(statement), statement, sg, ws + WS_TAB);
+    num_nodes_processed += process_expression(ivl_stmt_rval(statement), statement, ws + WS_TAB);
 
     // Push number of source nodes processed at this depth
-    sg->push_to_num_signals_at_depth_queue(num_nodes_processed);
+    push_scope_depth(num_nodes_processed);
     fprintf(DEBUG_PRINTS_FILE_PTR, "%spushed %d source signal(s) to queue\n", 
         ws.c_str(), num_nodes_processed);
 
     // Process Adjustments to LVal slice(s), in the case
     // that the RVal expression contains a concat.
-    if (sg->get_num_sink_slices() > num_nodes_processed) {
-        sg->erase_index_from_sink_slices(0);
+    if (sink_slices_.get_num_slices() > num_nodes_processed) {
+        erase_sink_slice(0);
     }
 
     // Check that slice-info stacks are correct sizes
     // Source Slices Stack:
     // (Source slice stack should never grow beyond size N, 
     //  where N = number of nodes on source signals queue.)
-    Error::check_slice_tracking_stack(sg->get_num_source_slices(), num_nodes_processed);
+    Error::check_slice_tracking_stack(source_slices_.get_num_slices(), num_nodes_processed);
     // Sink Slices Stack:
     // (Sink slice stack should never grow beyond size N, 
     //  where N = number of nodes on source signals queue.)
-    Error::check_slice_tracking_stack(sg->get_num_sink_slices(), num_nodes_processed);
+    Error::check_slice_tracking_stack(sink_slices_.get_num_slices(), num_nodes_processed);
 
     // Add connection(s)
     fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing connections ...\n", ws.c_str());
-    for (int i = (sg->get_num_source_signals() - 1); i >= 0; i--) {
+    for (int i = (source_signals_.get_num_signals() - 1); i >= 0; i--) {
 
         // Get source signal
-        source_signal = sg->get_source_signal(i);
-
-        // Set source signal ID (arrayed source signals)
-        if (source_signal->is_signal()) {
-            source_signal->set_id(sg->get_source_signal_id(i));
-        }
+        source_signal = get_source_signal(i);
 
         // Check if connection contains IVL generated signals.
         // If so, temporarily store the connections and process
         // them later. Otherwise, process normally.
         if (sink_signal->is_ivl_generated()) {
-            fprintf(DEBUG_PRINTS_FILE_PTR, "%slval is IVL generated, storing connection...\n", ws.c_str());
-            sg->track_local_signal_connection(sink_signal, source_signal, ws + WS_TAB);
+
+            fprintf(DEBUG_PRINTS_FILE_PTR, 
+                "%slval is IVL generated, storing connection...\n", ws.c_str());
+
+            sg_->track_local_signal_connection(
+                sink_signal, 
+                source_signal,
+                get_sink_slice(sink_signal),
+                get_source_slice(source_signal),
+                ws + WS_TAB);
+
         } else if (source_signal->is_ivl_generated()) {
-            fprintf(DEBUG_PRINTS_FILE_PTR, "%srval is IVL generated, storing connection...\n", ws.c_str());
-            sg->track_local_signal_connection(sink_signal, source_signal, ws + WS_TAB);
+
+            fprintf(DEBUG_PRINTS_FILE_PTR, 
+                "%srval is IVL generated, storing connection...\n", ws.c_str());
+
+            sg_->track_local_signal_connection(
+                sink_signal, 
+                source_signal,
+                get_sink_slice(sink_signal),
+                get_source_slice(source_signal),
+                ws + WS_TAB);
+
         } else {
-            sg->add_connection(sink_signal, source_signal, ws + WS_TAB);
+
+            sg_->add_connection(
+                sink_signal, 
+                source_signal, 
+                get_sink_slice(sink_signal),
+                get_source_slice(source_signal),
+                ws + WS_TAB);
+
         }
 
         // Pop slices from stacks
-        sg->pop_from_source_slices_queue();
-        sg->pop_from_sink_slices_queue();
+        pop_source_slice();
+        pop_sink_slice();
     }
 
     // Pop processed source nodes from queue
-    num_nodes_processed = sg->pop_from_num_signals_at_depth_queue();
-    sg->pop_from_source_signals_queue(num_nodes_processed);
-    sg->pop_from_source_signals_ids_queue(num_nodes_processed);
+    num_nodes_processed = pop_scope_depth();
+    pop_source_signals(num_nodes_processed);
     fprintf(DEBUG_PRINTS_FILE_PTR, "%spopped %d source signal(s) from queue\n", 
         ws.c_str(), num_nodes_processed);
 
     // Clear slice tracking flags
-    sg->clear_all_slice_tracking_flags();
+    disable_slice_tracking();
 }
 
 // ------------------------------- BLOCK Statement ----------------------------------
 
-void process_statement_block(
+void Tracker::process_statement_block(
     ivl_statement_t statement, 
-    SignalGraph*    sg, 
     string          ws) {
 
     // Iterate over sub-statements in block
     for (unsigned int i = 0; i < ivl_stmt_block_count(statement); i++) {
-        process_statement(ivl_stmt_block_stmt(statement, i), sg, ws + WS_TAB);
+        process_statement(ivl_stmt_block_stmt(statement, i), ws + WS_TAB);
     }
 }
 
 // ------------------------------- CASE Statement -----------------------------------
 
-void process_statement_case(
+void Tracker::process_statement_case(
     ivl_statement_t statement, 
-    SignalGraph*    sg, 
     string          ws) {
 
     // Iterate over sub-statements in block
     for (unsigned int i = 0; i < ivl_stmt_case_count(statement); i++) {
-        process_statement(ivl_stmt_case_stmt(statement, i), sg, ws + WS_TAB);
+        process_statement(ivl_stmt_case_stmt(statement, i), ws + WS_TAB);
     }
 }
 
 // ------------------------------- DELAY Statement ----------------------------------
 
-void process_statement_delay(
+void Tracker::process_statement_delay(
     ivl_statement_t statement, 
-    SignalGraph*    sg, 
     string          ws) {
 
     // Sub-statement
@@ -388,7 +396,7 @@ void process_statement_delay(
 
     // Check for a sub-statement
     if ((sub_statement = ivl_stmt_sub_stmt(statement))) {
-        process_statement(sub_statement, sg, ws + WS_TAB);
+        process_statement(sub_statement, ws + WS_TAB);
     }
 }
 
@@ -396,9 +404,9 @@ void process_statement_delay(
 // --------------------------- Main PROCESSING Function -----------------------------
 // ----------------------------------------------------------------------------------
 
-void process_statement(ivl_statement_t statement, 
-                       SignalGraph*    sg, 
-                       string          ws) {
+void Tracker::process_statement(
+    ivl_statement_t statement, 
+    string          ws) {
 
     fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing statement (%s)\n", 
         ws.c_str(), get_statement_type_as_string(statement));
@@ -411,18 +419,18 @@ void process_statement(ivl_statement_t statement,
         
         case IVL_ST_ASSIGN:
         case IVL_ST_ASSIGN_NB:
-            process_statement_assign(statement, sg, ws + WS_TAB);
+            process_statement_assign(statement, ws + WS_TAB);
             break;
 
         case IVL_ST_BLOCK:
-            process_statement_block(statement, sg, ws);
+            process_statement_block(statement, ws);
             break;
 
         case IVL_ST_CASE:
         case IVL_ST_CASER:
         case IVL_ST_CASEX:
         case IVL_ST_CASEZ:
-            process_statement_case(statement, sg, ws);
+            process_statement_case(statement, ws);
             break;
 
         case IVL_ST_CASSIGN:
@@ -430,16 +438,16 @@ void process_statement(ivl_statement_t statement,
             break;
 
         case IVL_ST_CONDIT:
-            process_statement_condit(statement, sg, ws);
+            process_statement_condit(statement, ws);
             break;
         
         case IVL_ST_DELAY:
         case IVL_ST_DELAYX:
-            process_statement_delay(statement, sg, ws);
+            process_statement_delay(statement, ws);
             break;
         
         case IVL_ST_WAIT:
-            process_statement_wait(statement, sg, ws);
+            process_statement_wait(statement, ws);
             break;
 
         case IVL_ST_ALLOC:

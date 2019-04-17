@@ -14,14 +14,14 @@ expressions are processed as combinational logic.
 
 // TTB Headers
 #include "ttb_typedefs.h"
-#include "ttb.h"
+#include "tracker.h"
 #include "error.h"
 
 // ----------------------------------------------------------------------------------
 // ------------------------------- Helper Functions ---------------------------------
 // ----------------------------------------------------------------------------------
 
-const char* get_expr_type_as_string(ivl_expr_t expression) {
+const char* Tracker::get_expr_type_as_string(ivl_expr_t expression) {
     switch (ivl_expr_type(expression)) {
         case IVL_EX_NONE:
             return "IVL_EX_NONE";
@@ -84,10 +84,9 @@ const char* get_expr_type_as_string(ivl_expr_t expression) {
 
 // ------------------------------ SIGNAL Expression ---------------------------------
 
-unsigned int process_expression_signal(
+unsigned int Tracker::process_expression_signal(
     ivl_expr_t      expression,
     ivl_statement_t statement,
-    SignalGraph*    sg, 
     string          ws) {
 
     // Source signal object
@@ -102,14 +101,13 @@ unsigned int process_expression_signal(
     ivl_signal_t source_ivl_signal = ivl_expr_signal(expression);
 
     // Get arrayed index expression
-    num_index_exprs = process_expression(ivl_expr_oper1(expression), statement, sg, ws + WS_TAB);
+    num_index_exprs = process_expression(ivl_expr_oper1(expression), statement, ws + WS_TAB);
     
     // Check that array index consists of (only) one expression
     if (num_index_exprs == 1) {
 
         // Get array index (i.e. source signal ID)
-        index_expr  = sg->pop_from_source_signals_queue();
-        sg->pop_from_source_signals_ids_queue();
+        index_expr  = pop_source_signal();
         array_index = index_expr->process_as_partselect_expr(statement);
 
     } else {
@@ -120,14 +118,13 @@ unsigned int process_expression_signal(
     }
 
     // Check if signal is to be ignored
-    if (!sg->check_if_ignore_signal(source_ivl_signal)) {
+    if (!sg_->check_if_ignore_signal(source_ivl_signal)) {
 
         // Get signal object
-        source_signal = sg->get_signal_from_ivl_signal(source_ivl_signal);
+        source_signal = sg_->get_signal_from_ivl_signal(source_ivl_signal);
 
         // Push source node to source nodes queue
-        sg->push_to_source_signals_queue(source_signal, ws + WS_TAB);
-        sg->push_to_source_signals_ids_queue(array_index, ws + WS_TAB);
+        push_source_signal(source_signal, array_index, ws + WS_TAB);
     }
 
     return 1;
@@ -135,27 +132,24 @@ unsigned int process_expression_signal(
 
 // ------------------------------ NUMBER Expression ---------------------------------
 
-unsigned int process_expression_number(
-    ivl_expr_t      expression,
-    SignalGraph*    sg, 
-    string          ws) {
+unsigned int Tracker::process_expression_number(
+    ivl_expr_t expression,
+    string     ws) {
 
     // Get expression signal
     Signal* source_signal = new Signal(expression);
 
     // Push source node to source nodes queue
-    sg->push_to_source_signals_queue(source_signal, ws + WS_TAB);
-    sg->push_to_source_signals_ids_queue(0, ws + WS_TAB);
+    push_source_signal(source_signal, 0, ws + WS_TAB);
 
     return 1;
 }
 
 // ------------------------------ SELECT Expression ---------------------------------
 
-unsigned int process_expression_select(
+unsigned int Tracker::process_expression_select(
     ivl_expr_t      expression, 
     ivl_statement_t statement,
-    SignalGraph*    sg, 
     string          ws) {
 
     // Index of select expression
@@ -170,23 +164,22 @@ unsigned int process_expression_select(
     unsigned int num_index_exprs = 0;
 
     // Get select base
-    num_base_exprs = process_expression(ivl_expr_oper1(expression), statement, sg, ws + WS_TAB);
+    num_base_exprs = process_expression(ivl_expr_oper1(expression), statement, ws + WS_TAB);
     
     // Check that base consists of (only) one IVL expression
     assert(num_base_exprs == 1 && "ERROR: more than one base expr. processed.\n");
-    assert(sg->get_source_signals_queue().back()->is_signal() &&
+    assert(source_signals_.get_back_signal()->is_signal() &&
         "ERROR: expression select base is NOT a signal.\n");
 
     // Get select index
-    num_index_exprs = process_expression(ivl_expr_oper2(expression), statement, sg, ws + WS_TAB);
+    num_index_exprs = process_expression(ivl_expr_oper2(expression), statement, ws + WS_TAB);
 
     // Check that index consists of (only) one IVL expression
     assert((num_index_exprs == 0 || num_index_exprs == 1) && "ERROR: more than one index expr. processed.\n");
     if (num_index_exprs) {
         
         // Get index
-        index = sg->pop_from_source_signals_queue();
-        sg->pop_from_source_signals_ids_queue();
+        index = pop_source_signal();
 
         // Get LSB of select
         lsb = index->process_as_partselect_expr(statement);
@@ -195,18 +188,17 @@ unsigned int process_expression_select(
     // Get MSB of select
     msb = lsb + ivl_expr_width(expression) - 1;
 
-    // Add source slice (of base) to queue
-    sg->track_source_slice(msb, lsb, ws + WS_TAB);
+    // Track source slice
+    track_source_slice(msb, lsb, ws + WS_TAB);
 
     return num_base_exprs;
 }
 
 // ------------------------------ CONCAT Expression ---------------------------------
 
-unsigned int process_expression_concat(
+unsigned int Tracker::process_expression_concat(
     ivl_expr_t      expression,
     ivl_statement_t statement, 
-    SignalGraph*    sg, 
     string          ws) {
 
     // Source signals processed here
@@ -231,12 +223,12 @@ unsigned int process_expression_concat(
 
             // Process expression
             num_source_signals_processed = process_expression(
-                ivl_expr_parm(expression, j), statement, sg, ws + WS_TAB);
+                ivl_expr_parm(expression, j), statement, ws + WS_TAB);
 
             // Add source slice to queue, but only if we just
             // processed base source signals.
             if (num_source_signals_processed == 1) {
-                sg->track_sink_slice(current_msb, current_lsb, ws + WS_TAB);
+                track_sink_slice(current_msb, current_lsb, ws + WS_TAB);
             }
 
             // Update total source signals processed
@@ -252,10 +244,9 @@ unsigned int process_expression_concat(
 
 // ------------------------------ UNARY Expression ----------------------------------
 
-unsigned int process_expression_unary(
+unsigned int Tracker::process_expression_unary(
     ivl_expr_t      expression, 
     ivl_statement_t statement,
-    SignalGraph*    sg, 
     string          ws) {
 
     // Source nodes processed here
@@ -263,17 +254,16 @@ unsigned int process_expression_unary(
 
     // Process operand expression
     num_nodes_processed += process_expression(
-        ivl_expr_oper1(expression), statement, sg, ws + WS_TAB);
+        ivl_expr_oper1(expression), statement, ws + WS_TAB);
 
     return num_nodes_processed;
 }
 
 // ------------------------------ BINARY Expression ---------------------------------
 
-unsigned int process_expression_binary(
+unsigned int Tracker::process_expression_binary(
     ivl_expr_t      expression, 
     ivl_statement_t statement,
-    SignalGraph*    sg, 
     string          ws) {
 
     // Source nodes processed here
@@ -281,19 +271,18 @@ unsigned int process_expression_binary(
 
     // Process operand expressions
     num_nodes_processed += process_expression(
-        ivl_expr_oper1(expression), statement, sg, ws + WS_TAB);
+        ivl_expr_oper1(expression), statement, ws + WS_TAB);
     num_nodes_processed += process_expression(
-        ivl_expr_oper2(expression), statement, sg, ws + WS_TAB);
+        ivl_expr_oper2(expression), statement, ws + WS_TAB);
 
     return num_nodes_processed;
 }
 
 // ----------------------------- TERNARY Expression ---------------------------------
 
-unsigned int process_expression_ternary(
+unsigned int Tracker::process_expression_ternary(
     ivl_expr_t      expression,
     ivl_statement_t statement,
-    SignalGraph*    sg, 
     string          ws) {
 
     // Source nodes processed here
@@ -301,11 +290,11 @@ unsigned int process_expression_ternary(
 
     // Process operand expressions
     num_nodes_processed += process_expression(
-        ivl_expr_oper1(expression), statement, sg, ws + WS_TAB);
+        ivl_expr_oper1(expression), statement, ws + WS_TAB);
     num_nodes_processed += process_expression(
-        ivl_expr_oper2(expression), statement, sg, ws + WS_TAB);
+        ivl_expr_oper2(expression), statement, ws + WS_TAB);
     num_nodes_processed += process_expression(
-        ivl_expr_oper3(expression), statement, sg, ws + WS_TAB);
+        ivl_expr_oper3(expression), statement, ws + WS_TAB);
 
     return num_nodes_processed;
 }
@@ -314,10 +303,9 @@ unsigned int process_expression_ternary(
 // --------------------------- Main PROCESSING Function -----------------------------
 // ----------------------------------------------------------------------------------
 
-unsigned int process_expression(
+unsigned int Tracker::process_expression(
     ivl_expr_t      expression,
     ivl_statement_t statement,  
-    SignalGraph*    sg,
     string          ws) {
 
     fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing expression (%s)\n", 
@@ -334,9 +322,9 @@ unsigned int process_expression(
             Error::not_supported("expression type (IVL_EX_BACCESS).");
             break;
         case IVL_EX_BINARY:
-            return process_expression_binary(expression, statement, sg, ws);
+            return process_expression_binary(expression, statement, ws);
         case IVL_EX_CONCAT:
-            return process_expression_concat(expression, statement, sg, ws);
+            return process_expression_concat(expression, statement, ws);
             break;
         case IVL_EX_DELAY:
             Error::not_supported("expression type (IVL_EX_DELAY).");
@@ -357,7 +345,7 @@ unsigned int process_expression(
             Error::not_supported("expression type (IVL_EX_NULL).");
             break;
         case IVL_EX_NUMBER:
-            return process_expression_number(expression, sg, ws);
+            return process_expression_number(expression, ws);
         case IVL_EX_ARRAY_PATTERN:
             Error::not_supported("expression type (IVL_EX_ARRAY_PATTERN).");
             break;
@@ -371,7 +359,7 @@ unsigned int process_expression(
             Error::not_supported("expression type (IVL_EX_SCOPE).");
             break;
         case IVL_EX_SELECT:
-            return process_expression_select(expression, statement, sg, ws);
+            return process_expression_select(expression, statement, ws);
         case IVL_EX_SFUNC:
             Error::not_supported("expression type (IVL_EX_SFUNC).");
             break;
@@ -379,12 +367,12 @@ unsigned int process_expression(
             Error::not_supported("expression type (IVL_EX_SHALLOWCOPY).");
             break;
         case IVL_EX_SIGNAL:
-            return process_expression_signal(expression, statement, sg, ws);
+            return process_expression_signal(expression, statement, ws);
         case IVL_EX_STRING:
             Error::not_supported("expression type (IVL_EX_STRING).");
             break;
         case IVL_EX_TERNARY:
-            return process_expression_ternary(expression, statement, sg, ws);
+            return process_expression_ternary(expression, statement, ws);
         case IVL_EX_UFUNC:
             Error::not_supported("expression type (IVL_EX_UFUNC).");
             break;
@@ -392,7 +380,7 @@ unsigned int process_expression(
             Error::not_supported("expression type (IVL_EX_ULONG).");
             break;
         case IVL_EX_UNARY:
-            return process_expression_unary(expression, statement, sg, ws);
+            return process_expression_unary(expression, statement, ws);
         default:
             Error::unknown_expression_type(ivl_expr_type(expression));
             break;

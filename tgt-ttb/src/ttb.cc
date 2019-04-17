@@ -16,10 +16,15 @@ Graphviz .dot file.
 // Standard Headers
 #include <cassert>
 
+// IVL API Header
+#include <ivl_target.h>
+
 // TTB Headers
 #include "ttb_typedefs.h"
 #include "ttb.h"
 #include "signal.h"
+#include "signal_graph.h"
+#include "tracker.h"
 #include "reporter.h"
 #include "error.h"
 
@@ -28,6 +33,7 @@ Graphviz .dot file.
 // ------------------------------------------------------------
 
 cmd_args_map_t* process_cmd_line_args(ivl_design_t des) {
+
     // Create map to hold cmd line args
     cmd_args_map_t* cmd_args = new cmd_args_map_t();
 
@@ -66,7 +72,7 @@ cmd_args_map_t* process_cmd_line_args(ivl_design_t des) {
 // ----------------- Continuous HDL Processing ----------------
 // ------------------------------------------------------------
 
-void find_continuous_connections(SignalGraph* sg) {
+void Tracker::find_continuous_connections() {
 
     // Signal object pointer
     Signal* current_signal = NULL;
@@ -75,13 +81,13 @@ void find_continuous_connections(SignalGraph* sg) {
     ivl_nexus_t sink_nexus = NULL;
 
     // Get signals adjacency list
-    sig_map_t signals_map = sg->get_signals_map();
+    sig_map_t signals_map = sg_->get_signals_map();
 
     // Create a signals map iterator
     sig_map_t::iterator it = signals_map.begin();
     
     // Set slice tracking flags
-    sg->set_all_slice_tracking_flags();
+    enable_slice_tracking();
 
     // Iterate over all signals in adjacency list
     while (it != signals_map.end()) {  
@@ -117,7 +123,7 @@ void find_continuous_connections(SignalGraph* sg) {
                     current_signal->set_id(i);
 
                     // Propagate the nexus
-                    propagate_nexus(sink_nexus, it->second, sg, WS_TAB);
+                    propagate_nexus(sink_nexus, it->second, WS_TAB);
                 } else {
 
                     // Nexus is NULL --> skip it
@@ -131,19 +137,28 @@ void find_continuous_connections(SignalGraph* sg) {
     }
 
     // Clear slice tracking flags
-    sg->clear_all_slice_tracking_flags();
+    disable_slice_tracking();
 }
 
 // ------------------------------------------------------------
 // ----------------- Procedural HDL Processing ----------------
 // ------------------------------------------------------------
 
-void find_procedural_connections(ivl_design_t design, SignalGraph* sg) {
+int find_procedural_connections(ivl_process_t process, void* t) {
+    
+    // Cast type for Tracker
+    Tracker* tracker = (Tracker*) t;
+
+    // Launch procedural logic processing
+    return tracker->process_process(process);
+}
+
+void launch_ivl_design_process(ivl_design_t design, Tracker* t) {
     int result = 0;
 
     // Processes are initial, always, or final blocks
     // Goes through all assignments in process blocks.
-    result = ivl_design_process(design, process_process, sg);
+    result = ivl_design_process(design, find_procedural_connections, t);
     if (result != 0) {
         Error::processing_procedural_connections();
     }
@@ -164,6 +179,7 @@ int target_design(ivl_design_t design) {
     cmd_args_map_t* cmd_args  = NULL; // command line args
     Reporter*       reporter  = NULL; // reporter object (prints messages)
     SignalGraph*    sg        = NULL; // signal graph object
+    Tracker*        tracker   = NULL; // connection tracker object
 
     // Create reporter processing object
     reporter = new Reporter(REPORTER_PRINTS_FILE_PTR);
@@ -177,9 +193,14 @@ int target_design(ivl_design_t design) {
     reporter->configurations(cmd_args);
     reporter->end_task();
 
-    // Initialize SignalGraph
+    // Create & Initialize SignalGraph
     reporter->start_task(INITIALIZE_SIG_GRAPH_MESSAGE);
     sg = new SignalGraph(cmd_args);
+    reporter->end_task();
+
+    // Create & Initialize Tracker
+    reporter->start_task(INITIALIZE_SIG_GRAPH_MESSAGE);
+    tracker = new Tracker(cmd_args, sg);
     reporter->end_task();
     
     // Get root scopes (top level modules) of design
@@ -198,12 +219,12 @@ int target_design(ivl_design_t design) {
 
     // Find CONTINUOUS signal-to-signal CONNECTIONS
     reporter->start_task(COMB_CONNECTION_ENUM_MESSAGE);
-    find_continuous_connections(sg);
+    tracker->find_continuous_connections();
     reporter->end_task();
 
     // Find PROCEDURAL signal-to-signal CONNECTIONS
     reporter->start_task(BEHAVE_CONNECTION_ENUM_MESSAGE);
-    find_procedural_connections(design, sg);
+    launch_ivl_design_process(design, tracker);
     reporter->end_task();
 
     // Process connections through local (IVL-generated) signals
@@ -225,6 +246,7 @@ int target_design(ivl_design_t design) {
     // Delete Objects
     // reporter->start_task(DESTROY_MESSAGE);
     delete(cmd_args);
+    delete(tracker);
     delete(sg);
     // reporter->end_task();
     // reporter->line_separator();

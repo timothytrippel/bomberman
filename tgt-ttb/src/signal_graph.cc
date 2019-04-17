@@ -17,9 +17,9 @@ Graphviz .dot file.
 #include "signal_graph.h"
 #include "error.h"
 
-// ----------------------------------------------------------------------------------
-// ------------------------------- Constructors -------------------------------------
-// ----------------------------------------------------------------------------------
+// ------------------------------------------------------------
+// ------------------------ Constructors ----------------------
+// ------------------------------------------------------------
 
 SignalGraph::SignalGraph():
     num_signals_(0),
@@ -28,18 +28,8 @@ SignalGraph::SignalGraph():
     num_constants_(0),
     num_connections_(0),
     num_local_connections_(0),
-    inside_ff_block_(false),
-    ignore_constants_(false),
-    track_source_slices_(false),
-    track_sink_slices_(false),
-    clk_basename_(""),
     dg_(NULL),
     signals_map_(),
-    source_signals_(),
-    source_signals_ids_(),
-    num_signals_at_depth_(),
-    source_slices_(),
-    sink_slices_(),
     connections_map_(),
     local_connections_map_(),
     signals_to_ignore_() {} 
@@ -54,52 +44,41 @@ SignalGraph::SignalGraph(cmd_args_map_t* cmd_args) {
     num_connections_       = 0;
     num_local_connections_ = 0;
 
-    // Intialize Flags
-    inside_ff_block_     = false;
-    ignore_constants_    = false;
-    track_source_slices_ = false;
-    track_sink_slices_   = false;
-
-    // Intialize Data
-    clk_basename_ = string("");
-    dg_           = NULL;
-
-    // Process command line args
-    process_cmd_line_args(cmd_args);
-
     // Initialize DotGraph
     dg_ = new DotGraph(cmd_args->at(OUTPUT_FILENAME_FLAG));
     dg_->init_graph();
+
+    // Process command line args
+    process_cmd_line_args(cmd_args);
 }
 
-// ----------------------------------------------------------------------------------
-// -------------------------------- Destructors -------------------------------------
-// ----------------------------------------------------------------------------------
+// ------------------------------------------------------------
+// ------------------------ Destructors -----------------------
+// ------------------------------------------------------------
 
-// void delete_signals_queue(signals_q_t sigs_q)
 SignalGraph::~SignalGraph() {
 
-    fprintf(DESTRUCTOR_PRINTS_FILE_PTR, "Executing SignalGraph destructor...\n");
+    fprintf(DESTRUCTOR_PRINTS_FILE_PTR, 
+        "Executing SignalGraph destructor...\n");
 
     // 1. Delete Connections in connections_map_
-    fprintf(DESTRUCTOR_PRINTS_FILE_PTR, "   Destroying connections map...\n");
+    fprintf(DESTRUCTOR_PRINTS_FILE_PTR, 
+        "Destroying connections map...\n");
     delete_connections_map();
     assert(!connections_map_.size() && 
         "ERROR: some connections remain un-deleted.\n");
 
 
     // 2. Delete Signals in signals_map_
-    fprintf(DESTRUCTOR_PRINTS_FILE_PTR, "   Destroying signals map...\n");
+    fprintf(DESTRUCTOR_PRINTS_FILE_PTR, 
+        "   Destroying signals map...\n");
     delete_signals_map();
     assert(!signals_map_.size() && 
         "ERROR: some signals remain un-deleted.\n");
 
-    // 3. Check all source_signals_ have been processed
-    assert(!source_signals_.size() && 
-        "ERROR: some source signals remain unprocessed.\n");
-
-    // 4. Close DotGraph file if it is still open
-    fprintf(DESTRUCTOR_PRINTS_FILE_PTR, "   Destroying DotGraph...\n");
+    // 3. Close DotGraph file if it is still open
+    fprintf(DESTRUCTOR_PRINTS_FILE_PTR, 
+        "   Destroying DotGraph...\n");
     dg_->save_graph();
     delete(dg_);
     dg_ = NULL;
@@ -168,585 +147,9 @@ void SignalGraph::delete_connections_map() {
     }
 } 
 
-// ----------------------------------------------------------------------------------
-// ------------------------------- Getters ------------------------------------------
-// ----------------------------------------------------------------------------------
-
-// ------------------------------ Graph Stats ---------------------------------------
-
-unsigned long SignalGraph::get_num_connections() const {
-    return num_connections_;
-}
-
-unsigned long SignalGraph::get_num_signals() const {
-    return num_signals_;
-}
-
-unsigned long SignalGraph::get_num_local_signals() const {
-    return num_local_signals_;
-}
-
-unsigned long SignalGraph::get_num_constants() const {
-    return num_constants_;
-}
-
-// ------------------------------ Signals Map ---------------------------------------
-
-sig_map_t SignalGraph::get_signals_map() const {
-    return signals_map_;
-}
-
-bool SignalGraph::in_signals_map(Signal* signal) const {
-    if (!signal) {
-        // Signal is NULL
-        return false;
-    } else {
-        return signals_map_.count(signal->get_ivl_signal());
-    }
-}
-
-Signal* SignalGraph::get_signal_from_ivl_signal(ivl_signal_t ivl_signal) {
-    sig_map_t::iterator sig_it = signals_map_.end();
-
-    // Check if IVL signal exists in map
-    if ((sig_it = signals_map_.find(ivl_signal)) != signals_map_.end()) {
-        return sig_it->second;
-    } else {
-        return NULL;
-    }
-}
-
-// -------------------------- Source Signals Queue ----------------------------------
-
-unsigned long SignalGraph::get_num_source_signals() const {
-    return source_signals_.size();
-}
-
-unsigned long SignalGraph::get_num_source_signals_ids() const {
-    return source_signals_ids_.size();
-}
-
-signals_q_t SignalGraph::get_source_signals_queue() const {
-    return source_signals_;   
-}
-
-Signal* SignalGraph::get_source_signal(unsigned int index) const {
-    
-    // Check index is within vector bounds and 
-    // vector is NOT empty
-    assert(index >= 0 && 
-        index < get_num_source_signals() &&
-        get_num_source_signals() != 0 &&
-        "ERROR: index is outside bounds of source_signals_ vector.\n");
-
-    return source_signals_[index];
-}
-
-unsigned int SignalGraph::get_source_signal_id(unsigned int index) const {
-    
-    // Check index is within vector bounds and 
-    // vector is NOT empty
-    assert(index >= 0 && 
-        index < get_num_source_signals_ids() &&
-        get_num_source_signals_ids() != 0 &&
-        "ERROR: index is outside bounds of source_signals_ids_ vector.\n");
-
-    return source_signals_ids_[index];
-}
-
-bool SignalGraph::check_if_clk_signal(ivl_signal_t source_signal) const {
-    if (string(ivl_signal_basename(source_signal)).find(clk_basename_) != string::npos) {
-        return true;
-    } else {
-        return false;
-    }
-    // if (strcmp(clk_basename_.c_str(), ivl_signal_basename(source_signal))) {
-    //     return false;
-    // } else {
-    //     return true;
-    // }
-}
-
-Signal* SignalGraph::pop_from_source_signals_queue() {
-    Signal* source_signal = NULL;
-
-    // Check if source nodes queue is not empty
-    if (get_num_source_signals() > 0) {
-
-        // Get last signal in queue
-        source_signal = source_signals_.back();
-
-        // Remove last signal in queue
-        source_signals_.pop_back();   
-    } else {
-        Error::popping_source_signals_queue(1, get_num_source_signals());
-    }
-
-    // Return removed node
-    return source_signal;
-}
-
-void SignalGraph::pop_from_source_signals_queue(unsigned int num_signals) {
-    
-    // Check if source signals queue is large enough
-    if (get_num_source_signals() >= num_signals) {
-        
-        // Pop num_signals from queue
-        for (unsigned int i = 0; i < num_signals; i++) {
-            
-            // Remove last signal in queue
-            source_signals_.pop_back();   
-        } 
-    } else {
-
-        Error::popping_source_signals_queue(num_signals, get_num_source_signals());
-    }
-}
-
-unsigned int SignalGraph::pop_from_source_signals_ids_queue() {
-    unsigned int id = 0;
-
-    // Check if source nodes queue is not empty
-    if (get_num_source_signals_ids() > 0) {
-
-        // Get last signal ID in queue
-        id = source_signals_ids_.back();
-
-        // Remove last signal in queue
-        source_signals_ids_.pop_back();   
-    } else {
-        Error::popping_source_signals_queue(1, get_num_source_signals_ids());
-    }
-
-    // Return removed node
-    return id;
-}
-
-void SignalGraph::pop_from_source_signals_ids_queue(unsigned int num_ids) {
-    
-    // Check if source signals queue is large enough
-    if (get_num_source_signals_ids() >= num_ids) {
-        
-        // Pop num_signals from queue
-        for (unsigned int i = 0; i < num_ids; i++) {
-            
-            // Remove last signal in queue
-            source_signals_ids_.pop_back();   
-        } 
-    } else {
-
-        Error::popping_source_signals_queue(num_ids, get_num_source_signals_ids());
-    }
-}
-
-// ------------------------- Enumeration Depth Queue --------------------------------
-
-unsigned long SignalGraph::get_scope_depth() const {
-    return num_signals_at_depth_.size();
-}
-
-unsigned int SignalGraph::pop_from_num_signals_at_depth_queue() {
-    unsigned int num_signals = 0;
-
-    // Check if source nodes queue is not empty
-    if (get_scope_depth() > 0) {
-        // Get last node in queue
-        num_signals = num_signals_at_depth_.back();
-
-        // Remove last node in queue
-        num_signals_at_depth_.pop_back();   
-    }
-
-    // Return removed node
-    return num_signals;
-}
-
-// -------------------------- Slice Tracking Queues ---------------------------------
-
-unsigned int SignalGraph::get_num_source_slices() const {
-    return source_slices_.size();
-}
-
-unsigned int SignalGraph::get_num_sink_slices() const {
-    return sink_slices_.size();
-}
-
-signal_slice_t SignalGraph::get_source_slice(Signal* source_signal) const {
-    // Source slice information
-    signal_slice_t source_slice = {
-            source_signal->get_msb(), 
-            source_signal->get_lsb()
-        };
-
-    if (track_source_slices_ && get_num_source_slices() > 0) {
-        source_slice = source_slices_.back();
-    }
-
-    return source_slice;
-}
-
-signal_slice_t SignalGraph::get_sink_slice(Signal* sink_signal) const {
-    // Sink slice information
-    signal_slice_t sink_slice = {
-            sink_signal->get_msb(),
-            sink_signal->get_lsb()
-        };
-
-    if (track_sink_slices_ && get_num_sink_slices() > 0) {
-        sink_slice = sink_slices_.back();
-    }
-
-    return sink_slice;
-}
-
-// --------------------------- Connection Tracking ----------------------------------
-
-bool SignalGraph::check_if_connection_exists(Signal*     sink_signal, 
-                                             Connection* new_conn) {
-
-    conn_q_t::iterator conn_it = connections_map_[sink_signal]->begin();
-
-    while (conn_it != connections_map_[sink_signal]->end()) {
-        if (**conn_it == *new_conn) {
-            return true;
-        }
-
-        conn_it++;
-    }
-
-    return false;
-}
-
-bool SignalGraph::check_if_local_connection_exists(Signal*     sink_signal, 
-                                                   Connection* new_conn) {
-
-    if (local_connections_map_.count(sink_signal)) {
-        conn_q_t::iterator conn_it = local_connections_map_[sink_signal]->begin();
-
-        while (conn_it != local_connections_map_[sink_signal]->end()) {
-            if (**conn_it == *new_conn) {
-                return true;
-            }
-
-            conn_it++;
-        }
-    }
-
-    return false;
-}
-
-bool SignalGraph::check_if_ignore_signal(Signal* signal) const {
-    // Check if ignore map is empty
-    if (!signals_to_ignore_.empty()) {
-
-        // Check that signal is not a constant (only ignore signals)
-        if (signal->is_signal()) {
-            return signals_to_ignore_.count(signal->get_basename());
-        }
-    }
-
-    return false;
-}
-
-bool SignalGraph::check_if_ignore_signal(ivl_signal_t signal) const { 
-    // Check if ignore map is empty
-    if (!signals_to_ignore_.empty()) {
-        return signals_to_ignore_.count(ivl_signal_basename(signal));
-    }
-
-    return false;
-}
-
-bool SignalGraph::check_if_inside_ff_block() const {
-    return inside_ff_block_;
-}
-
-// ----------------------------------------------------------------------------------
-// ------------------------------- Setters ------------------------------------------
-// ----------------------------------------------------------------------------------
-
-// --------------------------- Source Nodes Queue -----------------------------------
-
-void SignalGraph::push_to_source_signals_queue(Signal* source_signal, string ws) {
-    // Check that source signal is valid (not NULL)
-    assert(source_signal && "ERROR: attempting to push NULL source signal to queue.\n");
-
-    fprintf(DEBUG_PRINTS_FILE_PTR, "%sadding source node (%s) to connection queue\n", 
-        ws.c_str(), 
-        source_signal->get_fullname().c_str());
-
-    source_signals_.push_back(source_signal);
-}
-
-void SignalGraph::push_to_source_signals_ids_queue(unsigned int id, string ws) {
-    // Check that source signal queue is one longer than the IDs queue
-    // (i.e., the source signal has already been added to the sources queue.)
-    assert(get_num_source_signals_ids() == (get_num_source_signals() - 1) && 
-        "ERROR: push sources signal to queue BEFORE ID.\n");
-
-    fprintf(DEBUG_PRINTS_FILE_PTR, "%sadding source node ID (%d) to connection queue\n", 
-        ws.c_str(), 
-        id);
-
-    source_signals_ids_.push_back(id);
-}
-
-// ------------------------- Enumeration Depth Queue --------------------------------
-
-void SignalGraph::push_to_num_signals_at_depth_queue(unsigned int num_signals) {
-    num_signals_at_depth_.push_back(num_signals);
-}
-
-// ------------------------------ Slice Tracking ------------------------------------
-
-void SignalGraph::track_source_slice(unsigned int msb, 
-                                     unsigned int lsb,
-                                     string       ws) {
-
-    // Set signal slice info
-    signal_slice_t slice = {msb, lsb};
-
-    if (track_source_slices_) {
-
-        // Debug Print
-        fprintf(DEBUG_PRINTS_FILE_PTR, "%sTracking signal slice [%u:%u]\n", 
-            ws.c_str(), msb, lsb);
-
-        // push slice info to stack
-        source_slices_.push_back(slice);
-    }
-}
-
-void SignalGraph::track_sink_slice(unsigned int msb, 
-                                   unsigned int lsb,
-                                   string       ws) {
-
-    // Set signal slice info
-    signal_slice_t slice = {msb, lsb};
-
-    if (track_sink_slices_) {
-
-        // Debug Print
-        fprintf(DEBUG_PRINTS_FILE_PTR, "%sTracking signal slice [%u:%u]\n", 
-            ws.c_str(), msb, lsb);
-
-        // push slice info to stack
-        sink_slices_.push_back(slice);
-    }
-}
-
-void SignalGraph::pop_from_source_slices_queue() {
-    if (track_source_slices_ && get_num_source_slices() > 0) {
-        source_slices_.pop_back();
-    }
-}
-
-void SignalGraph::pop_from_sink_slices_queue() {
-    if (track_sink_slices_ && get_num_sink_slices() > 0) {
-        sink_slices_.pop_back();
-    }
-}
-
-void SignalGraph::set_track_source_slices_flag() {
-    track_source_slices_ = true;
-}
-
-void SignalGraph::set_track_sink_slices_flag() {
-    track_sink_slices_ = true;
-}
-
-void SignalGraph::clear_track_source_slices_flag() {
-    track_source_slices_ = false;
-}
-
-void SignalGraph::clear_track_sink_slices_flag() {
-    track_sink_slices_ = false;
-}
-
-void SignalGraph::set_all_slice_tracking_flags() {
-    set_track_source_slices_flag();
-    set_track_sink_slices_flag();
-}
-
-void SignalGraph::clear_all_slice_tracking_flags() {
-    clear_track_source_slices_flag();
-    clear_track_sink_slices_flag();
-}
-
-void SignalGraph::erase_index_from_sink_slices(unsigned int index) {
-    sink_slices_.erase(sink_slices_.begin() + index);
-}
-
-// ---------------------------- Connection Tracking ---------------------------------
-
-void SignalGraph::track_local_signal_connection(Signal* sink_signal, 
-                                                Signal* source_signal,
-                                                string  ws) {
-
-    signal_slice_t source_slice;
-    signal_slice_t sink_slice;
-    Connection*    conn;
-
-    // Check that source signal is valid (not null)
-    assert(source_signal && 
-        "ERROR: invalid (NULL) pointer to source signal.\n");
-
-    // Check that sink signal is valid (not null)
-    assert(sink_signal && 
-        "ERROR: invalid (NULL) pointer to sink signal.\n");
-
-    // Check that sink signal is NOT a constant
-    assert(!sink_signal->is_const() && 
-        "ERROR: sink signal cannot be a constant.\n");
-
-    fprintf(DEBUG_PRINTS_FILE_PTR, "%sTracking local signal connection.\n", ws.c_str());
-
-    // Check if connecting signal is already in signals map,
-    // i.e. it is an ivl_signal. If it is not in the signals map,
-    // check that it is a constant signal (i.e. an ivl_const or
-    // ivl_expr). 
-    //
-    // **NOTE**: Constants are NOT stored in signals map for
-    // memory efficiency, but references to them are stored in
-    // the connection objects. Hence the Connection destructor
-    // calls delete on pointers to constant Signals.
-    if (in_signals_map(source_signal) || source_signal->is_const()) {
-
-        // Do not process connections between TWO ivl-generated source signals
-        if (source_signal->is_ivl_generated() || sink_signal->is_ivl_generated()) {
-
-            // Get signal slices
-            source_slice = get_source_slice(source_signal);
-            sink_slice   = get_sink_slice(sink_signal);
-
-            // Create connection object
-            conn = new Connection(source_signal, sink_signal, source_slice, sink_slice);
-
-            // Check if local connection already exists
-            if (!check_if_local_connection_exists(sink_signal, conn)) {
-                
-                // Create connections list if it does not exist
-                if (!local_connections_map_.count(sink_signal)) {
-                    local_connections_map_[sink_signal] = new conn_q_t();
-                }
-
-                // Save Connection
-                local_connections_map_[sink_signal]->push_back(conn);
-
-                // Increment connection counter
-                num_local_connections_++;  
-
-            } else {
-
-                fprintf(DEBUG_PRINTS_FILE_PTR, "%slocal connection (from %s to %s) already exists...\n", 
-                    ws.c_str(),
-                    conn->get_source()->get_fullname().c_str(),
-                    conn->get_sink()->get_fullname().c_str());
-
-            }
-        } else {
-            Error::non_local_signal_connection();
-        }
-
-    } else {
-
-        Error::connecting_signal_not_in_graph(
-            signals_map_, source_signal->get_ivl_signal());
-
-    }
-}
-
-void SignalGraph::add_signal_to_ignore(string signal_basename) {
-    signals_to_ignore_[signal_basename] = true;
-}
-
-void SignalGraph::load_signals_to_ignore(string file_path) {
-
-    fprintf(DEBUG_PRINTS_FILE_PTR, "Loading signal (base)names to ignore:\n");
-
-    // Ignore file stream object
-    ifstream file_stream = ifstream(file_path);
-
-    // Signal basename (line) read from file stream
-    string signal_basename;
-
-    // Open file
-    if (file_stream.is_open()) {
-
-        // Process File
-        while (getline(file_stream, signal_basename)) {
-            signals_to_ignore_[signal_basename] = true;
-            fprintf(DEBUG_PRINTS_FILE_PTR, "%s%s\n", WS_TAB, signal_basename.c_str());
-        }
-
-        // Close File
-        file_stream.close();
-
-    } else {
-        fprintf(stderr, "ERROR: Could not open file %s\n", file_path.c_str());
-        exit(FILE_ERROR);
-    }
-}   
-
-void SignalGraph::set_inside_ff_block() {
-    inside_ff_block_ = true;
-}
-
-void SignalGraph::clear_inside_ff_block() {
-    inside_ff_block_ = false;
-}
-
-// ----------------------------------------------------------------------------------
-// ------------------------------- Dot Graph Management -----------------------------
-// ----------------------------------------------------------------------------------
-
-void SignalGraph::write_signals_to_dot_graph() {
-    
-    // Check that number of signals is correct
-    assert((num_signals_ + num_local_signals_ + num_signals_ignored_) == 
-        signals_map_.size() && 
-        "ERROR: number of signals does not match size of signals map.\n");
-
-    sig_map_t::iterator sig_it = signals_map_.begin();
-
-    while (sig_it != signals_map_.end()) {
-        
-        // Check if Signal is an IVL signal
-        if (sig_it->second->is_signal()) {
-
-            // Check if signal is to be ignored
-            if (!check_if_ignore_signal(sig_it->second)) {
-    
-                // Check if signal is local (IVL generated)
-                if (!sig_it->second->is_ivl_generated()) {
-
-                    // Iterate over all words in signal
-                    for (unsigned int i = sig_it->second->get_array_base(); 
-                                      i < sig_it->second->get_array_count(); 
-                                      i++) {
-
-                        // Set ID of signal
-                        sig_it->second->set_id(i);
-
-                        // Add signal to dot graph
-                        dg_->add_node(sig_it->second, "");   
-                    }
-                }
-            }
-        }
-        
-        // Increment iterator
-        sig_it++;
-    }
-}
-
-void SignalGraph::save_dot_graph() {
-    dg_->save_graph();
-}
-
-// ----------------------------------------------------------------------------------
-// ------------------------------- Signal Enumeration -------------------------------
-// ----------------------------------------------------------------------------------
+// ------------------------------------------------------------
+// ------------------- Signal Enumeration ---------------------
+// ------------------------------------------------------------
 
 void SignalGraph::find_all_signals(ivl_scope_t* scopes, unsigned int num_scopes) {
     for (unsigned int i = 0; i < num_scopes; i++) {
@@ -776,6 +179,30 @@ void SignalGraph::find_signals(ivl_scope_t scope) {
         // Add signal to graph
         add_signal(current_signal);
     } 
+}
+
+bool SignalGraph::check_if_ignore_signal(Signal* signal) const {
+    
+    // Check if ignore map is empty
+    if (!signals_to_ignore_.empty()) {
+
+        // Check that signal is not a constant (only ignore signals)
+        if (signal->is_signal()) {
+            return signals_to_ignore_.count(signal->get_basename());
+        }
+    }
+
+    return false;
+}
+
+bool SignalGraph::check_if_ignore_signal(ivl_signal_t signal) const { 
+    
+    // Check if ignore map is empty
+    if (!signals_to_ignore_.empty()) {
+        return signals_to_ignore_.count(ivl_signal_basename(signal));
+    }
+
+    return false;
 }
 
 void SignalGraph::add_signal(ivl_signal_t signal) {
@@ -813,17 +240,54 @@ void SignalGraph::add_signal(ivl_signal_t signal) {
     }
 }
 
-// ----------------------------------------------------------------------------------
-// ------------------------------- Connection Enumeration ---------------------------
-// ----------------------------------------------------------------------------------
+// ------------------------------------------------------------
+// ----------------- Connection Enumeration -------------------
+// ------------------------------------------------------------
 
-bool SignalGraph::add_connection(Signal* sink_signal, 
-                                 Signal* source_signal, 
-                                 string  ws) {
+bool SignalGraph::check_if_connection_exists(
+    Signal*     sink_signal, 
+    Connection* new_conn) {
 
-    signal_slice_t source_slice;
-    signal_slice_t sink_slice;
-    Connection*    conn;
+    conn_q_t::iterator conn_it = connections_map_[sink_signal]->begin();
+
+    while (conn_it != connections_map_[sink_signal]->end()) {
+        if (**conn_it == *new_conn) {
+            return true;
+        }
+
+        conn_it++;
+    }
+
+    return false;
+}
+
+bool SignalGraph::check_if_local_connection_exists(
+    Signal*     sink_signal, 
+    Connection* new_conn) {
+
+    if (local_connections_map_.count(sink_signal)) {
+        conn_q_t::iterator conn_it = local_connections_map_[sink_signal]->begin();
+
+        while (conn_it != local_connections_map_[sink_signal]->end()) {
+            if (**conn_it == *new_conn) {
+                return true;
+            }
+
+            conn_it++;
+        }
+    }
+
+    return false;
+}
+
+bool SignalGraph::add_connection(
+    Signal*        sink_signal, 
+    Signal*        source_signal, 
+    signal_slice_t sink_slice,
+    signal_slice_t source_slice,
+    string         ws) {
+
+    Connection* conn;
 
     // Check that source signal is valid (not null)
     assert(source_signal && 
@@ -853,10 +317,6 @@ bool SignalGraph::add_connection(Signal* sink_signal,
 
             // Do not process connections to ivl-generated source signals
             if (!source_signal->is_ivl_generated()) {
-
-                // Get signal slices
-                source_slice = get_source_slice(source_signal);
-                sink_slice   = get_sink_slice(sink_signal);
 
                 // Create connection object
                 conn = new Connection(source_signal, sink_signal, source_slice, sink_slice);
@@ -900,6 +360,80 @@ bool SignalGraph::add_connection(Signal* sink_signal,
     }
 
     return false;
+}
+
+void SignalGraph::track_local_signal_connection(
+    Signal*        sink_signal, 
+    Signal*        source_signal,
+    signal_slice_t sink_slice,
+    signal_slice_t source_slice,
+    string         ws) {
+
+    Connection* conn;
+
+    // Check that source signal is valid (not null)
+    assert(source_signal && 
+        "ERROR: invalid (NULL) pointer to source signal.\n");
+
+    // Check that sink signal is valid (not null)
+    assert(sink_signal && 
+        "ERROR: invalid (NULL) pointer to sink signal.\n");
+
+    // Check that sink signal is NOT a constant
+    assert(!sink_signal->is_const() && 
+        "ERROR: sink signal cannot be a constant.\n");
+
+    fprintf(DEBUG_PRINTS_FILE_PTR, "%sTracking local signal connection.\n", ws.c_str());
+
+    // Check if connecting signal is already in signals map,
+    // i.e. it is an ivl_signal. If it is not in the signals map,
+    // check that it is a constant signal (i.e. an ivl_const or
+    // ivl_expr). 
+    //
+    // **NOTE**: Constants are NOT stored in signals map for
+    // memory efficiency, but references to them are stored in
+    // the connection objects. Hence the Connection destructor
+    // calls delete on pointers to constant Signals.
+    if (in_signals_map(source_signal) || source_signal->is_const()) {
+
+        // Do not process connections between TWO ivl-generated source signals
+        if (source_signal->is_ivl_generated() || sink_signal->is_ivl_generated()) {
+
+            // Create connection object
+            conn = new Connection(source_signal, sink_signal, source_slice, sink_slice);
+
+            // Check if local connection already exists
+            if (!check_if_local_connection_exists(sink_signal, conn)) {
+                
+                // Create connections list if it does not exist
+                if (!local_connections_map_.count(sink_signal)) {
+                    local_connections_map_[sink_signal] = new conn_q_t();
+                }
+
+                // Save Connection
+                local_connections_map_[sink_signal]->push_back(conn);
+
+                // Increment connection counter
+                num_local_connections_++;  
+
+            } else {
+
+                fprintf(DEBUG_PRINTS_FILE_PTR, "%slocal connection (from %s to %s) already exists...\n", 
+                    ws.c_str(),
+                    conn->get_source()->get_fullname().c_str(),
+                    conn->get_sink()->get_fullname().c_str());
+
+            }
+        } else {
+            Error::non_local_signal_connection();
+        }
+
+    } else {
+
+        Error::connecting_signal_not_in_graph(
+            signals_map_, source_signal->get_ivl_signal());
+
+    }
 }
 
 void SignalGraph::process_local_connections(string ws) {
@@ -990,21 +524,142 @@ void SignalGraph::process_local_connections(string ws) {
         "ERROR: some local connections remain unprocessed.\n");
 }
 
-// ----------------------------------------------------------------------------------
-// ------------------------------------ Other ---------------------------------------
-// ----------------------------------------------------------------------------------
+// ------------------------------------------------------------
+// ---------------------- Stats Counters ----------------------
+// ------------------------------------------------------------
+
+unsigned long SignalGraph::get_num_connections() const {
+    return num_connections_;
+}
+
+unsigned long SignalGraph::get_num_signals() const {
+    return num_signals_;
+}
+
+unsigned long SignalGraph::get_num_local_signals() const {
+    return num_local_signals_;
+}
+
+unsigned long SignalGraph::get_num_constants() const {
+    return num_constants_;
+}
+
+// ------------------------------------------------------------
+// ------------------------ Signal Map ------------------------
+// ------------------------------------------------------------
+
+sig_map_t SignalGraph::get_signals_map() const {
+    return signals_map_;
+}
+
+bool SignalGraph::in_signals_map(Signal* signal) const {
+    if (!signal) {
+        // Signal is NULL
+        return false;
+    } else {
+        return signals_map_.count(signal->get_ivl_signal());
+    }
+}
+
+Signal* SignalGraph::get_signal_from_ivl_signal(ivl_signal_t ivl_signal) {
+    sig_map_t::iterator sig_it = signals_map_.end();
+
+    // Check if IVL signal exists in map
+    if ((sig_it = signals_map_.find(ivl_signal)) != signals_map_.end()) {
+        return sig_it->second;
+    } else {
+        return NULL;
+    }
+}
+
+// ------------------------------------------------------------
+// ------------------- Dot Graph Management -------------------
+// ------------------------------------------------------------
+
+void SignalGraph::write_signals_to_dot_graph() {
+    
+    // Check that number of signals is correct
+    assert((num_signals_ + num_local_signals_ + num_signals_ignored_) == 
+        signals_map_.size() && 
+        "ERROR: number of signals does not match size of signals map.\n");
+
+    sig_map_t::iterator sig_it = signals_map_.begin();
+
+    while (sig_it != signals_map_.end()) {
+        
+        // Check if Signal is an IVL signal
+        if (sig_it->second->is_signal()) {
+
+            // Check if signal is to be ignored
+            if (!check_if_ignore_signal(sig_it->second)) {
+    
+                // Check if signal is local (IVL generated)
+                if (!sig_it->second->is_ivl_generated()) {
+
+                    // Iterate over all words in signal
+                    for (unsigned int i = sig_it->second->get_array_base(); 
+                                      i < sig_it->second->get_array_count(); 
+                                      i++) {
+
+                        // Set ID of signal
+                        sig_it->second->set_id(i);
+
+                        // Add signal to dot graph
+                        dg_->add_node(sig_it->second, "");   
+                    }
+                }
+            }
+        }
+        
+        // Increment iterator
+        sig_it++;
+    }
+}
+
+void SignalGraph::save_dot_graph() {
+    dg_->save_graph();
+}
+
+// ------------------------------------------------------------
+// ---------------------- Config Loading ----------------------
+// ------------------------------------------------------------
 
 void SignalGraph::process_cmd_line_args(cmd_args_map_t* cmd_args) {
-    // Initialize CLK Basename
-    clk_basename_ = cmd_args->at(CLK_BASENAME_FLAG);
-
-    // // Load ignore constants flag
-    // if (!strcmp(cmd_args->at(IGNORE_CONSTANTS_FLAG).c_str(), "yes")) {
-    //     ignore_constants_ = true;
-    // }
     
     // Load signals to ignore
     if (cmd_args->count(IGNORE_FILEPATH_FLAG)) {
         load_signals_to_ignore(cmd_args->at(IGNORE_FILEPATH_FLAG));
     }
 }
+
+void SignalGraph::add_signal_to_ignore(string signal_basename) {
+    signals_to_ignore_[signal_basename] = true;
+}
+
+void SignalGraph::load_signals_to_ignore(string file_path) {
+
+    fprintf(DEBUG_PRINTS_FILE_PTR, "Loading signal (base)names to ignore:\n");
+
+    // Ignore file stream object
+    ifstream file_stream = ifstream(file_path);
+
+    // Signal basename (line) read from file stream
+    string signal_basename;
+
+    // Open file
+    if (file_stream.is_open()) {
+
+        // Process File
+        while (getline(file_stream, signal_basename)) {
+            signals_to_ignore_[signal_basename] = true;
+            fprintf(DEBUG_PRINTS_FILE_PTR, "%s%s\n", WS_TAB, signal_basename.c_str());
+        }
+
+        // Close File
+        file_stream.close();
+
+    } else {
+        fprintf(stderr, "ERROR: Could not open file %s\n", file_path.c_str());
+        exit(FILE_ERROR);
+    }
+} 

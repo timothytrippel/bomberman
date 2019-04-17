@@ -29,16 +29,6 @@ Graphviz .dot file.
 using namespace std;
 
 // ------------------------------------------------------------
-// ------------------------ Signal Slice ----------------------
-// ------------------------------------------------------------
-// Struct for holding MSB-LSB pair for tracking signal vector 
-// slices at a given nexus
-typedef struct signal_slice_s {
-    unsigned int msb;
-    unsigned int lsb;
-} signal_slice_t;
-
-// ------------------------------------------------------------
 // ------------------------- Connection -----------------------
 // ------------------------------------------------------------
 

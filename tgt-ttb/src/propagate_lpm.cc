@@ -16,13 +16,14 @@ type must be handled individually.
 
 // TTB Headers
 #include "ttb_typedefs.h"
-#include "ttb.h"
+#include "tracker.h"
 #include "error.h"
 
 // ----------------------------------------------------------------------------------
 // ------------------------------- Helper Functions ---------------------------------
 // ----------------------------------------------------------------------------------
-const char* get_lpm_type_as_string(ivl_lpm_t lpm) {
+
+const char* Tracker::get_lpm_type_as_string(ivl_lpm_t lpm) {
     switch(ivl_lpm_type(lpm)) {
         case IVL_LPM_ABS:
             return "IVL_LPM_ABS";
@@ -108,10 +109,11 @@ const char* get_lpm_type_as_string(ivl_lpm_t lpm) {
 // ----------------------------------------------------------------------------------
 // ------------------------------- LPM Device Types ---------------------------------
 // ----------------------------------------------------------------------------------
-void process_lpm_basic(ivl_lpm_t    lpm,
-                       Signal*      sink_signal,
-                       SignalGraph* sg,
-                       string       ws) {
+
+void Tracker::process_lpm_basic(
+    ivl_lpm_t lpm,
+    Signal*   sink_signal,
+    string    ws) {
 
     // Device Input Nexus
     ivl_nexus_t input_nexus = NULL;
@@ -124,14 +126,14 @@ void process_lpm_basic(ivl_lpm_t    lpm,
         input_nexus = ivl_lpm_data(lpm, i);
 
         // Propagate data input nexus
-        propagate_nexus(input_nexus, sink_signal, sg, ws + WS_TAB);
+        propagate_nexus(input_nexus, sink_signal, ws + WS_TAB);
     }    
 }
 
-void process_lpm_part_select(ivl_lpm_t    lpm,
-                             Signal*      sink_signal,
-                             SignalGraph* sg,
-                             string       ws) {
+void Tracker::process_lpm_part_select(
+    ivl_lpm_t lpm,
+    Signal*   sink_signal,
+    string    ws) {
 
     // Device Nexuses
     ivl_nexus_t input_nexus = NULL;
@@ -140,49 +142,53 @@ void process_lpm_part_select(ivl_lpm_t    lpm,
     // Get input pin (0) nexus for part-select LPM device
     input_nexus = ivl_lpm_data(lpm, LPM_PART_SELECT_INPUT_NEXUS_INDEX);
 
-    // Get base pin (1) nexus for part-select LPM device, which
-    // may be NULL if non-constant base is used.
-    base_nexus = ivl_lpm_data(lpm, LPM_PART_SELECT_BASE_NEXUS_INDEX);
-    if (base_nexus) {
-        Error::not_supported("non-constant base for LPM part select device.");
-    }
-
     // Get MSB and LSB of slice
     unsigned int msb = ivl_lpm_base(lpm) + ivl_lpm_width(lpm) - 1;
     unsigned int lsb = ivl_lpm_base(lpm);
+
+    // Get base pin (1) nexus for part-select LPM device, which
+    // may be NULL if constant base is used.
+    base_nexus = ivl_lpm_data(lpm, LPM_PART_SELECT_BASE_NEXUS_INDEX);
+    if (base_nexus) {
+        fprintf(stderr, "ERROR: LPM Part-Select Non-Constant Base\n");
+        fprintf(stderr, "File: %s Line: %d\n", ivl_lpm_file(lpm), ivl_lpm_lineno(lpm));
+        fprintf(stderr, "MSB: %d; LSB: %d\n", msb, lsb);
+        Error::not_supported("non-constant base for LPM part select device.");
+        // propagate_nexus(base_nexus, sink_signal, ws + WS_TAB);
+    }
 
     // Determine LPM type and track connection slice 
     if (ivl_lpm_type(lpm) == IVL_LPM_PART_VP) {
 
         // part select: vector to part (VP: part select in rval)
-        sg->track_source_slice(msb, lsb, ws);
+        track_source_slice(msb, lsb, ws);
 
         // Propagate nexus
-        propagate_nexus(input_nexus, sink_signal, sg, ws + WS_TAB);
+        propagate_nexus(input_nexus, sink_signal, ws + WS_TAB);
 
         // Pop slice info from stack
-        sg->pop_from_source_slices_queue();
+        pop_source_slice();
 
     } else if (ivl_lpm_type(lpm) == IVL_LPM_PART_PV) {
 
         // part select: part to vector (PV: part select in lval)
-        sg->track_sink_slice(msb, lsb, ws);
+        track_sink_slice(msb, lsb, ws);
 
         // Propagate nexus
-        propagate_nexus(input_nexus, sink_signal, sg, ws + WS_TAB);
+        propagate_nexus(input_nexus, sink_signal, ws + WS_TAB);
 
         // Pop slice info from stack
-        sg->pop_from_sink_slices_queue();
+        pop_sink_slice();
 
     } else {
         Error::unknown_part_select_lpm_type(ivl_lpm_type(lpm));
     }    
 }
 
-void process_lpm_concat(ivl_lpm_t    lpm,
-                        Signal*      sink_signal,
-                        SignalGraph* sg,
-                        string       ws) {
+void Tracker::process_lpm_concat(
+    ivl_lpm_t lpm,
+    Signal*   sink_signal,
+    string    ws) {
 
     // Device Input Nexus
     ivl_nexus_t input_nexus = NULL;
@@ -226,13 +232,13 @@ void process_lpm_concat(ivl_lpm_t    lpm,
                 current_msb = current_lsb + ivl_signal_width(source_signal) - 1;
 
                 // Track connection slice information
-                sg->track_sink_slice(current_msb, current_lsb, ws);
+                track_sink_slice(current_msb, current_lsb, ws);
 
                 // Propagate input nexus
-                propagate_nexus(input_nexus, sink_signal, sg, ws + WS_TAB);
+                propagate_nexus(input_nexus, sink_signal, ws + WS_TAB);
 
                 // Pop slice info from stack
-                sg->pop_from_sink_slices_queue();
+                pop_sink_slice();
 
                 // Update current LSB of sink signal slice
                 current_lsb += ivl_signal_width(source_signal);
@@ -245,10 +251,10 @@ void process_lpm_concat(ivl_lpm_t    lpm,
     }
 }
 
-void process_lpm_mux(ivl_lpm_t    lpm,
-                     Signal*      sink_signal,
-                     SignalGraph* sg,
-                     string       ws) {
+void Tracker::process_lpm_mux(
+    ivl_lpm_t lpm,
+    Signal*   sink_signal,
+    string    ws) {
 
     // Device Input Nexus
     ivl_nexus_t input_nexus = NULL;
@@ -257,32 +263,49 @@ void process_lpm_mux(ivl_lpm_t    lpm,
     input_nexus = ivl_lpm_select(lpm);
 
     // Propagate select input nexus
-    propagate_nexus(input_nexus, sink_signal, sg, ws + WS_TAB);
+    propagate_nexus(input_nexus, sink_signal, ws + WS_TAB);
 
     // Propagate DATA input(s)
-    process_lpm_basic(lpm, sink_signal, sg, ws);
+    process_lpm_basic(lpm, sink_signal, ws);
+}
+
+void Tracker::process_lpm_memory(
+    ivl_lpm_t lpm,
+    Signal*   sink_signal,
+    string    ws) {
+
+    // Device Input Nexus
+    ivl_nexus_t input_nexus = NULL;
+    
+    // Propagate SELECT input(s)
+    input_nexus = ivl_lpm_select(lpm);
+
+    // Propagate select input nexus
+    propagate_nexus(input_nexus, sink_signal, ws + WS_TAB);
+
+    return;
 }
 
 // ----------------------------------------------------------------------------------
 // --------------------------- Main LPM Progation Switch ----------------------------
 // ----------------------------------------------------------------------------------
-void propagate_lpm(ivl_lpm_t    lpm,
-                   Signal*      sink_signal,
-                   SignalGraph* sg,
-                   string       ws) {
+void Tracker::propagate_lpm(
+    ivl_lpm_t lpm,
+    Signal*   sink_signal,
+    string    ws) {
 
     // Add connections
     switch (ivl_lpm_type(lpm)) {
         case IVL_LPM_CONCAT:
         case IVL_LPM_CONCATZ:
-            process_lpm_concat(lpm, sink_signal, sg, ws);
+            process_lpm_concat(lpm, sink_signal, ws);
             break;
         case IVL_LPM_MUX:
-            process_lpm_mux(lpm, sink_signal, sg, ws);
+            process_lpm_mux(lpm, sink_signal, ws);
             break;
         case IVL_LPM_PART_VP:
         case IVL_LPM_PART_PV:
-            process_lpm_part_select(lpm, sink_signal, sg, ws);
+            process_lpm_part_select(lpm, sink_signal, ws);
             break;
         case IVL_LPM_ADD:
         case IVL_LPM_CMP_EEQ:
@@ -305,13 +328,13 @@ void propagate_lpm(ivl_lpm_t    lpm,
         case IVL_LPM_SHIFTL:
         case IVL_LPM_SHIFTR:
         case IVL_LPM_SUB:
-            process_lpm_basic(lpm, sink_signal, sg, ws);
+            process_lpm_basic(lpm, sink_signal, ws);
             break;
         case IVL_LPM_ABS:
             Error::not_supported("LPM device type (IVL_LPM_ABS)");
             break;
         case IVL_LPM_ARRAY:
-            Error::not_supported("LPM device type (IVL_LPM_ARRAY)");
+            process_lpm_memory(lpm, sink_signal, ws);
             break;
         case IVL_LPM_CAST_INT:
             Error::not_supported("LPM device type (IVL_LPM_CAST_INT)");

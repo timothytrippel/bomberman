@@ -79,6 +79,16 @@ typedef enum ivl_obj_type_e {
 } ivl_obj_type_t;
 
 // ------------------------------------------------------------
+// ------------------------ Signal Slice ----------------------
+// ------------------------------------------------------------
+// Struct for holding MSB-LSB pair for tracking signal vector 
+// slices at a given nexus
+typedef struct signal_slice_s {
+    unsigned int msb;
+    unsigned int lsb;
+} signal_slice_t;
+
+// ------------------------------------------------------------
 // -------------------------- Signal --------------------------
 // ------------------------------------------------------------
 
