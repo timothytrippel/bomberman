@@ -6,6 +6,7 @@
 
 # Ignore TTB Generated Files
 *.dot
+!tests/ivl_ttb/golden_dot/*.dot
 *.pdf
 *.vvp
 

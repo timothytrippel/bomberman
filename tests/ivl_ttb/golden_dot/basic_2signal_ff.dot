@@ -1,0 +1,27 @@
+digraph G {
+	"basic_2signal_ff.en" -> "basic_2signal_ff.next_q1"[label="[0:0]->[0:0]"];
+	"basic_2signal_ff.q1" -> "basic_2signal_ff.next_q1"[label="[0:0]->[0:0]"];
+	"basic_2signal_ff.d1" -> "basic_2signal_ff.next_q1"[label="[0:0]->[0:0]"];
+	"basic_2signal_ff.en" -> "basic_2signal_ff.next_q2"[label="[0:0]->[0:0]"];
+	"basic_2signal_ff.q2" -> "basic_2signal_ff.next_q2"[label="[0:0]->[0:0]"];
+	"basic_2signal_ff.d2" -> "basic_2signal_ff.next_q2"[label="[0:0]->[0:0]"];
+	"const.0.0" [shape=none, label="const.0.0[0:0]"];
+	"const.0.0" -> "basic_2signal_ff.q1"[label="[0:0]->[0:0]"];
+	"basic_2signal_ff.rst" -> "basic_2signal_ff.q1"[label="[0:0]->[0:0]"];
+	"basic_2signal_ff.clk" -> "basic_2signal_ff.q1"[label="[0:0]->[0:0]"];
+	"const.1.0" [shape=none, label="const.1.0[0:0]"];
+	"const.1.0" -> "basic_2signal_ff.q2"[label="[0:0]->[0:0]"];
+	"basic_2signal_ff.rst" -> "basic_2signal_ff.q2"[label="[0:0]->[0:0]"];
+	"basic_2signal_ff.clk" -> "basic_2signal_ff.q2"[label="[0:0]->[0:0]"];
+	"basic_2signal_ff.next_q1" -> "basic_2signal_ff.q1"[label="[0:0]->[0:0]"];
+	"basic_2signal_ff.next_q2" -> "basic_2signal_ff.q2"[label="[0:0]->[0:0]"];
+	"basic_2signal_ff.clk" [shape=rectangle, label="basic_2signal_ff.clk[0:0]"];
+	"basic_2signal_ff.d1" [shape=rectangle, label="basic_2signal_ff.d1[0:0]"];
+	"basic_2signal_ff.d2" [shape=rectangle, label="basic_2signal_ff.d2[0:0]"];
+	"basic_2signal_ff.en" [shape=rectangle, label="basic_2signal_ff.en[0:0]"];
+	"basic_2signal_ff.next_q1" [shape=ellipse, label="basic_2signal_ff.next_q1[0:0]"];
+	"basic_2signal_ff.next_q2" [shape=ellipse, label="basic_2signal_ff.next_q2[0:0]"];
+	"basic_2signal_ff.q1" [shape=square, label="basic_2signal_ff.q1[0:0]"];
+	"basic_2signal_ff.q2" [shape=square, label="basic_2signal_ff.q2[0:0]"];
+	"basic_2signal_ff.rst" [shape=rectangle, label="basic_2signal_ff.rst[0:0]"];
+}

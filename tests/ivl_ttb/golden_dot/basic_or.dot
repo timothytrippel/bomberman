@@ -1,0 +1,7 @@
+digraph G {
+	"basic_or.a" -> "basic_or.c"[label="[0:0]->[0:0]"];
+	"basic_or.b" -> "basic_or.c"[label="[0:0]->[0:0]"];
+	"basic_or.a" [shape=rectangle, label="basic_or.a[0:0]"];
+	"basic_or.b" [shape=rectangle, label="basic_or.b[0:0]"];
+	"basic_or.c" [shape=ellipse, label="basic_or.c[0:0]"];
+}

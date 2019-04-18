@@ -1,0 +1,5 @@
+digraph G {
+	"basic_delay.a" -> "basic_delay.out"[label="[0:0]->[0:0]"];
+	"basic_delay.a" [shape=ellipse, label="basic_delay.a[0:0]"];
+	"basic_delay.out" [shape=ellipse, label="basic_delay.out[0:0]"];
+}

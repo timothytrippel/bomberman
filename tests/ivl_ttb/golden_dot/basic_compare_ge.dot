@@ -1,0 +1,7 @@
+digraph G {
+	"basic_compare_ge.a" -> "basic_compare_ge.o"[label="[1:0]->[0:0]"];
+	"basic_compare_ge.b" -> "basic_compare_ge.o"[label="[1:0]->[0:0]"];
+	"basic_compare_ge.a" [shape=rectangle, label="basic_compare_ge.a[1:0]"];
+	"basic_compare_ge.b" [shape=rectangle, label="basic_compare_ge.b[1:0]"];
+	"basic_compare_ge.o" [shape=ellipse, label="basic_compare_ge.o[0:0]"];
+}

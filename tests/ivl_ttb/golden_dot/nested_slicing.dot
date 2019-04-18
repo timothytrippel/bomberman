@@ -1,0 +1,9 @@
+digraph G {
+	"nested_slicing.in" -> "nested_slicing.sub.in"[label="[7:0]->[7:0]"];
+	"nested_slicing.sub.in" -> "nested_slicing.sub.out"[label="[5:2]->[3:0]"];
+	"nested_slicing.sub.out" -> "nested_slicing.out"[label="[1:0]->[1:0]"];
+	"nested_slicing.sub.in" [shape=rectangle, label="nested_slicing.sub.in[7:0]"];
+	"nested_slicing.sub.out" [shape=ellipse, label="nested_slicing.sub.out[3:0]"];
+	"nested_slicing.in" [shape=rectangle, label="nested_slicing.in[7:0]"];
+	"nested_slicing.out" [shape=ellipse, label="nested_slicing.out[1:0]"];
+}

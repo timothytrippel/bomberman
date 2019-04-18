@@ -1,0 +1,9 @@
+digraph G {
+	"basic_module_inst.in" -> "basic_module_inst.mod_1.in"[label="[0:0]->[0:0]"];
+	"basic_module_inst.mod_1.in" -> "basic_module_inst.mod_1.out"[label="[0:0]->[0:0]"];
+	"basic_module_inst.mod_1.out" -> "basic_module_inst.out"[label="[0:0]->[0:0]"];
+	"basic_module_inst.mod_1.in" [shape=rectangle, label="basic_module_inst.mod_1.in[0:0]"];
+	"basic_module_inst.mod_1.out" [shape=ellipse, label="basic_module_inst.mod_1.out[0:0]"];
+	"basic_module_inst.in" [shape=rectangle, label="basic_module_inst.in[0:0]"];
+	"basic_module_inst.out" [shape=ellipse, label="basic_module_inst.out[0:0]"];
+}

@@ -1,0 +1,5 @@
+digraph G {
+	"const.0.11" [shape=none, label="const.0.11[1:0]"];
+	"const.0.11" -> "constant_part_select_pv.out"[label="[1:0]->[3:2]"];
+	"constant_part_select_pv.out" [shape=ellipse, label="constant_part_select_pv.out[3:0]"];
+}

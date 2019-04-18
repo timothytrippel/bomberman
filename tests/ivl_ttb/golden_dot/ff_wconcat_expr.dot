@@ -1,0 +1,20 @@
+digraph G {
+	"ff_wconcat_expr.en" -> "ff_wconcat_expr.next_out"[label="[0:0]->[0:0]"];
+	"ff_wconcat_expr.out" -> "ff_wconcat_expr.next_out"[label="[0:0]->[0:0]"];
+	"ff_wconcat_expr.data" -> "ff_wconcat_expr.next_out"[label="[0:0]->[0:0]"];
+	"const.1.0" [shape=none, label="const.1.0[0:0]"];
+	"const.1.0" -> "ff_wconcat_expr.out"[label="[0:0]->[0:0]"];
+	"const.0.00" [shape=none, label="const.0.00[1:0]"];
+	"const.0.00" -> "ff_wconcat_expr.out"[label="[1:0]->[0:0]"];
+	"ff_wconcat_expr.a" -> "ff_wconcat_expr.out"[label="[0:0]->[0:0]"];
+	"ff_wconcat_expr.b" -> "ff_wconcat_expr.out"[label="[0:0]->[0:0]"];
+	"ff_wconcat_expr.clk" -> "ff_wconcat_expr.out"[label="[0:0]->[0:0]"];
+	"ff_wconcat_expr.next_out" -> "ff_wconcat_expr.out"[label="[0:0]->[0:0]"];
+	"ff_wconcat_expr.a" [shape=rectangle, label="ff_wconcat_expr.a[0:0]"];
+	"ff_wconcat_expr.b" [shape=rectangle, label="ff_wconcat_expr.b[0:0]"];
+	"ff_wconcat_expr.clk" [shape=rectangle, label="ff_wconcat_expr.clk[0:0]"];
+	"ff_wconcat_expr.data" [shape=rectangle, label="ff_wconcat_expr.data[0:0]"];
+	"ff_wconcat_expr.en" [shape=rectangle, label="ff_wconcat_expr.en[0:0]"];
+	"ff_wconcat_expr.next_out" [shape=ellipse, label="ff_wconcat_expr.next_out[0:0]"];
+	"ff_wconcat_expr.out" [shape=square, label="ff_wconcat_expr.out[0:0]"];
+}

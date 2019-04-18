@@ -1,0 +1,22 @@
+digraph G {
+	"block_ff.en" -> "block_ff.next_q"[label="[0:0]->[1:0]"];
+	"block_ff.q" -> "block_ff.next_q"[label="[1:0]->[1:0]"];
+	"block_ff.d" -> "block_ff.next_q"[label="[1:0]->[1:0]"];
+	"const.1.0" [shape=none, label="const.1.0[0:0]"];
+	"const.1.0" -> "block_ff.q"[label="[0:0]->[0:0]"];
+	"block_ff.rst" -> "block_ff.q"[label="[0:0]->[0:0]"];
+	"block_ff.clk" -> "block_ff.q"[label="[0:0]->[0:0]"];
+	"const.3.0" [shape=none, label="const.3.0[0:0]"];
+	"const.3.0" -> "block_ff.q"[label="[0:0]->[1:1]"];
+	"block_ff.rst" -> "block_ff.q"[label="[0:0]->[1:1]"];
+	"block_ff.clk" -> "block_ff.q"[label="[0:0]->[1:1]"];
+	"block_ff.next_q" -> "block_ff.q"[label="[1:0]->[1:0]"];
+	"block_ff.rst" -> "block_ff.q"[label="[0:0]->[1:0]"];
+	"block_ff.clk" -> "block_ff.q"[label="[0:0]->[1:0]"];
+	"block_ff.clk" [shape=rectangle, label="block_ff.clk[0:0]"];
+	"block_ff.d" [shape=rectangle, label="block_ff.d[1:0]"];
+	"block_ff.en" [shape=rectangle, label="block_ff.en[0:0]"];
+	"block_ff.next_q" [shape=ellipse, label="block_ff.next_q[1:0]"];
+	"block_ff.q" [shape=square, label="block_ff.q[1:0]"];
+	"block_ff.rst" [shape=rectangle, label="block_ff.rst[0:0]"];
+}

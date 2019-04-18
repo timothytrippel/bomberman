@@ -1,0 +1,16 @@
+digraph G {
+	"basic_2bit_ff.en" -> "basic_2bit_ff.next_q"[label="[0:0]->[1:0]"];
+	"basic_2bit_ff.q" -> "basic_2bit_ff.next_q"[label="[1:0]->[1:0]"];
+	"basic_2bit_ff.d" -> "basic_2bit_ff.next_q"[label="[1:0]->[1:0]"];
+	"const.0.00" [shape=none, label="const.0.00[1:0]"];
+	"const.0.00" -> "basic_2bit_ff.q"[label="[1:0]->[1:0]"];
+	"basic_2bit_ff.rst" -> "basic_2bit_ff.q"[label="[0:0]->[1:0]"];
+	"basic_2bit_ff.clk" -> "basic_2bit_ff.q"[label="[0:0]->[1:0]"];
+	"basic_2bit_ff.next_q" -> "basic_2bit_ff.q"[label="[1:0]->[1:0]"];
+	"basic_2bit_ff.clk" [shape=rectangle, label="basic_2bit_ff.clk[0:0]"];
+	"basic_2bit_ff.d" [shape=rectangle, label="basic_2bit_ff.d[1:0]"];
+	"basic_2bit_ff.en" [shape=rectangle, label="basic_2bit_ff.en[0:0]"];
+	"basic_2bit_ff.next_q" [shape=ellipse, label="basic_2bit_ff.next_q[1:0]"];
+	"basic_2bit_ff.q" [shape=square, label="basic_2bit_ff.q[1:0]"];
+	"basic_2bit_ff.rst" [shape=rectangle, label="basic_2bit_ff.rst[0:0]"];
+}

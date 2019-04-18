@@ -1,0 +1,7 @@
+digraph G {
+	"always_source_part_select.a" -> "always_source_part_select.out"[label="[1:1]->[0:0]"];
+	"always_source_part_select.clk" -> "always_source_part_select.out"[label="[0:0]->[0:0]"];
+	"always_source_part_select.a" [shape=rectangle, label="always_source_part_select.a[1:0]"];
+	"always_source_part_select.clk" [shape=rectangle, label="always_source_part_select.clk[0:0]"];
+	"always_source_part_select.out" [shape=square, label="always_source_part_select.out[0:0]"];
+}

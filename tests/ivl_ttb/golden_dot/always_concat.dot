@@ -1,0 +1,11 @@
+digraph G {
+	"always_concat.a" -> "always_concat.out"[label="[0:0]->[3:3]"];
+	"always_concat.c" -> "always_concat.out"[label="[1:0]->[2:1]"];
+	"always_concat.b" -> "always_concat.out"[label="[0:0]->[0:0]"];
+	"always_concat.clk" -> "always_concat.out"[label="[0:0]->[3:0]"];
+	"always_concat.a" [shape=rectangle, label="always_concat.a[0:0]"];
+	"always_concat.b" [shape=rectangle, label="always_concat.b[0:0]"];
+	"always_concat.c" [shape=rectangle, label="always_concat.c[1:0]"];
+	"always_concat.clk" [shape=rectangle, label="always_concat.clk[0:0]"];
+	"always_concat.out" [shape=square, label="always_concat.out[3:0]"];
+}

@@ -1,0 +1,5 @@
+digraph G {
+	"basic_part_select_pv.in" -> "basic_part_select_pv.out"[label="[1:0]->[3:2]"];
+	"basic_part_select_pv.in" [shape=rectangle, label="basic_part_select_pv.in[1:0]"];
+	"basic_part_select_pv.out" [shape=ellipse, label="basic_part_select_pv.out[3:0]"];
+}

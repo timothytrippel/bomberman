@@ -1,0 +1,24 @@
+digraph G {
+	"two_bit_distr_counter.lsb" -> "two_bit_distr_counter.count"[label="[0:0]->[0:0]"];
+	"two_bit_distr_counter.msb" -> "two_bit_distr_counter.count"[label="[0:0]->[1:1]"];
+	"two_bit_distr_counter.lsb" -> "two_bit_distr_counter.next_lsb"[label="[0:0]->[0:0]"];
+	"two_bit_distr_counter.lsb" -> "two_bit_distr_counter.next_msb"[label="[0:0]->[0:0]"];
+	"two_bit_distr_counter.msb" -> "two_bit_distr_counter.next_msb"[label="[0:0]->[0:0]"];
+	"const.0.0" [shape=none, label="const.0.0[0:0]"];
+	"const.0.0" -> "two_bit_distr_counter.lsb"[label="[0:0]->[0:0]"];
+	"two_bit_distr_counter.rst" -> "two_bit_distr_counter.lsb"[label="[0:0]->[0:0]"];
+	"two_bit_distr_counter.clk" -> "two_bit_distr_counter.lsb"[label="[0:0]->[0:0]"];
+	"const.1.0" [shape=none, label="const.1.0[0:0]"];
+	"const.1.0" -> "two_bit_distr_counter.msb"[label="[0:0]->[0:0]"];
+	"two_bit_distr_counter.rst" -> "two_bit_distr_counter.msb"[label="[0:0]->[0:0]"];
+	"two_bit_distr_counter.clk" -> "two_bit_distr_counter.msb"[label="[0:0]->[0:0]"];
+	"two_bit_distr_counter.next_lsb" -> "two_bit_distr_counter.lsb"[label="[0:0]->[0:0]"];
+	"two_bit_distr_counter.next_msb" -> "two_bit_distr_counter.msb"[label="[0:0]->[0:0]"];
+	"two_bit_distr_counter.clk" [shape=rectangle, label="two_bit_distr_counter.clk[0:0]"];
+	"two_bit_distr_counter.count" [shape=ellipse, label="two_bit_distr_counter.count[1:0]"];
+	"two_bit_distr_counter.lsb" [shape=square, label="two_bit_distr_counter.lsb[0:0]"];
+	"two_bit_distr_counter.msb" [shape=square, label="two_bit_distr_counter.msb[0:0]"];
+	"two_bit_distr_counter.next_lsb" [shape=ellipse, label="two_bit_distr_counter.next_lsb[0:0]"];
+	"two_bit_distr_counter.next_msb" [shape=ellipse, label="two_bit_distr_counter.next_msb[0:0]"];
+	"two_bit_distr_counter.rst" [shape=rectangle, label="two_bit_distr_counter.rst[0:0]"];
+}

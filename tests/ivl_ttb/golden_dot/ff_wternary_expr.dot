@@ -1,0 +1,20 @@
+digraph G {
+	"ff_wternary_expr.en" -> "ff_wternary_expr.next_out"[label="[0:0]->[0:0]"];
+	"ff_wternary_expr.out" -> "ff_wternary_expr.next_out"[label="[0:0]->[0:0]"];
+	"ff_wternary_expr.data" -> "ff_wternary_expr.next_out"[label="[0:0]->[0:0]"];
+	"const.0.0" [shape=none, label="const.0.0[0:0]"];
+	"const.0.0" -> "ff_wternary_expr.out"[label="[0:0]->[0:0]"];
+	"ff_wternary_expr.c" -> "ff_wternary_expr.out"[label="[0:0]->[0:0]"];
+	"ff_wternary_expr.b" -> "ff_wternary_expr.out"[label="[0:0]->[0:0]"];
+	"ff_wternary_expr.a" -> "ff_wternary_expr.out"[label="[0:0]->[0:0]"];
+	"ff_wternary_expr.clk" -> "ff_wternary_expr.out"[label="[0:0]->[0:0]"];
+	"ff_wternary_expr.next_out" -> "ff_wternary_expr.out"[label="[0:0]->[0:0]"];
+	"ff_wternary_expr.a" [shape=rectangle, label="ff_wternary_expr.a[0:0]"];
+	"ff_wternary_expr.b" [shape=rectangle, label="ff_wternary_expr.b[0:0]"];
+	"ff_wternary_expr.c" [shape=rectangle, label="ff_wternary_expr.c[0:0]"];
+	"ff_wternary_expr.clk" [shape=rectangle, label="ff_wternary_expr.clk[0:0]"];
+	"ff_wternary_expr.data" [shape=rectangle, label="ff_wternary_expr.data[0:0]"];
+	"ff_wternary_expr.en" [shape=rectangle, label="ff_wternary_expr.en[0:0]"];
+	"ff_wternary_expr.next_out" [shape=ellipse, label="ff_wternary_expr.next_out[0:0]"];
+	"ff_wternary_expr.out" [shape=square, label="ff_wternary_expr.out[0:0]"];
+}

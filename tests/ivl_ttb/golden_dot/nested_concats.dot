@@ -1,0 +1,19 @@
+digraph G {
+	"nested_concats.a" -> "nested_concats.sub.a"[label="[0:0]->[0:0]"];
+	"nested_concats.b" -> "nested_concats.sub.b"[label="[0:0]->[0:0]"];
+	"nested_concats.c" -> "nested_concats.sub.c"[label="[1:0]->[1:0]"];
+	"nested_concats.sub.b" -> "nested_concats.sub.out"[label="[0:0]->[0:0]"];
+	"nested_concats.sub.c" -> "nested_concats.sub.out"[label="[1:0]->[2:1]"];
+	"nested_concats.sub.a" -> "nested_concats.sub.out"[label="[0:0]->[3:3]"];
+	"nested_concats.sub.out" -> "nested_concats.out_1"[label="[0:0]->[0:0]"];
+	"nested_concats.sub.out" -> "nested_concats.out_2"[label="[3:1]->[2:0]"];
+	"nested_concats.sub.a" [shape=rectangle, label="nested_concats.sub.a[0:0]"];
+	"nested_concats.sub.b" [shape=rectangle, label="nested_concats.sub.b[0:0]"];
+	"nested_concats.sub.c" [shape=rectangle, label="nested_concats.sub.c[1:0]"];
+	"nested_concats.sub.out" [shape=ellipse, label="nested_concats.sub.out[3:0]"];
+	"nested_concats.a" [shape=rectangle, label="nested_concats.a[0:0]"];
+	"nested_concats.b" [shape=rectangle, label="nested_concats.b[0:0]"];
+	"nested_concats.c" [shape=rectangle, label="nested_concats.c[1:0]"];
+	"nested_concats.out_1" [shape=ellipse, label="nested_concats.out_1[0:0]"];
+	"nested_concats.out_2" [shape=ellipse, label="nested_concats.out_2[2:0]"];
+}

@@ -1,0 +1,9 @@
+digraph G {
+	"always_sink_source_part_select.a" -> "always_sink_source_part_select.out"[label="[1:1]->[0:0]"];
+	"always_sink_source_part_select.clk" -> "always_sink_source_part_select.out"[label="[0:0]->[0:0]"];
+	"always_sink_source_part_select.a" -> "always_sink_source_part_select.out"[label="[0:0]->[1:1]"];
+	"always_sink_source_part_select.clk" -> "always_sink_source_part_select.out"[label="[0:0]->[1:1]"];
+	"always_sink_source_part_select.clk" [shape=rectangle, label="always_sink_source_part_select.clk[0:0]"];
+	"always_sink_source_part_select.out" [shape=square, label="always_sink_source_part_select.out[1:0]"];
+	"always_sink_source_part_select.a" [shape=rectangle, label="always_sink_source_part_select.a[1:0]"];
+}
