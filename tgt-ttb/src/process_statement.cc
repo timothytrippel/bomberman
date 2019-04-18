@@ -174,14 +174,14 @@ Signal* Tracker::process_statement_assign_lval(
     ivl_statement_t statement,
     string          ws) {
 
-    ivl_lval_t   lval                = NULL; // lval that contains sink signal
-    ivl_expr_t   part_select_expr    = NULL; // lval part-select offset expression
-    unsigned int part_select_sources = 0;    // number of part select source exprs processed
-    unsigned int part_select_msb     = 0;    // lval (sink signal) MSB
-    unsigned int part_select_lsb     = 0;    // lval (sink signal) LSB
-    unsigned int num_lvals           = 0;    // number of lvals to process
-    Signal*      sink_signal;                // "signal" that contains lval offset expr
-    Signal*      part_select;                // "signal" that contains lval offset expr
+    ivl_lval_t   lval             = NULL; // LVal that contains sink signal
+    Signal*      sink_signal      = NULL; // sink signal
+    ivl_expr_t   array_index_expr = NULL; // LVal array index expression
+    ivl_expr_t   part_select_expr = NULL; // LVal part-select offset expression
+    unsigned int array_index      = 0;    // LVal array index
+    unsigned int part_select_msb  = 0;    // LVal (sink signal) MSB
+    unsigned int part_select_lsb  = 0;    // LVal (sink signal) LSB
+    unsigned int num_lvals        = 0;    // number of lvals to process
 
     // Get number of lvals
     num_lvals = ivl_stmt_lvals(statement);
@@ -207,22 +207,15 @@ Signal* Tracker::process_statement_assign_lval(
     sink_signal->reset_slices();
 
     // Check if memory lval (i.e. lval is an arrayed signal)
-    if ((part_select_expr = ivl_lval_idx(lval))) {
+    if ((array_index_expr = ivl_lval_idx(lval))) {
         fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing lval array index ...\n", ws.c_str());
 
-        // Get LVAL signal array index as constant expression (Signal).
-        // Note: Number of source signals added to queue should be 1,
-        // because non-constant lval offsets are NOT supported.
-        part_select_sources = process_expression(part_select_expr, statement, ws + WS_TAB);
-        assert(part_select_sources == 1 && "ERROR: more than one LVAL part select expr. processed.\n");
-        part_select = pop_source_signal(ws);
+        // Get LVAL signal array index
+        array_index = process_index_expression(array_index_expr, statement, ws + WS_TAB);
 
         // Set sink signal ID (arrayed sink signals)
-        sink_signal->set_id(part_select->process_as_partselect_expr(statement));
+        sink_signal->set_id(array_index);
         fprintf(DEBUG_PRINTS_FILE_PTR, "%slval array index is: %u\n", ws.c_str(), sink_signal->get_id());
-
-        // Free memory
-        delete(part_select);
     }
     
     // Set sink signal as FF if inside an FF block
@@ -234,22 +227,12 @@ Signal* Tracker::process_statement_assign_lval(
     if ((part_select_expr = ivl_lval_part_off(lval))) {
         fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing lval part select ...\n", ws.c_str());
 
-        // Get part-select as constant expression (Signal).
-        // Note: Number of source signals added to queue should be 1,
-        // because non-constant lval offsets are NOT supported.
-        part_select_sources = process_expression(part_select_expr, statement, ws + WS_TAB);
-        assert(part_select_sources == 1 && "ERROR: more than one LVAL part select expr. processed.\n");
-        part_select = pop_source_signal(ws);
-
-        // Update MSB and LSB of slice
-        part_select_lsb = part_select->process_as_partselect_expr(statement);
+        // Get part-select MSB/LSB
+        part_select_lsb = process_index_expression(part_select_expr, statement, ws + WS_TAB);
         part_select_msb = part_select_lsb + ivl_lval_width(lval) - 1;
 
         // Track sink slice
         update_sink_slice(sink_signal, part_select_msb, part_select_lsb, ws);
-
-        // Free memory
-        delete(part_select);
     }
 
     // Print LVal sink signal selects

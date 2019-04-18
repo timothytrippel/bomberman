@@ -203,6 +203,11 @@ class Tracker {
 		    ivl_statement_t statement,  
 		    string          ws);
 
+		unsigned int process_index_expression(
+			ivl_expr_t      expression,
+		    ivl_statement_t statement,  
+		    string          ws);
+
 		unsigned int process_expression_signal(
 		    ivl_expr_t      expression,
 		    ivl_statement_t statement,

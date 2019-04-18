@@ -92,34 +92,15 @@ unsigned int Tracker::process_expression_signal(
     // Source signal object
     Signal* source_signal = NULL;
 
-    // Signal array index expression (arrayed signals)
-    unsigned int num_index_exprs = 0;
-    unsigned int array_index     = 0;
-    Signal*      index_expr      = NULL;
+    // Signal array index
+    unsigned int array_index  = 0;
 
     // Get expression IVL signal (source signal)
     ivl_signal_t source_ivl_signal = ivl_expr_signal(expression);
 
-    // Get arrayed index expression
-    num_index_exprs = process_expression(ivl_expr_oper1(expression), statement, ws + WS_TAB);
+    // Get signal array index
+    array_index = process_index_expression(ivl_expr_oper1(expression), statement, ws + WS_TAB);
     
-    // Check that array index consists of (only) one expression
-    if (num_index_exprs == 1) {
-
-        // Get array index (i.e. source signal ID)
-        index_expr  = pop_source_signal(ws);
-        array_index = index_expr->process_as_partselect_expr(statement);
-
-        // Free memory
-        delete(index_expr);
-
-    } else {
-
-        // If there is not EXACTLY 1 base expression, there must be none
-        assert(num_index_exprs == 0 && 
-            "ERROR: non-zero number of signal word index expressions encountered.\n");
-    }
-
     // Check if signal is to be ignored
     if (!sg_->check_if_ignore_signal(source_ivl_signal)) {
 
@@ -158,16 +139,13 @@ unsigned int Tracker::process_expression_select(
     // Base signal of select expression
     Signal* base = NULL;
 
-    // Index of select expression
-    Signal* index = NULL;
-
     // MSB/LSB slice of base computed from index expression
     unsigned int msb = 0;
     unsigned int lsb = 0;
 
-    // Number of signals added to source signals queue
-    unsigned int num_base_exprs  = 0;
-    unsigned int num_index_exprs = 0;
+    // Number of base signals added to source signals queue
+    // Note: should only be one
+    unsigned int num_base_exprs = 0;
 
     // Get select base signal
     num_base_exprs = process_expression(ivl_expr_oper1(expression), statement, ws + WS_TAB);
@@ -177,22 +155,8 @@ unsigned int Tracker::process_expression_select(
     assert(num_base_exprs == 1 && "ERROR: more than one base expr. processed.\n");
     assert(base->is_signal() && "ERROR: expression select base is NOT a signal.\n");
 
-    // Get select index
-    num_index_exprs = process_expression(ivl_expr_oper2(expression), statement, ws + WS_TAB);
-
-    // Check that index consists of (only) one IVL expression
-    assert((num_index_exprs == 0 || num_index_exprs == 1) && "ERROR: more than one index expr. processed.\n");
-    if (num_index_exprs) {
-        
-        // Get index
-        index = pop_source_signal(ws);
-
-        // Get LSB of select
-        lsb = index->process_as_partselect_expr(statement);
-
-        // Free memory
-        delete(index);
-    }
+    // Get select LSB
+    lsb = process_index_expression(ivl_expr_oper2(expression), statement, ws + WS_TAB);
 
     // Get MSB of select
     msb = lsb + ivl_expr_width(expression) - 1;
@@ -314,6 +278,42 @@ unsigned int Tracker::process_expression_ternary(
         ivl_expr_oper3(expression), statement, ws + WS_TAB);
 
     return num_nodes_processed;
+}
+
+// ------------------------------- INDEX Expression ---------------------------------
+
+unsigned int Tracker::process_index_expression(
+    ivl_expr_t      expression,
+    ivl_statement_t statement,  
+    string          ws) {
+
+    unsigned int num_signals_processed = 0;
+    Signal*      signal_constant       = NULL;
+    unsigned int index                 = 0;
+
+    // Check if expression type is IVL_EX_NONE
+    if (ivl_expr_type(expression) == IVL_EX_NONE) {
+        return 0;
+    }
+
+    // Process index expression
+    num_signals_processed = process_expression(expression, statement, ws);
+
+    // Check that only one signal was processed
+    assert(num_signals_processed == 1 && 
+        "ERROR-Tracker::process_index_expression: more than one index expr. processed.\n");
+
+    // Get signal constant that is the result 
+    // of processing the index expression
+    signal_constant = pop_source_signal(ws);
+
+    // Convert the signal constant to a number
+    index = signal_constant->process_as_index_expr(statement);
+
+    // Free signal constant memory
+    delete(signal_constant);
+
+    return index;
 }
 
 // ----------------------------------------------------------------------------------

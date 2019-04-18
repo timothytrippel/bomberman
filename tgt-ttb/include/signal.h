@@ -143,7 +143,7 @@ class Signal {
 
         // Other
         bool         is_ivl_generated() const;
-        unsigned int process_as_partselect_expr(ivl_statement_t statement) const;
+        unsigned int process_as_index_expr(ivl_statement_t statement) const;
 
     private:
         ivl_object_t   ivl_object_;

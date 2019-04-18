@@ -630,7 +630,7 @@ bool Signal::is_ivl_generated() const {
 	}
 }
 
-unsigned int Signal::process_as_partselect_expr(ivl_statement_t statement) const {
+unsigned int Signal::process_as_index_expr(ivl_statement_t statement) const {
 
     // Check part_select is only of type IVL_CONST_EXPR
     // @TODO: support non-constant part selects,
