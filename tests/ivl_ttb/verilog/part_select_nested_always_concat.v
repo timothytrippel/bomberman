@@ -9,7 +9,9 @@ module nested_always_concat(
 );
 
 	always @(posedge clk) begin
-		out <= {a,{c,b},{e,d}};
+		out[6:1] <= {a,{e,d},b};
+		out[7:7] <= c[1:1];
+		out[0:0] <= c[0];
 	end
 
 endmodule

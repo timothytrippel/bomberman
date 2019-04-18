@@ -89,27 +89,15 @@ class Tracker {
 			signal_slice_t slice, 
 			string         ws);
 
-		void update_source_slice(
-			Signal*      signal, 
-			unsigned int msb, 
-			unsigned int lsb, 
-			string       ws);
+		void shift_source_slice(
+			Signal* signal, 
+			int     num_bits, 
+			string  ws);
 
-		void update_sink_slice(
-			Signal*      signal, 
-			unsigned int msb, 
-			unsigned int lsb, 
-			string       ws);
-
-		void update_source_slice(
-			Signal*        signal, 
-			signal_slice_t slice, 
-			string         ws);
-
-		void update_sink_slice(
-			Signal*        signal, 
-			signal_slice_t slice, 
-			string         ws);
+		void shift_sink_slice(
+			Signal* signal, 
+			int     num_bits, 
+			string  ws);
 
 		// Depth Tracking (tracks number of signals at a given depth)
         unsigned int pop_scope_depth();

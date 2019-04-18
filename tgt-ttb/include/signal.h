@@ -136,10 +136,8 @@ class Signal {
         void set_sink_slice(unsigned int msb, unsigned int lsb, string ws);
         void set_source_slice(signal_slice_t source_slice, string ws);
         void set_sink_slice(signal_slice_t sink_slice, string ws);
-        void update_source_slice(unsigned int msb, unsigned int lsb, string ws);
-        void update_sink_slice(unsigned int msb, unsigned int lsb, string ws);
-        void update_source_slice(signal_slice_t source_slice, string ws);
-        void update_sink_slice(signal_slice_t sink_slice, string ws);
+        void shift_source_slice(int num_bits, string ws);
+        void shift_sink_slice(int num_bits, string ws);
 
         // Other
         bool         is_ivl_generated() const;

@@ -161,8 +161,8 @@ unsigned int Tracker::process_expression_select(
     // Get MSB of select
     msb = lsb + ivl_expr_width(expression) - 1;
 
-    // Update source slice
-    update_source_slice(base, msb, lsb, ws);
+    // Track source slice
+    set_source_slice(base, msb, lsb, ws);
 
     return num_base_exprs;
 }
@@ -176,6 +176,9 @@ unsigned int Tracker::process_expression_concat(
 
     // Base source signal
     Signal* base = NULL;
+
+    // Source signal pointer
+    Signal* source_signal = NULL;
 
     // Source signals processed here
     unsigned int num_source_signals_processed = 0;
@@ -209,7 +212,15 @@ unsigned int Tracker::process_expression_concat(
                 base = source_signals_.get_back_signal();
 
                 // Track sink slice
-                update_sink_slice(base, current_msb, current_lsb, ws);
+                set_sink_slice(base, current_msb, current_lsb, ws);
+
+            } else {
+
+                // Update nested slices
+                for (unsigned int k = 1; k <= num_source_signals_processed; k++) {
+                    source_signal = source_signals_.get_signal(source_signals_.get_num_signals() - k);
+                    shift_sink_slice(source_signal, current_lsb, ws);
+                }
             }
 
             // Update total source signals processed

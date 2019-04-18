@@ -143,8 +143,8 @@ void Tracker::process_lpm_part_select(
     input_nexus = ivl_lpm_data(lpm, LPM_PART_SELECT_INPUT_NEXUS_INDEX);
 
     // Get MSB and LSB of slice
-    unsigned int msb = ivl_lpm_base(lpm) + ivl_lpm_width(lpm) - 1;
     unsigned int lsb = ivl_lpm_base(lpm);
+    unsigned int msb = ivl_lpm_base(lpm) + ivl_lpm_width(lpm) - 1;
 
     // Get base pin (1) nexus for part-select LPM device, which
     // may be NULL if constant base is used.

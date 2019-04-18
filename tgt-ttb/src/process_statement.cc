@@ -206,6 +206,11 @@ Signal* Tracker::process_statement_assign_lval(
     // Reset sink signal slices
     sink_signal->reset_slices();
 
+    // Set sink signal as FF if inside an FF block
+    if (check_if_inside_ff_block()) {
+        sink_signal->set_is_ff();
+    }
+
     // Check if memory lval (i.e. lval is an arrayed signal)
     if ((array_index_expr = ivl_lval_idx(lval))) {
         fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing lval array index ...\n", ws.c_str());
@@ -218,11 +223,6 @@ Signal* Tracker::process_statement_assign_lval(
         fprintf(DEBUG_PRINTS_FILE_PTR, "%slval array index is: %u\n", ws.c_str(), sink_signal->get_id());
     }
     
-    // Set sink signal as FF if inside an FF block
-    if (check_if_inside_ff_block()) {
-        sink_signal->set_is_ff();
-    }
-
     // Process lval part select expression (if necessary)
     if ((part_select_expr = ivl_lval_part_off(lval))) {
         fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing lval part select ...\n", ws.c_str());
@@ -232,7 +232,7 @@ Signal* Tracker::process_statement_assign_lval(
         part_select_msb = part_select_lsb + ivl_lval_width(lval) - 1;
 
         // Track sink slice
-        update_sink_slice(sink_signal, part_select_msb, part_select_lsb, ws);
+        set_sink_slice(sink_signal, part_select_msb, part_select_lsb, ws);
     }
 
     // Print LVal sink signal selects
@@ -277,22 +277,26 @@ void Tracker::process_statement_assign(
         source_signal = get_source_signal(i);
 
         // LVal (sink signal) slice is held in the sink signal object.
-        // need to move this information to the sources signal, since
+        // need to move this information to the source signal, since
         // that's where its extracted from when add_connection is called.
         if (sink_signal->is_sink_slice_modified()) { 
 
-            // Process Adjustments to LVal sink slice(s), in the case
-            // that the LVal was sliced (LVal offset), and the RVal 
-            // expression contained a concat.
+            // Get the LVal (sink signal) sink slice
+            signal_slice_t lval_sink_slice = sink_signal->get_sink_slice(sink_signal);
+            unsigned int lval_lsb = lval_sink_slice.lsb;
+
+            // Check if the source signal sink slice was modified,
+            // i.e., if a concat was processed in the RVal.
             if (source_signal->is_sink_slice_modified()) {
 
-                // Update LVal (sink signal) sink slice with RVal (source signal)
-                // sink slice, then replace RVal (source signal) sink slice with 
-                // LVal (sink signal) sink slice.
-                update_sink_slice(sink_signal, source_signal->get_sink_slice(source_signal), ws);
-            }
+                // Shift the source signal sink slice to account for LVal offset
+                shift_sink_slice(source_signal, lval_lsb, ws);
 
-            set_sink_slice(source_signal, sink_signal->get_sink_slice(sink_signal), ws);
+            } else {
+
+                // Otherwise, just move LVal sink slice info to source signal
+                set_sink_slice(source_signal, lval_sink_slice, ws);
+            }
         }
 
         // Check if connection contains IVL generated signals.

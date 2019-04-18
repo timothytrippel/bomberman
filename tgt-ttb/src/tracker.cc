@@ -192,49 +192,25 @@ void Tracker::set_sink_slice(
 	}
 }
 
-void Tracker::update_source_slice(
-	Signal*      signal, 
-	unsigned int msb, 
-	unsigned int lsb, 
-	string       ws) {
+void Tracker::shift_source_slice(
+	Signal* signal, 
+	int     num_bits, 
+	string  ws) {
 
 	// Check if slice tracking enabled
 	if (slicing_enabled_) {
-		signal->update_source_slice(msb, lsb, ws);
+		signal->shift_source_slice(num_bits, ws);
 	}
 }
 
-void Tracker::update_sink_slice(
-	Signal*      signal, 
-	unsigned int msb, 
-	unsigned int lsb, 
-	string       ws) {
+void Tracker::shift_sink_slice(
+	Signal* signal, 
+	int     num_bits, 
+	string  ws) {
 
 	// Check if slice tracking enabled
 	if (slicing_enabled_) {
-		signal->update_sink_slice(msb, lsb, ws);
-	}
-}
-
-void Tracker::update_source_slice(
-	Signal*        signal, 
-	signal_slice_t slice, 
-	string         ws) {
-
-	// Check if slice tracking enabled
-	if (slicing_enabled_) {
-		signal->update_source_slice(slice, ws);
-	}
-}
-
-void Tracker::update_sink_slice(
-	Signal*        signal, 
-	signal_slice_t slice, 
-	string         ws) {
-
-	// Check if slice tracking enabled
-	if (slicing_enabled_) {
-		signal->update_sink_slice(slice, ws);
+		signal->shift_sink_slice(num_bits, ws);
 	}
 }
 

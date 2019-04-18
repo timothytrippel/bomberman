@@ -520,7 +520,7 @@ void Signal::set_source_slice(unsigned int msb, unsigned int lsb, string ws) {
 
 	// Debug Print
     fprintf(DEBUG_PRINTS_FILE_PTR, 
-    	"%sSetting SOURCE signal slice [%u:%u]\n", 
+    	"%sSetting SOURCE slice [%u:%u]\n", 
         ws.c_str(), msb, lsb);
 
 	source_slice_modified_ = true;
@@ -532,7 +532,7 @@ void Signal::set_sink_slice(unsigned int msb, unsigned int lsb, string ws) {
 
 	// Debug Print
     fprintf(DEBUG_PRINTS_FILE_PTR, 
-    	"%sSetting SINK signal slice [%u:%u]\n", 
+    	"%sSetting SINK slice [%u:%u]\n", 
         ws.c_str(), msb, lsb);
 
 	sink_slice_modified_ = true;
@@ -548,74 +548,56 @@ void Signal::set_sink_slice(signal_slice_t sink_slice, string ws) {
 	this->set_sink_slice(sink_slice.msb, sink_slice.lsb, ws);
 }
 
-void Signal::update_source_slice(unsigned int msb, unsigned int lsb, string ws) {
+void Signal::shift_source_slice(int num_bits, string ws) {
 
-	// Check that MSB and LSB are not negative
-	assert(msb >= 0 && lsb >= 0 && 
-		"ERROR-Signal::update_source_slice: cannot process negative slice indices.\n");
-
-	// Check if tracking slice info
-	if (source_slice_modified_) {
-
-		// Debug Print
-        fprintf(DEBUG_PRINTS_FILE_PTR, 
-        	"%sUpdating SOURCE signal slice [%u:%u] with [%u:%u] to [%u:%u]\n", 
-            ws.c_str(), 
-            source_msb_, 
-            source_lsb_, 
-            msb, 
-            lsb, 
-            source_lsb_ + lsb + (msb - lsb),
-            source_lsb_ + lsb);
-
-		// ALREADY tracking it --> update slice
-		source_lsb_ += lsb;
-		source_msb_ = source_lsb_ + (msb - lsb);
-
-	} else {
-
-		// NOT tracking it yet --> record slice
-		this->set_source_slice(msb, lsb, ws);
-	}
-}
-
-void Signal::update_sink_slice(unsigned int msb, unsigned int lsb, string ws) {
+	// Negative is left shift, Positive is right shift
 	
-	// Check that MSB and LSB are not negative
-	assert(msb >= 0 && lsb >= 0 && 
-		"ERROR-Signal::update_sink_slice: cannot process negative slice indices.\n");
+	// Check that resulting MSB and LSB are not negative
+	assert((source_msb_ + num_bits) >= 0 && (source_lsb_ + num_bits) >= 0 && 
+		"ERROR-Signal::shift_source_slice: shift will cause negative indices.\n");
 
-	// Check if tracking slice info
-	if (sink_slice_modified_) {
+	// Debug Print
+    fprintf(DEBUG_PRINTS_FILE_PTR, 
+    	"%sShifting SOURCE slice [%u:%u] by %d to [%u:%u]\n", 
+        ws.c_str(), 
+        source_msb_, 
+        source_lsb_, 
+        num_bits, 
+        source_msb_ + num_bits,
+        source_lsb_ + num_bits);
 
-		// Debug Print
-        fprintf(DEBUG_PRINTS_FILE_PTR, 
-        	"%sUpdating SINK signal slice [%u:%u] with [%u:%u] to [%u:%u]\n", 
-            ws.c_str(), 
-            sink_msb_, 
-            sink_lsb_, 
-            msb, 
-            lsb, 
-            sink_lsb_ + lsb + (msb - lsb),
-            sink_lsb_ + lsb);
+    // Shift MSB/LSB
+	source_lsb_ += num_bits;
+	source_msb_ += num_bits;
 
-		// ALREADY tracking it --> update slice
-		sink_lsb_ += lsb;
-		sink_msb_ = sink_lsb_ + (msb - lsb);
-
-	} else {
-
-		// NOT tracking it yet --> record slice
-		this->set_sink_slice(msb, lsb, ws);
-	}
+	// Update modified flag
+	source_slice_modified_ = true;
 }
 
-void Signal::update_source_slice(signal_slice_t source_slice, string ws) {
-	this->update_source_slice(source_slice.msb, source_slice.lsb, ws);
-}
+void Signal::shift_sink_slice(int num_bits, string ws) {
+	
+	// Negative is left shift, Positive is right shift
 
-void Signal::update_sink_slice(signal_slice_t sink_slice, string ws) { 
-	this->update_sink_slice(sink_slice.msb, sink_slice.lsb, ws);
+	// Check that resulting MSB and LSB are not negative
+	assert((sink_msb_ + num_bits) >= 0 && (sink_lsb_ + num_bits) >= 0 && 
+		"ERROR-Signal::shift_sink_slice: shift will cause negative indices.\n");
+
+	// Debug Print
+    fprintf(DEBUG_PRINTS_FILE_PTR, 
+    	"%sShifting SINK slice [%u:%u] by %d to [%u:%u]\n", 
+        ws.c_str(), 
+        sink_msb_, 
+        sink_lsb_, 
+        num_bits, 
+        sink_msb_ + num_bits,
+        sink_lsb_ + num_bits);
+
+    // Shift MSB/LSB
+	sink_lsb_ += num_bits;
+	sink_msb_ += num_bits;
+
+	// Update modified flag
+	sink_slice_modified_ = true;
 }
 
 // ----------------------------------------------------------------------------------
