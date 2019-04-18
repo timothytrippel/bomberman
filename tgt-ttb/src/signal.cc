@@ -13,6 +13,7 @@ Graphviz .dot file.
 #include <sstream>
 
 // TTB Headers
+#include "ttb_typedefs.h"
 #include "signal.h"
 #include "error.h"
 
@@ -25,7 +26,13 @@ Signal::Signal():
 	ivl_type_(IVL_NONE),
 	id_(0),
 	is_ff_(false),
-	is_input_(false) {}
+	is_input_(false),
+	source_slice_modified_(false),
+	sink_slice_modified_(false),
+	source_msb_(0),
+	source_lsb_(0),
+	sink_msb_(0),
+	sink_lsb_(0) {}
 
 // Signal
 Signal::Signal(ivl_signal_t signal):
@@ -33,7 +40,13 @@ Signal::Signal(ivl_signal_t signal):
 	ivl_type_(IVL_SIGNAL),
 	id_(0),
 	is_ff_(false),
-	is_input_(false) {
+	is_input_(false),
+	source_slice_modified_(false),
+	sink_slice_modified_(false),
+	source_msb_(0),
+	source_lsb_(0),
+	sink_msb_(0),
+	sink_lsb_(0) {
 
 	// Check if the signal is an input
 	if (ivl_signal_port(signal) == IVL_SIP_INPUT) {
@@ -47,7 +60,13 @@ Signal::Signal(ivl_net_const_t constant):
 	ivl_type_(IVL_CONST),
 	id_(const_id),
 	is_ff_(false),
-	is_input_(false) {
+	is_input_(false),
+	source_slice_modified_(false),
+	sink_slice_modified_(false),
+	source_msb_(0),
+	source_lsb_(0),
+	sink_msb_(0),
+	sink_lsb_(0) {
 
 	// Increment Constant ID counter
 	const_id++;
@@ -59,7 +78,13 @@ Signal::Signal(ivl_expr_t expression):
 	ivl_type_(IVL_EXPR),
 	id_(const_id),
 	is_ff_(false),
-	is_input_(false) {
+	is_input_(false),
+	source_slice_modified_(false),
+	sink_slice_modified_(false),
+	source_msb_(0),
+	source_lsb_(0),
+	sink_msb_(0),
+	sink_lsb_(0) {
 
 	// Increment Constant ID counter
 	const_id++;
@@ -215,6 +240,60 @@ bool Signal::is_arrayed() const {
 	}
 
 	return false;
+}
+
+bool Signal::is_source_slice_modified() const {
+	return source_slice_modified_;
+}
+
+bool Signal::is_sink_slice_modified() const {
+	return sink_slice_modified_;
+}
+
+signal_slice_t Signal::get_source_slice(Signal* signal) const {
+
+	// Check that signal is not NULL
+	assert(signal && "ERROR-Signal::get_source_slice: cannot get slice of NULL signal.\n");
+
+	// Check if tracking slice info
+	if (source_slice_modified_) {
+		return {source_msb_, source_lsb_};
+	} else {
+
+		// Check if this Signal is the SOURCE/SINK
+		if (this == signal) {
+
+			// This is the SOURCE signal
+			return {this->get_msb(), this->get_lsb()};
+		} else {
+
+			// This is the SINK signal
+			return {signal->get_msb(), signal->get_lsb()};
+		}
+	}
+}
+
+signal_slice_t Signal::get_sink_slice(Signal* signal) const {
+	
+	// Check that signal is not NULL
+	assert(signal && "ERROR-Signal::get_sink_slice: cannot get slice of NULL signal.\n");
+
+	// Check if tracking slice info
+	if (sink_slice_modified_) {
+		return {sink_msb_, sink_lsb_};
+	} else {
+
+		// Check if this Signal is the SOURCE/SINK
+		if (this == signal) {
+
+			// This is the SINK signal
+			return {this->get_msb(), this->get_lsb()};
+		} else {
+
+			// This is the SOURCE signal
+			return {signal->get_msb(), signal->get_lsb()};
+		}
+	}
 }
 
 // ----------------------------------- Signal ---------------------------------------
@@ -426,6 +505,117 @@ void Signal::set_id(unsigned int value) {
 
 	// Set the id_ value
 	id_ = value;
+}
+
+void Signal::reset_slices() {
+	source_msb_            = 0;
+	source_lsb_            = 0; 
+	sink_msb_              = 0; 
+	sink_lsb_              = 0;
+	source_slice_modified_ = false;
+	sink_slice_modified_   = false;
+}
+
+void Signal::set_source_slice(unsigned int msb, unsigned int lsb, string ws) {
+
+	// Debug Print
+    fprintf(DEBUG_PRINTS_FILE_PTR, 
+    	"%sSetting SOURCE signal slice [%u:%u]\n", 
+        ws.c_str(), msb, lsb);
+
+	source_slice_modified_ = true;
+	source_msb_            = msb;
+	source_lsb_            = lsb;
+}
+
+void Signal::set_sink_slice(unsigned int msb, unsigned int lsb, string ws) {
+
+	// Debug Print
+    fprintf(DEBUG_PRINTS_FILE_PTR, 
+    	"%sSetting SINK signal slice [%u:%u]\n", 
+        ws.c_str(), msb, lsb);
+
+	sink_slice_modified_ = true;
+	sink_msb_            = msb;
+	sink_lsb_            = lsb;
+}
+
+void Signal::set_source_slice(signal_slice_t source_slice, string ws) {
+	this->set_source_slice(source_slice.msb, source_slice.lsb, ws);
+}
+
+void Signal::set_sink_slice(signal_slice_t sink_slice, string ws) {
+	this->set_sink_slice(sink_slice.msb, sink_slice.lsb, ws);
+}
+
+void Signal::update_source_slice(unsigned int msb, unsigned int lsb, string ws) {
+
+	// Check that MSB and LSB are not negative
+	assert(msb >= 0 && lsb >= 0 && 
+		"ERROR-Signal::update_source_slice: cannot process negative slice indices.\n");
+
+	// Check if tracking slice info
+	if (source_slice_modified_) {
+
+		// Debug Print
+        fprintf(DEBUG_PRINTS_FILE_PTR, 
+        	"%sUpdating SOURCE signal slice [%u:%u] with [%u:%u] to [%u:%u]\n", 
+            ws.c_str(), 
+            source_msb_, 
+            source_lsb_, 
+            msb, 
+            lsb, 
+            source_lsb_ + lsb + (msb - lsb),
+            source_lsb_ + lsb);
+
+		// ALREADY tracking it --> update slice
+		source_lsb_ += lsb;
+		source_msb_ = source_lsb_ + (msb - lsb);
+
+	} else {
+
+		// NOT tracking it yet --> record slice
+		this->set_source_slice(msb, lsb, ws);
+	}
+}
+
+void Signal::update_sink_slice(unsigned int msb, unsigned int lsb, string ws) {
+	
+	// Check that MSB and LSB are not negative
+	assert(msb >= 0 && lsb >= 0 && 
+		"ERROR-Signal::update_sink_slice: cannot process negative slice indices.\n");
+
+	// Check if tracking slice info
+	if (sink_slice_modified_) {
+
+		// Debug Print
+        fprintf(DEBUG_PRINTS_FILE_PTR, 
+        	"%sUpdating SINK signal slice [%u:%u] with [%u:%u] to [%u:%u]\n", 
+            ws.c_str(), 
+            sink_msb_, 
+            sink_lsb_, 
+            msb, 
+            lsb, 
+            sink_lsb_ + lsb + (msb - lsb),
+            sink_lsb_ + lsb);
+
+		// ALREADY tracking it --> update slice
+		sink_lsb_ += lsb;
+		sink_msb_ = sink_lsb_ + (msb - lsb);
+
+	} else {
+
+		// NOT tracking it yet --> record slice
+		this->set_sink_slice(msb, lsb, ws);
+	}
+}
+
+void Signal::update_source_slice(signal_slice_t source_slice, string ws) {
+	this->update_source_slice(source_slice.msb, source_slice.lsb, ws);
+}
+
+void Signal::update_sink_slice(signal_slice_t sink_slice, string ws) { 
+	this->update_sink_slice(sink_slice.msb, sink_slice.lsb, ws);
 }
 
 // ----------------------------------------------------------------------------------

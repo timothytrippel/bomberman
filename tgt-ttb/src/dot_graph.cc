@@ -100,10 +100,14 @@ void DotGraph::add_connection(Connection* conn, string ws) const {
     if (file_ptr_) {
 
         // Debug Print
-        fprintf(DEBUG_PRINTS_FILE_PTR, "%sADDING CONNECTION: %s --> %s\n", 
-            ws.c_str(), 
-            conn->get_source()->get_fullname().c_str(), 
-            conn->get_sink()->get_fullname().c_str());
+        fprintf(DEBUG_PRINTS_FILE_PTR, "%sADDING CONNECTION: %s[%u:%u] --> %s[%u:%u]\n", 
+            ws.c_str(),
+            conn->get_source()->get_fullname().c_str(),
+            conn->get_source_msb(),
+            conn->get_source_lsb(),
+            conn->get_sink()->get_fullname().c_str(),
+            conn->get_sink_msb(),
+            conn->get_sink_lsb());
 
         // Add connection to .dot file
         fprintf(file_ptr_, "\t\"%s\" -> \"%s\"[label=\"%s\"];\n", 

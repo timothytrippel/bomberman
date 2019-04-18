@@ -115,9 +115,9 @@ void Tracker::process_statement_wait(
         num_nodes_processed += process_event(event, statement, ws + WS_TAB);
     }
 
-    // Push number of source nodes processed at this depth
+    // Push number of source signals processed at this depth
     push_scope_depth(num_nodes_processed);
-    fprintf(DEBUG_PRINTS_FILE_PTR, "%spushed %d source node(s) to queue\n", 
+    fprintf(DEBUG_PRINTS_FILE_PTR, "%spushed %d source signal(s) to stack\n", 
         ws.c_str(), num_nodes_processed);
 
     // Get/process sub-statement
@@ -125,12 +125,9 @@ void Tracker::process_statement_wait(
         process_statement(sub_statement, ws + WS_TAB);
     }
 
-    // Pop processed source nodes from queue
+    // Pop processed source signals from stack
     num_nodes_processed = pop_scope_depth();
-    pop_source_signals(num_nodes_processed);
-    fprintf(DEBUG_PRINTS_FILE_PTR, "%spopped %d source signal(s) from queue\n", 
-        ws.c_str(), num_nodes_processed);
-
+    pop_source_signals(num_nodes_processed, ws);
 }
 
 // ------------------------------ CONDIT Statement ----------------------------------
@@ -152,9 +149,9 @@ void Tracker::process_statement_condit(
     // Process conditional expression to get source signals
     num_nodes_processed += process_expression(condit_expr, statement, ws + WS_TAB);
     
-    // Push number of source nodes processed at this depth
+    // Push number of source signals processed at this depth
     push_scope_depth(num_nodes_processed);
-    fprintf(DEBUG_PRINTS_FILE_PTR, "%spushed %d source node(s) to queue\n", 
+    fprintf(DEBUG_PRINTS_FILE_PTR, "%spushed %d source signaks(s) to stack\n", 
         ws.c_str(), num_nodes_processed);
 
     // Process true/false sub-statements to propagate 
@@ -166,11 +163,9 @@ void Tracker::process_statement_condit(
         process_statement(false_statement, ws + WS_TAB);
     }
 
-    // Pop processed source nodes from queue
+    // Pop processed source signals from stack
     num_nodes_processed = pop_scope_depth();
-    pop_source_signals(num_nodes_processed);
-    fprintf(DEBUG_PRINTS_FILE_PTR, "%spopped %d source signal(s) from queue\n", 
-        ws.c_str(), num_nodes_processed);
+    pop_source_signals(num_nodes_processed, ws);
 }
 
 // ------------------------------ ASSIGN Statement ----------------------------------
@@ -208,6 +203,9 @@ Signal* Tracker::process_statement_assign_lval(
     // Get sink signal
     sink_signal = sg_->get_signal_from_ivl_signal(ivl_lval_sig(lval));
 
+    // Reset sink signal slices
+    sink_signal->reset_slices();
+
     // Check if memory lval (i.e. lval is an arrayed signal)
     if ((part_select_expr = ivl_lval_idx(lval))) {
         fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing lval array index ...\n", ws.c_str());
@@ -217,11 +215,14 @@ Signal* Tracker::process_statement_assign_lval(
         // because non-constant lval offsets are NOT supported.
         part_select_sources = process_expression(part_select_expr, statement, ws + WS_TAB);
         assert(part_select_sources == 1 && "ERROR: more than one LVAL part select expr. processed.\n");
-        part_select = pop_source_signal();
+        part_select = pop_source_signal(ws);
 
         // Set sink signal ID (arrayed sink signals)
         sink_signal->set_id(part_select->process_as_partselect_expr(statement));
         fprintf(DEBUG_PRINTS_FILE_PTR, "%slval array index is: %u\n", ws.c_str(), sink_signal->get_id());
+
+        // Free memory
+        delete(part_select);
     }
     
     // Set sink signal as FF if inside an FF block
@@ -238,14 +239,14 @@ Signal* Tracker::process_statement_assign_lval(
         // because non-constant lval offsets are NOT supported.
         part_select_sources = process_expression(part_select_expr, statement, ws + WS_TAB);
         assert(part_select_sources == 1 && "ERROR: more than one LVAL part select expr. processed.\n");
-        part_select = pop_source_signal();
+        part_select = pop_source_signal(ws);
 
         // Update MSB and LSB of slice
         part_select_lsb = part_select->process_as_partselect_expr(statement);
         part_select_msb = part_select_lsb + ivl_lval_width(lval) - 1;
 
-        // Track connection slice information
-        track_sink_slice(part_select_msb, part_select_lsb, ws + WS_TAB);
+        // Track sink slice
+        update_sink_slice(sink_signal, part_select_msb, part_select_lsb, ws);
 
         // Free memory
         delete(part_select);
@@ -270,7 +271,7 @@ void Tracker::process_statement_assign(
     Signal*      source_signal       = NULL; // source node to connect to
 
     // Set slice tracking flags
-    enable_slice_tracking();
+    enable_slicing();
 
     // Process lval expression
     fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing lval(s) ...\n", ws.c_str());
@@ -285,28 +286,31 @@ void Tracker::process_statement_assign(
     fprintf(DEBUG_PRINTS_FILE_PTR, "%spushed %d source signal(s) to queue\n", 
         ws.c_str(), num_nodes_processed);
 
-    // Process Adjustments to LVal slice(s), in the case
-    // that the RVal expression contains a concat.
-    if (sink_slices_.get_num_slices() > num_nodes_processed) {
-        erase_sink_slice(0);
-    }
-
-    // Check that slice-info stacks are correct sizes
-    // Source Slices Stack:
-    // (Source slice stack should never grow beyond size N, 
-    //  where N = number of nodes on source signals queue.)
-    Error::check_slice_tracking_stack(source_slices_.get_num_slices(), num_nodes_processed);
-    // Sink Slices Stack:
-    // (Sink slice stack should never grow beyond size N, 
-    //  where N = number of nodes on source signals queue.)
-    Error::check_slice_tracking_stack(sink_slices_.get_num_slices(), num_nodes_processed);
-
     // Add connection(s)
     fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing connections ...\n", ws.c_str());
     for (int i = (source_signals_.get_num_signals() - 1); i >= 0; i--) {
 
         // Get source signal
         source_signal = get_source_signal(i);
+
+        // LVal (sink signal) slice is held in the sink signal object.
+        // need to move this information to the sources signal, since
+        // that's where its extracted from when add_connection is called.
+        if (sink_signal->is_sink_slice_modified()) { 
+
+            // Process Adjustments to LVal sink slice(s), in the case
+            // that the LVal was sliced (LVal offset), and the RVal 
+            // expression contained a concat.
+            if (source_signal->is_sink_slice_modified()) {
+
+                // Update LVal (sink signal) sink slice with RVal (source signal)
+                // sink slice, then replace RVal (source signal) sink slice with 
+                // LVal (sink signal) sink slice.
+                update_sink_slice(sink_signal, source_signal->get_sink_slice(source_signal), ws);
+            }
+
+            set_sink_slice(source_signal, sink_signal->get_sink_slice(sink_signal), ws);
+        }
 
         // Check if connection contains IVL generated signals.
         // If so, temporarily store the connections and process
@@ -319,8 +323,8 @@ void Tracker::process_statement_assign(
             sg_->track_local_signal_connection(
                 sink_signal, 
                 source_signal,
-                get_sink_slice(sink_signal),
-                get_source_slice(source_signal),
+                source_signal->get_sink_slice(sink_signal),
+                source_signal->get_source_slice(source_signal),
                 ws + WS_TAB);
 
         } else if (source_signal->is_ivl_generated()) {
@@ -331,8 +335,8 @@ void Tracker::process_statement_assign(
             sg_->track_local_signal_connection(
                 sink_signal, 
                 source_signal,
-                get_sink_slice(sink_signal),
-                get_source_slice(source_signal),
+                source_signal->get_sink_slice(sink_signal),
+                source_signal->get_source_slice(source_signal),
                 ws + WS_TAB);
 
         } else {
@@ -340,25 +344,22 @@ void Tracker::process_statement_assign(
             sg_->add_connection(
                 sink_signal, 
                 source_signal, 
-                get_sink_slice(sink_signal),
-                get_source_slice(source_signal),
+                source_signal->get_sink_slice(sink_signal),
+                source_signal->get_source_slice(source_signal),
                 ws + WS_TAB);
 
         }
 
-        // Pop slices from stacks
-        pop_source_slice();
-        pop_sink_slice();
+        // Reset source signal slices
+        source_signal->reset_slices();
     }
 
     // Pop processed source nodes from queue
     num_nodes_processed = pop_scope_depth();
-    pop_source_signals(num_nodes_processed);
-    fprintf(DEBUG_PRINTS_FILE_PTR, "%spopped %d source signal(s) from queue\n", 
-        ws.c_str(), num_nodes_processed);
+    pop_source_signals(num_nodes_processed, ws);
 
     // Clear slice tracking flags
-    disable_slice_tracking();
+    disable_slicing();
 }
 
 // ------------------------------- BLOCK Statement ----------------------------------

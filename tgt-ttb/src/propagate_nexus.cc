@@ -54,7 +54,7 @@ void Tracker::propagate_nexus(ivl_nexus_t nexus, Signal* sink_signal, string ws)
             sg_->get_signal_from_ivl_signal(source_signal)->set_id(ivl_nexus_ptr_pin(nexus_ptr));
 
             // Process (potential) source signal
-            proccessed_signal = propagate_signal(source_signal, sink_signal, ws);
+            proccessed_signal |= propagate_signal(source_signal, sink_signal, ws);
 
         } else if ((source_logic = ivl_nexus_ptr_log(nexus_ptr))) {
             
@@ -82,7 +82,9 @@ void Tracker::propagate_nexus(ivl_nexus_t nexus, Signal* sink_signal, string ws)
             
             // Nexus target object is a CONSTANT
             fprintf(DEBUG_PRINTS_FILE_PTR, " -- CONSTANT -- %s\n", get_const_type_as_string(source_constant));
-            propagate_constant(source_constant, sink_signal, ws);
+            if (!proccessed_signal) {
+                propagate_constant(source_constant, sink_signal, ws);
+            }
 
         } else {
             

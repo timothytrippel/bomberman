@@ -107,8 +107,11 @@ unsigned int Tracker::process_expression_signal(
     if (num_index_exprs == 1) {
 
         // Get array index (i.e. source signal ID)
-        index_expr  = pop_source_signal();
+        index_expr  = pop_source_signal(ws);
         array_index = index_expr->process_as_partselect_expr(statement);
+
+        // Free memory
+        delete(index_expr);
 
     } else {
 
@@ -152,6 +155,9 @@ unsigned int Tracker::process_expression_select(
     ivl_statement_t statement,
     string          ws) {
 
+    // Base signal of select expression
+    Signal* base = NULL;
+
     // Index of select expression
     Signal* index = NULL;
 
@@ -163,13 +169,13 @@ unsigned int Tracker::process_expression_select(
     unsigned int num_base_exprs  = 0;
     unsigned int num_index_exprs = 0;
 
-    // Get select base
+    // Get select base signal
     num_base_exprs = process_expression(ivl_expr_oper1(expression), statement, ws + WS_TAB);
-    
-    // Check that base consists of (only) one IVL expression
+    base           = source_signals_.get_back_signal();
+
+    // Check that base consists of (only) one IVL (signal) expression
     assert(num_base_exprs == 1 && "ERROR: more than one base expr. processed.\n");
-    assert(source_signals_.get_back_signal()->is_signal() &&
-        "ERROR: expression select base is NOT a signal.\n");
+    assert(base->is_signal() && "ERROR: expression select base is NOT a signal.\n");
 
     // Get select index
     num_index_exprs = process_expression(ivl_expr_oper2(expression), statement, ws + WS_TAB);
@@ -179,17 +185,20 @@ unsigned int Tracker::process_expression_select(
     if (num_index_exprs) {
         
         // Get index
-        index = pop_source_signal();
+        index = pop_source_signal(ws);
 
         // Get LSB of select
         lsb = index->process_as_partselect_expr(statement);
+
+        // Free memory
+        delete(index);
     }
 
     // Get MSB of select
     msb = lsb + ivl_expr_width(expression) - 1;
 
-    // Track source slice
-    track_source_slice(msb, lsb, ws + WS_TAB);
+    // Update source slice
+    update_source_slice(base, msb, lsb, ws);
 
     return num_base_exprs;
 }
@@ -200,6 +209,9 @@ unsigned int Tracker::process_expression_concat(
     ivl_expr_t      expression,
     ivl_statement_t statement, 
     string          ws) {
+
+    // Base source signal
+    Signal* base = NULL;
 
     // Source signals processed here
     unsigned int num_source_signals_processed = 0;
@@ -225,10 +237,15 @@ unsigned int Tracker::process_expression_concat(
             num_source_signals_processed = process_expression(
                 ivl_expr_parm(expression, j), statement, ws + WS_TAB);
 
-            // Add source slice to queue, but only if we just
+            // Track sink slice information, but only if we just
             // processed base source signals.
             if (num_source_signals_processed == 1) {
-                track_sink_slice(current_msb, current_lsb, ws + WS_TAB);
+
+                // Get base source signal
+                base = source_signals_.get_back_signal();
+
+                // Track sink slice
+                update_sink_slice(base, current_msb, current_lsb, ws);
             }
 
             // Update total source signals processed

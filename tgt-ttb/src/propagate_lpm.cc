@@ -161,24 +161,18 @@ void Tracker::process_lpm_part_select(
     if (ivl_lpm_type(lpm) == IVL_LPM_PART_VP) {
 
         // part select: vector to part (VP: part select in rval)
-        track_source_slice(msb, lsb, ws);
+        set_source_slice(sink_signal, msb, lsb, ws);
 
         // Propagate nexus
         propagate_nexus(input_nexus, sink_signal, ws + WS_TAB);
-
-        // Pop slice info from stack
-        pop_source_slice();
 
     } else if (ivl_lpm_type(lpm) == IVL_LPM_PART_PV) {
 
         // part select: part to vector (PV: part select in lval)
-        track_sink_slice(msb, lsb, ws);
+        set_sink_slice(sink_signal, msb, lsb, ws);
 
         // Propagate nexus
         propagate_nexus(input_nexus, sink_signal, ws + WS_TAB);
-
-        // Pop slice info from stack
-        pop_sink_slice();
 
     } else {
         Error::unknown_part_select_lpm_type(ivl_lpm_type(lpm));
@@ -231,14 +225,11 @@ void Tracker::process_lpm_concat(
                 // Compute current MSB of sink signal slice
                 current_msb = current_lsb + ivl_signal_width(source_signal) - 1;
 
-                // Track connection slice information
-                track_sink_slice(current_msb, current_lsb, ws);
+                // Track sink slice information
+                set_sink_slice(sink_signal, current_msb, current_lsb, ws);
 
                 // Propagate input nexus
                 propagate_nexus(input_nexus, sink_signal, ws + WS_TAB);
-
-                // Pop slice info from stack
-                pop_sink_slice();
 
                 // Update current LSB of sink signal slice
                 current_lsb += ivl_signal_width(source_signal);

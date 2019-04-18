@@ -340,16 +340,22 @@ bool SignalGraph::add_connection(
                     num_connections_++;  
 
                 } else {
-                    fprintf(DEBUG_PRINTS_FILE_PTR, "%sconnection (from %s to %s) already exists...\n", 
+                    fprintf(DEBUG_PRINTS_FILE_PTR, "%sconnection (from %s[%u:%u] to %s[%u:%u]) already exists...\n", 
                         ws.c_str(),
                         conn->get_source()->get_fullname().c_str(),
-                        conn->get_sink()->get_fullname().c_str());
+                        conn->get_source_msb(),
+                        conn->get_source_lsb(),
+                        conn->get_sink()->get_fullname().c_str(),
+                        conn->get_sink_msb(),
+                        conn->get_sink_lsb());
                 }
 
                 return true;
             } else {
                 return false;
             }
+        } else {
+            return true;
         }
 
     } else {
@@ -357,9 +363,8 @@ bool SignalGraph::add_connection(
         Error::connecting_signal_not_in_graph(
             signals_map_, source_signal->get_ivl_signal());
 
+        return false;
     }
-
-    return false;
 }
 
 void SignalGraph::track_local_signal_connection(
@@ -418,10 +423,14 @@ void SignalGraph::track_local_signal_connection(
 
             } else {
 
-                fprintf(DEBUG_PRINTS_FILE_PTR, "%slocal connection (from %s to %s) already exists...\n", 
-                    ws.c_str(),
-                    conn->get_source()->get_fullname().c_str(),
-                    conn->get_sink()->get_fullname().c_str());
+                fprintf(DEBUG_PRINTS_FILE_PTR, "%slocal connection (from %s[%u:%u] to %s[%u:%u]) already exists...\n", 
+                        ws.c_str(),
+                        conn->get_source()->get_fullname().c_str(),
+                        conn->get_source_msb(),
+                        conn->get_source_lsb(),
+                        conn->get_sink()->get_fullname().c_str(),
+                        conn->get_sink_msb(),
+                        conn->get_sink_lsb());
 
             }
         } else {

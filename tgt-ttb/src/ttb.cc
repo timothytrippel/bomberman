@@ -87,13 +87,16 @@ void Tracker::find_continuous_connections() {
     sig_map_t::iterator it = signals_map.begin();
     
     // Set slice tracking flags
-    enable_slice_tracking();
+    enable_slicing();
 
     // Iterate over all signals in adjacency list
     while (it != signals_map.end()) {  
 
         // Get Signal object
         current_signal = it->second;
+
+        // Reset Signal slices
+        current_signal->reset_slices();
 
         // Only find connections to non-ivl-generated signals
         if (!current_signal->is_ivl_generated()) {
@@ -132,12 +135,15 @@ void Tracker::find_continuous_connections() {
             }
         }
 
+        // Reset Signal slices
+        current_signal->reset_slices();
+
         // Increment the iterator
         it++;
     }
 
     // Clear slice tracking flags
-    disable_slice_tracking();
+    disable_slicing();
 }
 
 // ------------------------------------------------------------

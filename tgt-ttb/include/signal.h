@@ -105,19 +105,23 @@ class Signal {
         bool operator!=(const Signal& sig) const;
 
         // General Getters
-        string         get_fullname()    const;
-        string         get_basename()    const;
-        ivl_object_t   get_ivl_obj()     const;
-        ivl_obj_type_t get_ivl_type()    const;
-        ivl_signal_t   get_ivl_signal()  const;
-        unsigned int   get_msb()         const;
-        unsigned int   get_lsb()         const;
-        unsigned int   get_id()          const;
-        unsigned int   get_array_base()  const;
-        unsigned int   get_array_count() const;
-        bool 		   is_signal()       const;
-		bool 		   is_const()        const;
-        bool           is_arrayed()      const;
+        string         get_fullname()     const;
+        string         get_basename()     const;
+        ivl_object_t   get_ivl_obj()      const;
+        ivl_obj_type_t get_ivl_type()     const;
+        ivl_signal_t   get_ivl_signal()   const;
+        unsigned int   get_msb()          const;
+        unsigned int   get_lsb()          const;
+        unsigned int   get_id()           const;
+        unsigned int   get_array_base()   const;
+        unsigned int   get_array_count()  const;
+        bool 		   is_signal()        const;
+		bool 		   is_const()         const;
+        bool           is_arrayed()       const;
+        bool           is_source_slice_modified() const;
+        bool           is_sink_slice_modified()   const;
+        signal_slice_t get_source_slice(Signal* signal) const;
+        signal_slice_t get_sink_slice(Signal* signal)   const;
 
         // Dot Getters
         string get_dot_label() const;
@@ -127,6 +131,15 @@ class Signal {
         void set_is_ff();
         void set_is_input();
         void set_id(unsigned int value);
+        void reset_slices();
+        void set_source_slice(unsigned int msb, unsigned int lsb, string ws);
+        void set_sink_slice(unsigned int msb, unsigned int lsb, string ws);
+        void set_source_slice(signal_slice_t source_slice, string ws);
+        void set_sink_slice(signal_slice_t sink_slice, string ws);
+        void update_source_slice(unsigned int msb, unsigned int lsb, string ws);
+        void update_sink_slice(unsigned int msb, unsigned int lsb, string ws);
+        void update_source_slice(signal_slice_t source_slice, string ws);
+        void update_sink_slice(signal_slice_t sink_slice, string ws);
 
         // Other
         bool         is_ivl_generated() const;
@@ -138,6 +151,12 @@ class Signal {
         unsigned int   id_;
         bool           is_ff_;
         bool           is_input_;
+        bool           source_slice_modified_;
+        bool           sink_slice_modified_;
+        unsigned int   source_msb_;
+        unsigned int   source_lsb_;
+        unsigned int   sink_msb_;
+        unsigned int   sink_lsb_;
 
         // Unique ID for Constants
         static unsigned int const_id; 

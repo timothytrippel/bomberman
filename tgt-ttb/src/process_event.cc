@@ -78,9 +78,11 @@ unsigned int Tracker::process_event_nexus(
 
         // Push signal to source signals queue
         push_source_signal(source_signal, 0, ws + WS_TAB);
+
+        return 1;
     }
 
-    return 1;
+    return 0;
 }
 
 // ----------------------------------------------------------------------------------
