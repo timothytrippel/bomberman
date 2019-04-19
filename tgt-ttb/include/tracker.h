@@ -19,6 +19,7 @@ Graphviz .dot file.
 // Standard Headers
 #include <string>
 #include <vector>
+#include <set>
 
 // IVL API Header
 #include <ivl_target.h>
@@ -298,6 +299,7 @@ class Tracker {
         // State Tracking Data
         SignalGraph*         sg_;                   // signal graph object
         SignalQ              source_signals_;       // source signals queue
+        set<ivl_nexus_t>     explored_nexi_;        // used to detect loops in continuous logic
         vector<unsigned int> num_signals_at_depth_; // tracks num source nodes at current depth
         
         // Config Loading

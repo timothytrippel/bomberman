@@ -28,6 +28,7 @@ Tracker::Tracker():
 	slicing_enabled_(false),
 	sg_(NULL),
 	source_signals_(),
+	explored_nexi_(),
 	num_signals_at_depth_() {}
 
 Tracker::Tracker(
@@ -56,7 +57,11 @@ Tracker::~Tracker() {
 	// 1. Set pointer to SignalsGraph to NULL
 	sg_ = NULL;
 
-	// 2. Check that all source signals processed
+	// 2. Check that all explored signals processed
+	assert(explored_nexi_.size() == 0 &&
+		"ERROR-Tracker::~Tracker: nexi left unprocessed.\n");
+
+	// 3. Check that all source signals processed
 	assert(source_signals_.get_num_signals() == 0 &&
 		"ERROR-Tracker::~Tracker: source signals left unprocessed.\n");
 }

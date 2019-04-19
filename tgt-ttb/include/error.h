@@ -58,7 +58,6 @@ class Error {
         static void check_lvals_not_concatenated(unsigned int num_lvals, ivl_statement_t statement);
         static void check_lval_not_nested(ivl_lval_t lval, ivl_statement_t statement);
         static void check_part_select_expr(ivl_obj_type_t obj_type, ivl_statement_t statement);
-        static void check_slice_tracking_stack(unsigned int size, unsigned int size_limit);
 
         // Error Reporting Functions
         // Unknown Types
@@ -77,7 +76,7 @@ class Error {
         static void non_local_signal_connection();
         static void multiple_valid_event_nexus_ptrs(ivl_statement_t stmt);
         static void zero_event_nexus_ptrs(ivl_statement_t stmt);
-        static void non_signal_event_nexus_ptr(ivl_statement_t stmt);
+        static void constant_event_nexus_ptr(ivl_statement_t stmt);
 };
 
 #endif

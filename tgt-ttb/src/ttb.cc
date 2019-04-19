@@ -125,8 +125,16 @@ void Tracker::find_continuous_connections() {
                     // Set sink signal ID to nexus index (arrayed)
                     current_signal->set_id(i);
 
+                    // Reset explored nexi set
+                    explored_nexi_.clear();
+
                     // Propagate the nexus
                     propagate_nexus(sink_nexus, it->second, WS_TAB);
+
+                    // Check all explored nexi removed from set
+                    assert(explored_nexi_.size() == 0 &&
+                        "ERROR-Tracker::find_continuous_connections: nexi left unprocessed.\n");
+                    
                 } else {
 
                     // Nexus is NULL --> skip it

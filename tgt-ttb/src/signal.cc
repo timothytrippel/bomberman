@@ -551,7 +551,7 @@ void Signal::set_sink_slice(signal_slice_t sink_slice, string ws) {
 void Signal::shift_source_slice(int num_bits, string ws) {
 
 	// Negative is left shift, Positive is right shift
-	
+
 	// Check that resulting MSB and LSB are not negative
 	assert((source_msb_ + num_bits) >= 0 && (source_lsb_ + num_bits) >= 0 && 
 		"ERROR-Signal::shift_source_slice: shift will cause negative indices.\n");
@@ -620,8 +620,7 @@ unsigned int Signal::process_as_index_expr(ivl_statement_t statement) const {
     Error::check_part_select_expr(ivl_type_, statement);
 
     // Get LSB offset index
-    string bit_string = string(ivl_expr_bits(ivl_object_.ivl_expr));
-    reverse(bit_string.begin(), bit_string.end());
+    string bit_string = this->get_expr_bitstring();
 
     // Convert bitstring to unsigned long
     return stoul(bit_string, NULL, BITSTRING_BASE);

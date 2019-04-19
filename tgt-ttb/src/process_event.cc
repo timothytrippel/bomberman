@@ -29,6 +29,9 @@ unsigned int Tracker::process_event_nexus(
     ivl_signal_t temp_sig          = NULL;
     ivl_signal_t source_ivl_signal = NULL;
 
+    // fprintf(DEBUG_PRINTS_FILE_PTR, 
+    //     "%sfound %d event nexus ptrs\n", ws.c_str(), ivl_nexus_ptrs(nexus));
+
     // Get event nexus pointer IVL signal (source signal)
     if (ivl_nexus_ptrs(nexus) == 1) {
 
@@ -37,15 +40,24 @@ unsigned int Tracker::process_event_nexus(
 
     } else if (ivl_nexus_ptrs(nexus) > 1) {
 
+
         // Find IVL source signal whose scope matches that of the event itself
         for (unsigned int i = 0; i < ivl_nexus_ptrs(nexus); i++) {
 
-            // Check nexus pointer type(s) are signal object(s) only
-            // @TODO: propgate other nexus types besides signals 
+            // Check nexus pointer type(s) are signal object(s) only.
+            // Other nexus types (i.e. LOGs and LPMs) are just connections 
+            // to the event signal which are propagated during the continuous
+            // logic propagation phase.
             if ((temp_sig = ivl_nexus_ptr_sig(ivl_nexus_ptr(nexus, i)))) {
                 
+                // fprintf(DEBUG_PRINTS_FILE_PTR, "%sevent nexus signal: %s.%s\n", 
+                //     ws.c_str(), 
+                //     ivl_scope_name(ivl_signal_scope(temp_sig)),
+                //     ivl_signal_basename(temp_sig));
+
                 // Check if scope of source signal matches scope of event
-                if (ivl_signal_scope(temp_sig) == ivl_event_scope(event)) {
+                if (ivl_signal_scope(temp_sig) == ivl_event_scope(event) &&
+                    !ivl_signal_local(temp_sig)) {
 
                     // Check if source signal already found
                     if (!source_ivl_signal) {
@@ -54,8 +66,8 @@ unsigned int Tracker::process_event_nexus(
                         Error::multiple_valid_event_nexus_ptrs(statement);
                     }
                 }
-            } else {
-                Error::non_signal_event_nexus_ptr(statement);
+            } else if (ivl_nexus_ptr_con(ivl_nexus_ptr(nexus, i))) {
+                Error::constant_event_nexus_ptr(statement);
             }
         } 
     } else {
@@ -124,7 +136,7 @@ unsigned int Tracker::process_event(
      if ((num_anyedge_nexus_ptrs = ivl_event_nany(event))) {
         fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing event @anyedge\n", ws.c_str());
         for (unsigned int j = 0; j < num_anyedge_nexus_ptrs; j++) {
-            event_nexus = ivl_event_any(event, j);      
+            event_nexus = ivl_event_any(event, j);  
             num_nodes_processed += process_event_nexus(
                 event, event_nexus, statement, ws);
         }

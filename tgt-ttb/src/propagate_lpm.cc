@@ -150,11 +150,11 @@ void Tracker::process_lpm_part_select(
     // may be NULL if constant base is used.
     base_nexus = ivl_lpm_data(lpm, LPM_PART_SELECT_BASE_NEXUS_INDEX);
     if (base_nexus) {
-        fprintf(stderr, "ERROR: LPM Part-Select Non-Constant Base\n");
-        fprintf(stderr, "File: %s Line: %d\n", ivl_lpm_file(lpm), ivl_lpm_lineno(lpm));
-        fprintf(stderr, "MSB: %d; LSB: %d\n", msb, lsb);
-        Error::not_supported("non-constant base for LPM part select device.");
-        // propagate_nexus(base_nexus, sink_signal, ws + WS_TAB);
+        fprintf(stderr, "WARNING: LPM Part-Select Non-Constant Base\n");
+        // fprintf(stderr, "File: %s Line: %d\n", ivl_lpm_file(lpm), ivl_lpm_lineno(lpm));
+        // fprintf(stderr, "MSB: %d; LSB: %d\n", msb, lsb);
+        // Error::not_supported("non-constant base for LPM part select device.");
+        propagate_nexus(base_nexus, sink_signal, ws + WS_TAB);
     }
 
     // Determine LPM type and track connection slice 

@@ -200,14 +200,6 @@ void Error::check_part_select_expr(ivl_obj_type_t obj_type, ivl_statement_t stat
     }
 }
 
-void Error::check_slice_tracking_stack(unsigned int size, unsigned int size_limit) {
-    // Check slice info stack size
-    if (size > size_limit) {
-        fprintf(stderr, "ERROR: slice info stack size (%u) > size limit (%u).\n", size, size_limit);
-        exit(SLICE_TRACKING_ERROR);
-    }
-}
-
 // ------------------------------------------------------------
 // --------------- Error Reporting: Unkown Types --------------
 // ------------------------------------------------------------
@@ -296,8 +288,8 @@ void Error::zero_event_nexus_ptrs(ivl_statement_t stmt) {
     exit(PROCEDURAL_CONNECTIONS_ERROR);
 }
 
-void Error::non_signal_event_nexus_ptr(ivl_statement_t stmt) {
-    fprintf(stderr, "NOT-SUPPORTED: non-signal event nexus pointer. \
+void Error::constant_event_nexus_ptr(ivl_statement_t stmt) {
+    fprintf(stderr, "NOT-SUPPORTED: constant event nexus pointer. \
         \n(File: %s -- Line: %d).\n", 
         ivl_stmt_file(stmt), ivl_stmt_lineno(stmt));
 

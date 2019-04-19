@@ -20,5 +20,6 @@ TESTBENCH := $(wildcard $(TEST_BENCH)/*.v)
 TESTBENCH := $(filter-out %-defines.v %-params.v %_defines.v, $(TESTBENCH))
 
 INCLUDEDIRS := -I$(ORPSOC_RTL) -I$(DBG_IF_RTL) -I$(UART_RTL)  -I$(DBG_IF_RTL) -I$(OR1200_RTL) -I$(TEST_BENCH)
+# INCLUDEDIRS := -I$(ORPSOC_RTL) -I$(DBG_IF_RTL) -I$(UART_RTL)  -I$(DBG_IF_RTL) -I$(OR1200_RTL)
 
 include ../../common.mk
