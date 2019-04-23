@@ -147,6 +147,16 @@ void Error::check_arrayed_signal(sig_map_t signals, ivl_signal_t signal) {
 
                 exit(NOT_SUPPORTED_ERROR);
             }
+
+            // Check if number of dimensions is greater than 1
+            if (ivl_signal_dimensions(signal) > 1) {
+             
+                fprintf(stderr, "NOT-SUPPORTED: arrayed signal (%s) with more than one dimen.",
+                    signals[signal]->get_fullname().c_str());
+
+                exit(NOT_SUPPORTED_ERROR);
+            }
+
         } else {
 
             // Confirm that ARRAY_BASE is 0 (should be for non-arrayed signals)

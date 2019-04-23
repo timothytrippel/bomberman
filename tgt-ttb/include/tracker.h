@@ -192,6 +192,12 @@ class Tracker {
 		    ivl_statement_t statement,  
 		    string          ws);
 
+		vector<unsigned int> process_array_index_expression(
+			ivl_signal_t    base_ivl_signal,
+			ivl_expr_t      expression,
+		    ivl_statement_t statement,  
+		    string          ws);
+
 		unsigned int process_index_expression(
 			ivl_expr_t      expression,
 		    ivl_statement_t statement,  
@@ -256,7 +262,12 @@ class Tracker {
 		    ivl_statement_t statement,  
 		    string          ws);
 
-		Signal* process_statement_assign_lval(
+		void process_statement_assign_rval(
+		    Signal*         sink_signal,
+		    ivl_statement_t statement,
+		    string          ws);
+
+		void process_statement_assign_lval(
 		    ivl_statement_t statement,
 		    string          ws);
 
@@ -293,8 +304,9 @@ class Tracker {
 		string clk_basename_; // indicates if processing inside a FF block
 
 		// State Tracking Flags
-        bool inside_ff_block_; // indicates if processing inside a FF block
-        bool slicing_enabled_; // indicates if processing bit slices
+        bool inside_ff_block_;       // indicates if processing inside a FF block
+        bool slicing_enabled_;       // indicates if processing bit slices
+        bool array_index_is_signal_; // indicates if array index is a signal (1) or constant (0)
 
         // State Tracking Data
         SignalGraph*         sg_;                   // signal graph object

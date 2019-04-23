@@ -1,10 +1,10 @@
 module proc_sink_arrayed_sig_swpd_addr(
-	input clk,
-	input rst,
-	input data_1,
-	input data_2,
-	input data_3,
-	input data_4,
+	input        clk,
+	input        rst,
+	input  [1:0] data_1,
+	input  [1:0] data_2,
+	input  [1:0] data_3,
+	input  [1:0] data_4,
 	output [7:0] out
 );	
 	

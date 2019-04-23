@@ -55,6 +55,7 @@ using namespace std;
 #define LPM_PART_SELECT_INPUT_NEXUS_INDEX 0
 #define LPM_PART_SELECT_BASE_NEXUS_INDEX  1
 #define STMT_ASSIGN_LVAL_INDEX            0
+#define SIGNAL_DIM_0_BIT_INDEX            0
 
 // File Pointer Defines
 #define REPORTER_PRINTS_FILE_PTR   stdout
@@ -63,7 +64,7 @@ using namespace std;
 
 // Other Defines
 #define LINE_SEPARATOR        "------------------------------------------------------------"
-#define WS_TAB                "  "
+#define WS_TAB                "--"
 
 // ------------------------------------------------------------
 // ------------------------ String Map ------------------------

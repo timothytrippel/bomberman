@@ -41,11 +41,15 @@ class SignalQ {
 		unsigned int get_num_signals() const;
 		Signal*      get_signal(unsigned int index) const;
 		Signal*      get_back_signal() const;
+		Signal*      get_back_signal(unsigned int index) const;
 		Signal*      pop_signal();
 		void         pop_signals(unsigned int num_signals);
 
 		// Setters
 		void push_signal(Signal* signal, unsigned int id);
+
+		// Debug
+		void print() const;
 
 	private:
 		vector<Signal*>      signal_q_;

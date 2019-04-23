@@ -170,99 +170,17 @@ void Tracker::process_statement_condit(
 
 // ------------------------------ ASSIGN Statement ----------------------------------
 
-Signal* Tracker::process_statement_assign_lval(
+void Tracker::process_statement_assign_rval(
+    Signal*         sink_signal,
     ivl_statement_t statement,
     string          ws) {
 
-    ivl_lval_t   lval             = NULL; // LVal that contains sink signal
-    Signal*      sink_signal      = NULL; // sink signal
-    ivl_expr_t   array_index_expr = NULL; // LVal array index expression
-    ivl_expr_t   part_select_expr = NULL; // LVal part-select offset expression
-    unsigned int array_index      = 0;    // LVal array index
-    unsigned int part_select_msb  = 0;    // LVal (sink signal) MSB
-    unsigned int part_select_lsb  = 0;    // LVal (sink signal) LSB
-    unsigned int num_lvals        = 0;    // number of lvals to process
-
-    // Get number of lvals
-    num_lvals = ivl_stmt_lvals(statement);
-
-    // Check for (NON-SUPPORTED) concatenated lvals
-    // @TODO: support concatenated lvals
-    Error::check_lvals_not_concatenated(num_lvals, statement);
-
-    // Get lval object
-    lval = ivl_stmt_lval(statement, STMT_ASSIGN_LVAL_INDEX);
-
-    // Get MSB of lval
-    part_select_msb = part_select_lsb + ivl_lval_width(lval) - 1;
-
-    // Check for a (NON-SUPPORTED) nested lval
-    // @TODO: support nested lvals
-    Error::check_lval_not_nested(lval, statement);
-
-    // Get sink signal
-    sink_signal = sg_->get_signal_from_ivl_signal(ivl_lval_sig(lval));
-
-    // Reset sink signal slices
-    sink_signal->reset_slices();
-
-    // Set sink signal as FF if inside an FF block
-    if (check_if_inside_ff_block()) {
-        sink_signal->set_is_ff();
-    }
-
-    // Check if memory lval (i.e. lval is an arrayed signal)
-    if ((array_index_expr = ivl_lval_idx(lval))) {
-        fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing lval array index ...\n", ws.c_str());
-
-        // Get LVAL signal array index
-        array_index = process_index_expression(array_index_expr, statement, ws + WS_TAB);
-
-        // Set sink signal ID (arrayed sink signals)
-        sink_signal->set_id(array_index);
-        fprintf(DEBUG_PRINTS_FILE_PTR, "%slval array index is: %u\n", ws.c_str(), sink_signal->get_id());
-    }
-    
-    // Process lval part select expression (if necessary)
-    if ((part_select_expr = ivl_lval_part_off(lval))) {
-        fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing lval part select ...\n", ws.c_str());
-
-        // Get part-select MSB/LSB
-        part_select_lsb = process_index_expression(part_select_expr, statement, ws + WS_TAB);
-        part_select_msb = part_select_lsb + ivl_lval_width(lval) - 1;
-
-        // Track sink slice
-        set_sink_slice(sink_signal, part_select_msb, part_select_lsb, ws);
-    }
-
-    // Print LVal sink signal selects
-    fprintf(DEBUG_PRINTS_FILE_PTR, "%ssink signal: %s[%d:%d]\n", 
-        ws.c_str(),
-        sink_signal->get_fullname().c_str(),
-        part_select_msb,
-        part_select_lsb);
-
-    return sink_signal;
-}
-
-void Tracker::process_statement_assign(
-    ivl_statement_t statement, 
-    string          ws) {
-
     unsigned int num_nodes_processed = 0;    // source nodes processed here
-    Signal*      sink_signal         = NULL; // sink signal to connect to
     Signal*      source_signal       = NULL; // source node to connect to
-
-    // Set slice tracking flags
-    enable_slicing();
-
-    // Process lval expression
-    fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing lval(s) ...\n", ws.c_str());
-    sink_signal = process_statement_assign_lval(statement, ws + WS_TAB);
 
     // Process rval expression
     fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing rval(s) ...\n", ws.c_str());
-    num_nodes_processed += process_expression(ivl_stmt_rval(statement), statement, ws + WS_TAB);
+    num_nodes_processed = process_expression(ivl_stmt_rval(statement), statement, ws + WS_TAB);
 
     // Push number of source nodes processed at this depth
     push_scope_depth(num_nodes_processed);
@@ -275,27 +193,35 @@ void Tracker::process_statement_assign(
 
         // Get source signal
         source_signal = get_source_signal(i);
+        // printf("Source Signal Ptr: %d\n", source_signal);
 
-        // LVal (sink signal) slice is held in the sink signal object.
-        // need to move this information to the source signal, since
-        // that's where its extracted from when add_connection is called.
-        if (sink_signal->is_sink_slice_modified()) { 
+        // signal_slice_t rval_sink_slice = source_signal->get_sink_slice(sink_signal);
 
-            // Get the LVal (sink signal) sink slice
-            signal_slice_t lval_sink_slice = sink_signal->get_sink_slice(sink_signal);
-            unsigned int lval_lsb = lval_sink_slice.lsb;
+        // Only update slices of source signals in current scope depth
+        if (i >= (source_signals_.get_num_signals() - num_nodes_processed)) {
+            
+            // LVal (sink signal) slice is held in the sink signal object.
+            // need to move this information to the source signal, since
+            // that's where its extracted from when add_connection is called.
+            if (sink_signal->is_sink_slice_modified()) { 
 
-            // Check if the source signal sink slice was modified,
-            // i.e., if a concat was processed in the RVal.
-            if (source_signal->is_sink_slice_modified()) {
+                // Get the LVal (sink signal) sink slice
+                signal_slice_t lval_sink_slice = sink_signal->get_sink_slice(sink_signal);
+                unsigned int lval_lsb = lval_sink_slice.lsb;
+                // printf("LVal LSB: %u\n", lval_lsb);
 
-                // Shift the source signal sink slice to account for LVal offset
-                shift_sink_slice(source_signal, lval_lsb, ws);
+                // Check if the source signal sink slice was modified,
+                // i.e., if a concat was processed in the RVal.
+                if (source_signal->is_sink_slice_modified()) {
 
-            } else {
+                    // Shift the source signal sink slice to account for LVal offset
+                    shift_sink_slice(source_signal, lval_lsb, ws);
 
-                // Otherwise, just move LVal sink slice info to source signal
-                set_sink_slice(source_signal, lval_sink_slice, ws);
+                } else {
+
+                    // Otherwise, just move LVal sink slice info to source signal
+                    set_sink_slice(source_signal, lval_sink_slice, ws);
+                }
             }
         }
 
@@ -334,16 +260,144 @@ void Tracker::process_statement_assign(
                 source_signal->get_sink_slice(sink_signal),
                 source_signal->get_source_slice(source_signal),
                 ws + WS_TAB);
-
         }
-
-        // Reset source signal slices
-        source_signal->reset_slices();
     }
 
-    // Pop processed source nodes from queue
+    // Pop processed source signals from queue
     num_nodes_processed = pop_scope_depth();
     pop_source_signals(num_nodes_processed, ws);
+}
+
+void Tracker::process_statement_assign_lval(
+    ivl_statement_t statement,
+    string          ws) {
+
+    ivl_lval_t   lval              = NULL; // LVal that contains sink signal
+    Signal*      sink_signal       = NULL; // sink signal
+    ivl_expr_t   array_index_expr  = NULL; // LVal array index expression
+    ivl_expr_t   part_select_expr  = NULL; // LVal part-select offset expressions
+    unsigned int num_array_signals = 0;    // number of LVal array index signals
+    unsigned int array_index       = 0;    // LVal array index
+    unsigned int part_select_msb   = 0;    // LVal (sink signal) MSB
+    unsigned int part_select_lsb   = 0;    // LVal (sink signal) LSB
+    unsigned int num_lvals         = 0;    // number of lvals to process
+    vector<unsigned int> array_indexi;     // LVal array indexe
+
+    fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing lval(s) ...\n", ws.c_str());
+
+    // Get number of lvals
+    num_lvals = ivl_stmt_lvals(statement);
+
+    // Check for (NON-SUPPORTED) concatenated lvals
+    // @TODO: support concatenated lvals
+    Error::check_lvals_not_concatenated(num_lvals, statement);
+
+    // Get lval object
+    lval = ivl_stmt_lval(statement, STMT_ASSIGN_LVAL_INDEX);
+
+    // Get MSB of lval
+    part_select_msb = part_select_lsb + ivl_lval_width(lval) - 1;
+
+    // Check for a (NON-SUPPORTED) nested lval
+    // @TODO: support nested lvals
+    Error::check_lval_not_nested(lval, statement);
+
+    // Get sink signal
+    sink_signal = sg_->get_signal_from_ivl_signal(ivl_lval_sig(lval));
+
+    // Reset sink signal slices
+    sink_signal->reset_slices();
+
+    // Set sink signal as FF if inside an FF block
+    if (check_if_inside_ff_block()) {
+        sink_signal->set_is_ff();
+    }
+
+    // Check if memory lval (i.e. lval is an arrayed signal)
+    if ((array_index_expr = ivl_lval_idx(lval))) {
+        
+        // Get LVAL signal array indexi
+        array_indexi = process_array_index_expression(ivl_lval_sig(lval), array_index_expr, statement, ws + WS_TAB);
+
+        // Check if array index was a signal or a constant
+        if (array_index_is_signal_) {
+
+            // number of array index signals processed (max of 1)
+            num_array_signals = 1;
+            
+            // Reset array index is signal flag
+            array_index_is_signal_ = false;
+
+        } else {
+
+            // number of array index signals processed (0 for constants)
+            num_array_signals = 0;
+        }
+
+    } else {
+
+        // number of array index signals processed (max of 1)
+        num_array_signals = 0;
+
+        // index is 0 if LVal (sink) signal is not arrayed
+        array_indexi.push_back(0);    
+    }
+
+    // Push number of array source signals processed at this depth
+    // (NOTE: max of 1 currently is supported.)
+    push_scope_depth(num_array_signals);
+    fprintf(DEBUG_PRINTS_FILE_PTR, "%spushed %d source signal(s) to queue\n", 
+                ws.c_str(), num_array_signals);
+
+    // Process lval part select expression (if necessary)
+    if ((part_select_expr = ivl_lval_part_off(lval))) {
+        fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing lval part select ...\n", ws.c_str());
+
+        // Get part-select MSB/LSB
+        part_select_lsb = process_index_expression(part_select_expr, statement, ws + WS_TAB);
+        part_select_msb = part_select_lsb + ivl_lval_width(lval) - 1;
+
+        // Track sink slice
+        set_sink_slice(sink_signal, part_select_msb, part_select_lsb, ws);
+    }
+
+    // Iterate over array indexi
+    while (array_indexi.size()) {
+
+        // Get (single) LVAL signal array index
+        array_index = array_indexi.back();
+        array_indexi.pop_back();
+
+        fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing lval array index (%d) ...\n", ws.c_str(), array_index);
+
+        // Set sink signal ID
+        sink_signal->set_id(array_index);
+
+        // Print LVal sink signal selects
+        fprintf(DEBUG_PRINTS_FILE_PTR, "%ssink signal: %s[%d:%d]\n", 
+            ws.c_str(),
+            sink_signal->get_fullname().c_str(),
+            part_select_msb,
+            part_select_lsb);
+
+        // Process RVals associated with current LVal
+        process_statement_assign_rval(sink_signal, statement, ws);
+    }
+
+    // Pop processed (array index) source signals from queue
+    num_array_signals = pop_scope_depth();
+    pop_source_signals(num_array_signals, ws);
+}
+
+void Tracker::process_statement_assign(
+    ivl_statement_t statement, 
+    string          ws) {
+
+    // Set slice tracking flags
+    enable_slicing();
+
+    // Process lval expressions
+    process_statement_assign_lval(statement, ws + WS_TAB);
 
     // Clear slice tracking flags
     disable_slicing();

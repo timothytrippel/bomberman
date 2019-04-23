@@ -1,11 +1,11 @@
 digraph G {
-	"cont_source_arrayed_sig_swpd_addr.0.in" -> "cont_source_arrayed_sig_swpd_addr.out"[label="[1:0]->[1:0]"];
-	"cont_source_arrayed_sig_swpd_addr.1.in" -> "cont_source_arrayed_sig_swpd_addr.out"[label="[1:0]->[3:2]"];
-	"cont_source_arrayed_sig_swpd_addr.2.in" -> "cont_source_arrayed_sig_swpd_addr.out"[label="[1:0]->[5:4]"];
-	"cont_source_arrayed_sig_swpd_addr.3.in" -> "cont_source_arrayed_sig_swpd_addr.out"[label="[1:0]->[7:6]"];
-	"cont_source_arrayed_sig_swpd_addr.0.in" [shape=ellipse, label="cont_source_arrayed_sig_swpd_addr.0.in[1:0]"];
-	"cont_source_arrayed_sig_swpd_addr.1.in" [shape=ellipse, label="cont_source_arrayed_sig_swpd_addr.1.in[1:0]"];
-	"cont_source_arrayed_sig_swpd_addr.2.in" [shape=ellipse, label="cont_source_arrayed_sig_swpd_addr.2.in[1:0]"];
-	"cont_source_arrayed_sig_swpd_addr.3.in" [shape=ellipse, label="cont_source_arrayed_sig_swpd_addr.3.in[1:0]"];
+	"cont_source_arrayed_sig_swpd_addr.in.0" -> "cont_source_arrayed_sig_swpd_addr.out"[label="[1:0]->[1:0]"];
+	"cont_source_arrayed_sig_swpd_addr.in.1" -> "cont_source_arrayed_sig_swpd_addr.out"[label="[1:0]->[3:2]"];
+	"cont_source_arrayed_sig_swpd_addr.in.2" -> "cont_source_arrayed_sig_swpd_addr.out"[label="[1:0]->[5:4]"];
+	"cont_source_arrayed_sig_swpd_addr.in.3" -> "cont_source_arrayed_sig_swpd_addr.out"[label="[1:0]->[7:6]"];
+	"cont_source_arrayed_sig_swpd_addr.in.0" [shape=ellipse, label="cont_source_arrayed_sig_swpd_addr.in.0[1:0]"];
+	"cont_source_arrayed_sig_swpd_addr.in.1" [shape=ellipse, label="cont_source_arrayed_sig_swpd_addr.in.1[1:0]"];
+	"cont_source_arrayed_sig_swpd_addr.in.2" [shape=ellipse, label="cont_source_arrayed_sig_swpd_addr.in.2[1:0]"];
+	"cont_source_arrayed_sig_swpd_addr.in.3" [shape=ellipse, label="cont_source_arrayed_sig_swpd_addr.in.3[1:0]"];
 	"cont_source_arrayed_sig_swpd_addr.out" [shape=ellipse, label="cont_source_arrayed_sig_swpd_addr.out[7:0]"];
 }

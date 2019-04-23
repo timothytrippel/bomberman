@@ -117,6 +117,7 @@ class Signal {
         unsigned int   get_array_count()  const;
         bool 		   is_signal()        const;
 		bool 		   is_const()         const;
+        bool           is_const_expr()    const;
         bool           is_arrayed()       const;
         bool           is_source_slice_modified() const;
         bool           is_sink_slice_modified()   const;
@@ -141,7 +142,7 @@ class Signal {
 
         // Other
         bool         is_ivl_generated() const;
-        unsigned int process_as_index_expr(ivl_statement_t statement) const;
+        unsigned int to_uint()          const;
 
     private:
         ivl_object_t   ivl_object_;

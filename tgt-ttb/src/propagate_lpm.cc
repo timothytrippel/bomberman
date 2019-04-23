@@ -222,6 +222,7 @@ void Tracker::process_lpm_concat(
 
             // Inputs should only be SIGNAL or LPM objects
             if ((source_signal = ivl_nexus_ptr_sig(input_nexus_ptr))) {
+                
                 // Compute current MSB of sink signal slice
                 current_msb = current_lsb + ivl_signal_width(source_signal) - 1;
 
@@ -237,6 +238,7 @@ void Tracker::process_lpm_concat(
 
             } else if (ivl_nexus_ptr_lpm(input_nexus_ptr) != lpm) {
                 Error::not_supported("LPM-CONCAT input device type.");
+                // @TODO: Check other cases too?
             }
         }
     }

@@ -26,6 +26,7 @@ Tracker::Tracker():
 	clk_basename_(""), 
 	inside_ff_block_(false),
 	slicing_enabled_(false),
+	array_index_is_signal_(false),
 	sg_(NULL),
 	source_signals_(),
 	explored_nexi_(),
@@ -36,9 +37,10 @@ Tracker::Tracker(
 	SignalGraph*    sg) {
 
 	// Intialize Flags
-    inside_ff_block_  = false;
-    slicing_enabled_   = false;
-    ignore_constants_ = false;
+    inside_ff_block_        = false;
+    slicing_enabled_        = false;
+    array_index_is_signal_  = false;
+    ignore_constants_       = false;
 
     // Intialize Data
     clk_basename_ = string("");
@@ -131,9 +133,10 @@ void Tracker::push_source_signal(
     	"ERROR: attempting to push NULL source signal to queue.\n");
 
     // Debug Print
-    fprintf(DEBUG_PRINTS_FILE_PTR, "%spushing source signal (%s) to stack\n", 
+    fprintf(DEBUG_PRINTS_FILE_PTR, "%spushing source signal (name: %s, ID: %u) to stack\n", 
         ws.c_str(), 
-        source_signal->get_fullname().c_str());
+        source_signal->get_fullname().c_str(),
+        id);
 
     // Push source signal to stack
     source_signals_.push_signal(source_signal, id);

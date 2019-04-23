@@ -12,6 +12,7 @@ Graphviz .dot file.
 // Standard Headers
 
 // TTB Headers
+#include "ttb_typedefs.h"
 #include "signal_q.h"
 #include "error.h"
 
@@ -57,25 +58,11 @@ Signal* SignalQ::get_signal(unsigned int index) const {
 }
 
 Signal* SignalQ::get_back_signal() const {
+	return this->get_signal(signal_q_.size() - 1);
+}
 
-	// Check that queues are not empty, and are the same size
-	assert(signal_q_.size() > 0 && 
-		"ERROR-SignalQ::get_signal: cannot pop from empty signal queue.\n");
-	assert(id_q_.size() > 0 && 
-		"ERROR-SignalQ::get_signal: cannot pop from empty ID queue.\n");
-	assert(signal_q_.size() == id_q_.size() && 
-		"ERROR-SignalQ::get_signal: signal and ID queues should be the same size.\n");
-
-	// Signal/ID to return
-	Signal*      signal = signal_q_.back();
-	unsigned int id     = id_q_.back();
-
-	// Set signal ID (arrayed source signals)
-    if (signal->is_signal()) {
-		signal->set_id(id);
-	}
-
-	return signal;
+Signal* SignalQ::get_back_signal(unsigned int index) const {
+	return this->get_signal(signal_q_.size() - index - 1);
 }
 
 Signal* SignalQ::pop_signal() {
@@ -112,6 +99,11 @@ void SignalQ::pop_signals(unsigned int num_signals) {
 
 	// Pop signals/IDs
 	for (unsigned int i = 0; i < num_signals; i++) {
+		
+		// Reset signal slices
+    	signal_q_.back()->reset_slices();
+
+    	// Remove items from queues
 		signal_q_.pop_back();
 		id_q_.pop_back();
 	} 
@@ -126,4 +118,17 @@ void SignalQ::push_signal(Signal* signal, unsigned int id) {
 	// Push slice to the queue
 	signal_q_.push_back(signal);
 	id_q_.push_back(id);
+}
+
+// ------------------------------------------------------------
+// --------------------------- Debug --------------------------
+// ------------------------------------------------------------
+
+void SignalQ::print() const {
+
+	fprintf(DEBUG_PRINTS_FILE_PTR, "Signals\n");
+
+	for (unsigned int i = 0; i < signal_q_.size(); i++) {
+		fprintf(DEBUG_PRINTS_FILE_PTR, "%s%s\n", WS_TAB, get_signal(i)->get_fullname().c_str());
+	}
 }

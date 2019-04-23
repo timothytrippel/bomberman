@@ -232,6 +232,14 @@ bool Signal::is_const() const {
 	}
 }
 
+bool Signal::is_const_expr() const {
+	if (ivl_type_ == IVL_EXPR) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
 bool Signal::is_arrayed() const {
 	if (ivl_type_ == IVL_SIGNAL) {
 		if (ivl_signal_dimensions(ivl_object_.ivl_signal) > 0) {
@@ -310,9 +318,9 @@ string Signal::get_signal_fullname() const {
 	if (this->is_arrayed()) {
 		return (get_signal_scopename() + 
 			string(".") + 
-			to_string(id_) + 
+			get_signal_basename() +
 			string(".") + 
-			get_signal_basename());	
+			to_string(id_));	
 	} else {
 		return (get_signal_scopename() + string(".") + get_signal_basename());	
 	}
@@ -320,11 +328,12 @@ string Signal::get_signal_fullname() const {
 
 unsigned int Signal::get_signal_msb() const {
     if (ivl_signal_packed_dimensions(ivl_object_.ivl_signal) > 0) {
+        
         // Check MSB is not negative
-        assert((ivl_signal_packed_msb(ivl_object_.ivl_signal, 0) >= 0) && \
+        assert((ivl_signal_packed_msb(ivl_object_.ivl_signal, SIGNAL_DIM_0_BIT_INDEX) >= 0) && \
             "NOT-SUPPORTED: negative MSB index.\n");
         
-        return ivl_signal_packed_msb(ivl_object_.ivl_signal, 0);
+        return ivl_signal_packed_msb(ivl_object_.ivl_signal, SIGNAL_DIM_0_BIT_INDEX);
     } else {
         return 0;
     }
@@ -332,11 +341,12 @@ unsigned int Signal::get_signal_msb() const {
 
 unsigned int Signal::get_signal_lsb() const {
     if (ivl_signal_packed_dimensions(ivl_object_.ivl_signal) > 0) {
+        
         // Check LSB is not negative
-        assert((ivl_signal_packed_lsb(ivl_object_.ivl_signal, 0) >= 0) && \
+        assert((ivl_signal_packed_lsb(ivl_object_.ivl_signal, SIGNAL_DIM_0_BIT_INDEX) >= 0) && \
             "NOT-SUPPORTED: negative LSB index.\n");
 
-        return ivl_signal_packed_lsb(ivl_object_.ivl_signal, 0);
+        return ivl_signal_packed_lsb(ivl_object_.ivl_signal, SIGNAL_DIM_0_BIT_INDEX);
     } else {
         return 0;
     }
@@ -612,16 +622,17 @@ bool Signal::is_ivl_generated() const {
 	}
 }
 
-unsigned int Signal::process_as_index_expr(ivl_statement_t statement) const {
+unsigned int Signal::to_uint() const {
 
-    // Check part_select is only of type IVL_CONST_EXPR
-    // @TODO: support non-constant part selects,
-    // e.g. signals: signal_a[signal_b] <= signal_c;
-    Error::check_part_select_expr(ivl_type_, statement);
+    // Check signals is only of type IVL_CONST_EXPR
+    assert(this->is_const_expr() && 
+    	"ERROR-Signal::process_as_index_expr: cannot convert signals to numbers.\n");
 
-    // Get LSB offset index
+	// Get LSB offset index
     string bit_string = this->get_expr_bitstring();
 
     // Convert bitstring to unsigned long
     return stoul(bit_string, NULL, BITSTRING_BASE);
+    
+    return 0;
 }

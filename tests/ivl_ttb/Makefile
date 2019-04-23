@@ -61,7 +61,7 @@ $(SRC_DIR)/%.test: $(DOT_DIR)/%.dot
 
 # IVL Target Module
 tgt-ttb: 
-	$(MAKE) -C $(TGT_TTB_DIR)
+	$(MAKE) -C $(TGT_TTB_DIR) -j8
 
 # IVL Target TTB Module Analysis
 $(DOT_DIR)/%.dot: $(SRC_DIR)/%.v tgt-ttb

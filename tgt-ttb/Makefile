@@ -29,7 +29,10 @@ SRCS := $(shell find $(SRC_DIR) -type f -name *.cc)
 OBJS := $(patsubst $(SRC_DIR)/%,$(BUILD_DIR)/%,$(SRCS:.cc=.o))
 
 # Make Targets
-all: $(TGT) confs install
+all: 
+	$(MAKE) $(TGT) 
+	$(MAKE) confs 
+	$(MAKE) install
 
 $(TGT): $(OBJS)
 	$(CC) -undefined suppress -flat_namespace $(CFLAGS) -o $@.tgt $^ 

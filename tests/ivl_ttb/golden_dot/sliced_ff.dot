@@ -4,11 +4,9 @@ digraph G {
 	"sliced_ff.d" -> "sliced_ff.next_q"[label="[1:0]->[1:0]"];
 	"const.1.1" [shape=none, label="const.1.1[0:0]"];
 	"const.1.1" -> "sliced_ff.q"[label="[0:0]->[1:1]"];
-	"sliced_ff.rst" -> "sliced_ff.q"[label="[0:0]->[1:1]"];
-	"sliced_ff.clk" -> "sliced_ff.q"[label="[0:0]->[1:1]"];
-	"sliced_ff.next_q" -> "sliced_ff.q"[label="[1:0]->[1:0]"];
 	"sliced_ff.rst" -> "sliced_ff.q"[label="[0:0]->[1:0]"];
 	"sliced_ff.clk" -> "sliced_ff.q"[label="[0:0]->[1:0]"];
+	"sliced_ff.next_q" -> "sliced_ff.q"[label="[1:0]->[1:0]"];
 	"sliced_ff.clk" [shape=rectangle, label="sliced_ff.clk[0:0]"];
 	"sliced_ff.d" [shape=rectangle, label="sliced_ff.d[1:0]"];
 	"sliced_ff.en" [shape=rectangle, label="sliced_ff.en[0:0]"];

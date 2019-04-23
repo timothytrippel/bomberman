@@ -478,30 +478,31 @@ void SignalGraph::process_local_connections(string ws) {
             // Check that the (one) connection to sink signal is local
             assert(local_signal->is_ivl_generated() &&
                 "ERROR: signal connected to sink signal is NOT local.\n");
-
+            
             // Delete sink connections queue
             sink_conns_it->second->pop_back();
             delete(sink_conns_it->second);
             sink_conns_it->second = NULL;
-
+            
             // Remove sink signal from connections map
             local_connections_map_.erase(sink_signal);
 
             // Get reference to local (middle-man) signal connections
             local_conns_it = local_connections_map_.find(local_signal);
- 
+            
             // Iterate over source signals connected to local signal
             while (!local_conns_it->second->empty()) {
                 
                 // Get current connection obj
                 current_conn = local_conns_it->second->back();
-
+                
                 // Modify sink signal of connection obj
                 current_conn->set_sink(sink_signal);
-
+                
                 // Add connection to dot graph
                 dg_->add_connection(current_conn, ws);
                 num_connections_++;
+                
 
                 // Remove connection from queue after it is processed
                 local_conns_it->second->pop_back();
