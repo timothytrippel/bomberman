@@ -284,49 +284,71 @@ bool Signal::is_sink_slice_modified() const {
 }
 
 signal_slice_t Signal::get_source_slice(Signal* signal) const {
+	
+	signal_slice_t source_slice = {0, 0};
 
 	// Check that signal is not NULL
 	assert(signal && "ERROR-Signal::get_source_slice: cannot get slice of NULL signal.\n");
 
 	// Check if tracking slice info
 	if (source_slice_modified_) {
-		return {source_msb_, source_lsb_};
+
+		// Update source slice
+		source_slice.msb = source_msb_;
+		source_slice.lsb = source_lsb_;
+
 	} else {
 
 		// Check if this Signal is the SOURCE/SINK
 		if (this == signal) {
 
 			// This is the SOURCE signal
-			return {this->get_msb(), this->get_lsb()};
+			source_slice.msb = this->get_msb();
+			source_slice.lsb = this->get_lsb();
+
 		} else {
 
 			// This is the SINK signal
-			return {signal->get_msb(), signal->get_lsb()};
+			source_slice.msb = signal->get_msb();
+			source_slice.lsb = signal->get_lsb();
 		}
 	}
+
+	return source_slice;
 }
 
 signal_slice_t Signal::get_sink_slice(Signal* signal) const {
-	
+
+	signal_slice_t sink_slice = {0, 0};
+
 	// Check that signal is not NULL
 	assert(signal && "ERROR-Signal::get_sink_slice: cannot get slice of NULL signal.\n");
 
 	// Check if tracking slice info
 	if (sink_slice_modified_) {
-		return {sink_msb_, sink_lsb_};
+		
+		// Update sink slice
+		sink_slice.msb = sink_msb_;
+		sink_slice.lsb = sink_lsb_;
+
 	} else {
 
 		// Check if this Signal is the SOURCE/SINK
 		if (this == signal) {
 
 			// This is the SINK signal
-			return {this->get_msb(), this->get_lsb()};
+			sink_slice.msb = this->get_msb();
+			sink_slice.lsb = this->get_lsb();
+			
 		} else {
 
 			// This is the SOURCE signal
-			return {signal->get_msb(), signal->get_lsb()};
+			sink_slice.msb = signal->get_msb();
+			sink_slice.lsb = signal->get_lsb();
 		}
 	}
+
+	return sink_slice;
 }
 
 // ----------------------------------- Signal ---------------------------------------

@@ -151,7 +151,7 @@ void Tracker::process_statement_condit(
     
     // Push number of source signals processed at this depth
     push_scope_depth(num_nodes_processed);
-    fprintf(DEBUG_PRINTS_FILE_PTR, "%spushed %d source signaks(s) to stack\n", 
+    fprintf(DEBUG_PRINTS_FILE_PTR, "%spushed %d source signals(s) to stack\n", 
         ws.c_str(), num_nodes_processed);
 
     // Process true/false sub-statements to propagate 
@@ -198,7 +198,7 @@ void Tracker::process_statement_assign_rval(
         // signal_slice_t rval_sink_slice = source_signal->get_sink_slice(sink_signal);
 
         // Only update slices of source signals in current scope depth
-        if (i >= (source_signals_.get_num_signals() - num_nodes_processed)) {
+        if (i >= (int) (source_signals_.get_num_signals() - num_nodes_processed)) {
             
             // LVal (sink signal) slice is held in the sink signal object.
             // need to move this information to the source signal, since
@@ -273,6 +273,7 @@ void Tracker::process_statement_assign_lval(
     string          ws) {
 
     ivl_lval_t   lval              = NULL; // LVal that contains sink signal
+    ivl_signal_t ivl_sink_signal   = NULL; // IVL sink signal
     Signal*      sink_signal       = NULL; // sink signal
     ivl_expr_t   array_index_expr  = NULL; // LVal array index expression
     ivl_expr_t   part_select_expr  = NULL; // LVal part-select offset expressions
@@ -305,19 +306,24 @@ void Tracker::process_statement_assign_lval(
     // @TODO: support nested lvals
     Error::check_lval_not_nested(lval, statement);
 
+    // Get lval IVL sink signal
+    ivl_sink_signal = ivl_lval_sig(lval);
+
     // Check if LVal (sink) signal in to be ignored
-    if (sg_->check_if_ignore_signal_fullname(ivl_lval_sig(lval)) ||
-        sg_->check_if_ignore_signal_basename(ivl_lval_sig(lval))) {
+    if (sg_->check_if_ignore_mem_signal(ivl_sink_signal) ||
+        sg_->check_if_ignore_signal(ivl_sink_signal)) {
+        
         fprintf(DEBUG_PRINTS_FILE_PTR, 
             "%slval (sink) signal (%s.%s) is ignored\n", 
             ws.c_str(),
-            ivl_scope_name(ivl_signal_scope(ivl_lval_sig(lval))),
-            ivl_signal_basename(ivl_lval_sig(lval)));
+            ivl_scope_name(ivl_signal_scope(ivl_sink_signal)),
+            ivl_signal_basename(ivl_sink_signal));
+
         return;
     }
 
     // Get sink signal
-    sink_signal = sg_->get_signal_from_ivl_signal(ivl_lval_sig(lval));
+    sink_signal = sg_->get_signal_from_ivl_signal(ivl_sink_signal);
 
     // Reset sink signal slices
     sink_signal->reset_slices();
@@ -331,8 +337,9 @@ void Tracker::process_statement_assign_lval(
     if ((array_index_expr = ivl_lval_idx(lval))) {
         
         // Get LVAL signal array indexi
-        array_indexi = process_array_index_expression(ivl_lval_sig(lval), array_index_expr, statement, ws + WS_TAB);
-
+        array_indexi = process_array_index_expression(
+            ivl_sink_signal, array_index_expr, statement, ws + WS_TAB);
+        
         // Check if array index was a signal or a constant
         if (array_index_is_signal_) {
 
@@ -370,7 +377,7 @@ void Tracker::process_statement_assign_lval(
         // Get part-select MSB/LSB
         part_select_lsb = process_index_expression(part_select_expr, statement, ws + WS_TAB);
         part_select_msb = part_select_lsb + ivl_lval_width(lval) - 1;
-
+        
         // Check that sink slice is valid
         if (part_select_lsb != -1 && part_select_msb != -1) {
 
@@ -514,6 +521,14 @@ void Tracker::process_statement(
             Error::stask_statement_type_warning(statement);
             break;
 
+        case IVL_ST_UTASK:
+            Error::utask_statement_type_warning(statement);
+            break;
+
+        case IVL_ST_WHILE:
+            Error::while_statement_type_warning(statement);
+            break;
+
         case IVL_ST_ALLOC:
         case IVL_ST_CONTRIB:
         case IVL_ST_DEASSIGN:
@@ -528,8 +543,6 @@ void Tracker::process_statement(
         case IVL_ST_RELEASE:
         case IVL_ST_REPEAT: 
         case IVL_ST_TRIGGER:
-        case IVL_ST_UTASK:
-        case IVL_ST_WHILE:
         default:
             // Print HDL code, file, and line number of event
             Tracker::print_statement_hdl(statement, ws);

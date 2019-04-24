@@ -95,6 +95,7 @@ void Reporter::set_file_path(const char* p) {
 // ------------------------------------------------------------
 
 void Reporter::start_task(const char* message) {
+
     // Print starting message
     print_message(message);
 
@@ -129,6 +130,7 @@ void Reporter::end_task() {
 // ------------------------------------------------------------
 
 void Reporter::print_message(const char* message) const {
+
     // Check that file has been opened for writing report
     assert(file_ptr_ != NULL && "ERROR: reporter file ptr is NULL.\n");
 
@@ -138,6 +140,7 @@ void Reporter::print_message(const char* message) const {
 }
 
 void Reporter::line_separator() const {
+
     // Check that file has been opened for writing report
     assert(file_ptr_ != NULL && "ERROR: reporter file ptr is NULL.\n");
 
@@ -146,6 +149,7 @@ void Reporter::line_separator() const {
 }
 
 void Reporter::configurations(cmd_args_map_t* cmd_args) const {
+
     // Check that file has been opened for writing report
     assert(file_ptr_ != NULL && "ERROR: reporter file ptr is NULL.\n");
 
@@ -159,6 +163,7 @@ void Reporter::configurations(cmd_args_map_t* cmd_args) const {
 }
 
 void Reporter::root_scopes(ivl_scope_t* scopes, unsigned int num_scopes) const {
+
     // Check that file has been opened for writing report
     assert(file_ptr_ != NULL && "ERROR: reporter file ptr is NULL.\n");
 
@@ -177,6 +182,7 @@ void Reporter::root_scopes(ivl_scope_t* scopes, unsigned int num_scopes) const {
 }
 
 void Reporter::num_signals(unsigned long num_signals) const {
+
     // Check that file has been opened for writing report
     assert(file_ptr_ != NULL && "ERROR: reporter file ptr is NULL.\n");
 
@@ -185,6 +191,7 @@ void Reporter::num_signals(unsigned long num_signals) const {
 }
 
 void Reporter::signal_names(sig_map_t signals_map) const {
+
     // Check that file has been opened for writing report
     assert(file_ptr_ != NULL && "ERROR: reporter file ptr is NULL.\n");
 
@@ -205,20 +212,16 @@ void Reporter::signal_names(sig_map_t signals_map) const {
 }
 
 void Reporter::graph_stats(SignalGraph* sg) const {
+
     // Check that file has been opened for writing report
     assert(file_ptr_ != NULL && "ERROR: reporter file ptr is NULL.\n");
 
-    // Print number of signals enumerated in design
-    fprintf(file_ptr_, "Number of signals found:       %lu\n", sg->get_num_signals());
-
-    // Print number of local signals processed (removed) in design
-    fprintf(file_ptr_, "Number of local signals found: %lu\n", sg->get_num_local_signals());
-
-    // Print number of constants enumerated in design
-    fprintf(file_ptr_, "Number of constants found:     %lu\n", sg->get_num_constants());
-    
-    // Print number of connections enumerated in design
-    fprintf(file_ptr_, "Number of connections found:   %lu\n", sg->get_num_connections());
+    // Print graph stats
+    fprintf(file_ptr_, "Number of signals found:          %lu\n", sg->get_num_signals());
+    fprintf(file_ptr_, "Number of memory signals skipped: %lu\n", sg->get_num_mem_signals());
+    fprintf(file_ptr_, "Number of local signals removed:  %lu\n", sg->get_num_local_signals());
+    fprintf(file_ptr_, "Number of constants found:        %lu\n", sg->get_num_constants());
+    fprintf(file_ptr_, "Number of connections found:      %lu\n", sg->get_num_connections());
 }
 
 // ------------------------------------------------------------
@@ -226,6 +229,7 @@ void Reporter::graph_stats(SignalGraph* sg) const {
 // ------------------------------------------------------------
 
 void Reporter::init() {
+
     // Open output file or print to STDOUT
     if (!file_path_ && !file_ptr_){
         file_ptr_ = stdout;

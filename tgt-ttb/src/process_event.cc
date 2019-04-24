@@ -174,18 +174,16 @@ unsigned int Tracker::process_event_nexus(
     // Check that a source signal was found
     if (!source_ivl_signal) {
 
-        // fprintf(stderr, "Event Scope: %s\n", ivl_scope_name(ivl_event_scope(event)));
-        // fprintf(stderr, "Num scope params: %d\n", ivl_scope_params(ivl_event_scope(event)));
-        // for (int i = 0; i < ivl_scope_params(ivl_event_scope(event)); i++) {
-        //     ivl_parameter_t param = ivl_scope_param(ivl_event_scope(event), i);
-        //     fprintf(stderr, "%s\n", ivl_parameter_basename(param));
-        // }
+        // Print event scope
+        fprintf(stderr, "Event Scope: %s\n", ivl_scope_name(ivl_event_scope(event)));
 
         // Print HDL code, file, and line number of event
         Tracker::print_statement_hdl(statement, ws);
 
-        // Throw Error
-        assert(false && "ERROR-Tracker::process_event_nexus: no source IVL signal found.\n");
+        // Throw Warning
+        Error::unkown_event_source_signal_warning(statement);
+
+        return 0;
     }
 
     // Check if CLK signal is one of source signals. If so, 
@@ -197,7 +195,7 @@ unsigned int Tracker::process_event_nexus(
     } 
     
     // Check if signal is to be ignored
-    if (!sg_->check_if_ignore_signal_fullname(source_ivl_signal)) {
+    if (!sg_->check_if_ignore_mem_signal(source_ivl_signal)) {
 
         // Get signal object from IVL source signal
         Signal* source_signal = sg_->get_signal_from_ivl_signal(source_ivl_signal);
@@ -206,9 +204,9 @@ unsigned int Tracker::process_event_nexus(
         push_source_signal(source_signal, 0, ws + WS_TAB);
 
         return 1;
+    } else {
+        return 0;    
     }
-
-    return 0;
 }
 
 // ----------------------------------------------------------------------------------

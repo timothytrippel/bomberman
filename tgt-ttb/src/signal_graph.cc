@@ -24,12 +24,15 @@ Graphviz .dot file.
 SignalGraph::SignalGraph():
     num_signals_(0),
     num_signals_ignored_(0),
+    num_mem_signals_(0),
     num_local_signals_(0),
     num_constants_(0),
     num_connections_(0),
     num_local_connections_(0),
+    mem_signal_size_(MEM_SIG_SIZE_DEFAULT),
     dg_(NULL),
     signals_map_(),
+    consts_map_(),
     connections_map_(),
     local_connections_map_(),
     signals_to_ignore_() {} 
@@ -39,10 +42,14 @@ SignalGraph::SignalGraph(cmd_args_map_t* cmd_args) {
     // Intialize Counters
     num_signals_           = 0;
     num_signals_ignored_   = 0;
+    num_mem_signals_       = 0;
     num_local_signals_     = 0;
     num_constants_         = 0;
     num_connections_       = 0;
     num_local_connections_ = 0;
+
+    // Configs
+    mem_signal_size_ = MEM_SIG_SIZE_DEFAULT;
 
     // Initialize DotGraph
     dg_ = new DotGraph(cmd_args->at(OUTPUT_FILENAME_FLAG));
@@ -76,7 +83,14 @@ SignalGraph::~SignalGraph() {
     assert(!signals_map_.size() && 
         "ERROR: some signals remain un-deleted.\n");
 
-    // 3. Close DotGraph file if it is still open
+    // 3. Delete Constants (Signals) in consts_map_
+    fprintf(DESTRUCTOR_PRINTS_FILE_PTR, 
+        "   Destroying constants map...\n");
+    delete_constants_map();
+    assert(!consts_map_.size() && 
+        "ERROR: some constants remain un-deleted.\n");
+
+    // 4. Close DotGraph file if it is still open
     fprintf(DESTRUCTOR_PRINTS_FILE_PTR, 
         "   Destroying DotGraph...\n");
     dg_->save_graph();
@@ -101,6 +115,26 @@ void SignalGraph::delete_signals_map() {
 
         // Remove signal from map
         signals_map_.erase(sig_map_it->first);
+    }
+}
+
+void SignalGraph::delete_constants_map() {
+
+    // Create a signals map iterator
+    consts_map_t::iterator consts_map_it;
+    
+    // Iterate over the map using iterator till end
+    while (!consts_map_.empty()) {   
+        
+        // Get refence to first map item
+        consts_map_it = consts_map_.begin();
+
+        // Delete signal
+        delete(consts_map_it->second);
+        consts_map_it->second = NULL;
+
+        // Remove signal from map
+        consts_map_.erase(consts_map_it->first);
     }
 }
 
@@ -151,6 +185,45 @@ void SignalGraph::delete_connections_map() {
 // ------------------- Signal Enumeration ---------------------
 // ------------------------------------------------------------
 
+bool SignalGraph::check_if_ignore_signal(ivl_signal_t signal) const {
+    
+    // Check if ignore map is empty
+    if (!signals_to_ignore_.empty()) {
+
+        // Check that signal is not NULL
+        if (signal) {
+            return signals_to_ignore_.count(ivl_signal_basename(signal));
+        }
+    }
+
+    return false;
+}
+
+
+bool SignalGraph::check_if_ignore_signal(Signal* signal) const {
+
+    // Check that signal is not a constant (only ignore signals)
+    if (signal->is_signal()) {
+        return this->check_if_ignore_signal(signal->get_ivl_signal());
+    }
+
+    return false;
+}
+
+bool SignalGraph::check_if_ignore_mem_signal(ivl_signal_t mem_signal) const {
+    
+    // Check if ignore mem signal set is empty
+    if (!mem_signals_to_ignore_.empty()) {
+
+        // Check that signal is not NULL
+        if (mem_signal) {
+            return mem_signals_to_ignore_.count(mem_signal);
+        }
+    }
+
+    return false;
+}
+
 void SignalGraph::find_all_signals(ivl_scope_t* scopes, unsigned int num_scopes) {
     for (unsigned int i = 0; i < num_scopes; i++) {
         find_signals(scopes[i]);
@@ -181,115 +254,50 @@ void SignalGraph::find_signals(ivl_scope_t scope) {
     } 
 }
 
-bool SignalGraph::check_if_ignore_signal_basename(Signal* signal) const {
-    
-    // Check if ignore map is empty
-    if (!signals_to_ignore_.empty()) {
-
-        // Check that signal is not a constant (only ignore signals)
-        if (signal->is_signal()) {
-            return signals_to_ignore_.count(signal->get_basename());
-        }
-    }
-
-    return false;
-}
-
-bool SignalGraph::check_if_ignore_signal_fullname(Signal* signal) const {
-    
-    // Check if ignore map is empty
-    if (!signals_to_ignore_.empty()) {
-
-        // Check that signal is not a constant (only ignore signals)
-        if (signal->is_signal()) {
-            return signals_to_ignore_.count(signal->get_fullname());
-        }
-    }
-
-    return false;
-}
-
-bool SignalGraph::check_if_ignore_signal_basename(ivl_signal_t signal) { 
-    
-    string basename = string(ivl_signal_basename(signal));
-
-    // printf("BASENAME: %s\n", basename.c_str());
-
-    // printf("Signals to Ignore:\n");
-    // string_map_t::iterator it = signals_to_ignore_.begin();
-    // while (it != signals_to_ignore_.end()) {
-    //    printf("%s\n", it->first.c_str());
-    //    it++; 
-    // }
-
-    // Check if ignore map is empty
-    if (!signals_to_ignore_.empty()) {
-        return signals_to_ignore_.count(basename);
-    }
-
-    return false;
-}
-
-bool SignalGraph::check_if_ignore_signal_fullname(ivl_signal_t signal) { 
-    
-    string fullname = Signal::get_fullname(signal);
-
-    // printf("FULLNAME: %s\n", fullname.c_str());
-
-    // printf("Signals to Ignore:\n");
-    // string_map_t::iterator it = signals_to_ignore_.begin();
-    // while (it != signals_to_ignore_.end()) {
-    //    printf("%s\n", it->first.c_str());
-    //    it++; 
-    // }
-
-    // Check if ignore map is empty
-    if (!signals_to_ignore_.empty()) {
-        return signals_to_ignore_.count(fullname);
-    }
-
-    return false;
-}
-
 void SignalGraph::add_signal(ivl_signal_t signal) {
 
     // Skip arrayed signals that are memories
-    if (ivl_signal_array_count(signal) > 128) {
-        signals_to_ignore_[Signal::get_fullname(signal)];
-        num_signals_ignored_++;
-        return;
-    }
+    if (ivl_signal_array_count(signal) >= mem_signal_size_) {
+        
+        // Track number of mem signals ignored
+        mem_signals_to_ignore_[signal] = true;
+        num_mem_signals_++;
 
-    // Add signal to map
-    signals_map_[signal] = new Signal(signal);
-
-    // Check if arrayed signal has negative array base
-    // @TODO: support arrayed signals with negative bases
-    Error::check_arrayed_signal(signals_map_, signal);
-
-    // Check if signal is multi-dimensional
-    // @TODO: support multi-dimensional signals 
-    // (i.e. signals packed dimensions like memories)
-    Error::check_signal_not_multidimensional(signals_map_, signal);
-
-    // Check if signal is to be ignored
-    if (!check_if_ignore_signal_basename(signal)) {
-
-        // Initialize signal connections queue
-        // Ignore local (IVL) generated signals.
-        if (!ivl_signal_local(signal)) {
-            // Intialize connections queue for signal
-            connections_map_[signals_map_[signal]] = new conn_q_t();
-
-            // Increment Signals Counter
-            num_signals_++;
-        } else {
-
-            // Increment Local Signals Counter
-            num_local_signals_++;
-        }
     } else {
-        num_signals_ignored_++;
+
+        // Add signal to map
+        signals_map_[signal] = new Signal(signal);
+
+        // Check if arrayed signal has negative array base
+        // @TODO: support arrayed signals with negative bases
+        Error::check_arrayed_signal(signals_map_, signal);
+
+        // Check if signal is multi-dimensional
+        // @TODO: support multi-dimensional signals 
+        // (i.e. signals packed dimensions like memories)
+        Error::check_signal_not_multidimensional(signals_map_, signal);
+
+        // Check if signal is to be ignored
+        if (!check_if_ignore_signal(signal)) {
+
+            // Initialize signal connections queue
+            // Ignore local (IVL) generated signals.
+            if (!ivl_signal_local(signal)) {
+
+                // Intialize connections queue for signal
+                connections_map_[signals_map_[signal]] = new conn_q_t();
+
+                // Increment Signals Counter
+                num_signals_++;
+
+            } else {
+
+                // Increment Local Signals Counter
+                num_local_signals_++;
+            }
+        } else {
+            num_signals_ignored_++;
+        }
     }
 }
 
@@ -359,20 +367,28 @@ bool SignalGraph::add_connection(
     // check that it is a constant signal (i.e. an ivl_const or
     // ivl_expr). 
     //
-    // **NOTE**: Constants are NOT stored in signals map for
-    // memory efficiency, but references to them are stored in
-    // the connection objects. Hence the Connection destructor
+    // **NOTE**: Constants are NOT stored in signals map but rather
+    // are stored in the consts map. Hence the Signal Graph destructor
     // calls delete on pointers to constant Signals.
     if (in_signals_map(source_signal) || source_signal->is_const()) {
 
         // Do not process connections to source signals to be ignored
-        if (!check_if_ignore_signal_basename(source_signal)) {
+        if (!check_if_ignore_signal(source_signal)) {
 
             // Do not process connections to ivl-generated source signals
             if (!source_signal->is_ivl_generated()) {
 
                 // Create connection object
                 conn = new Connection(source_signal, sink_signal, source_slice, sink_slice);
+
+                // Check if the source signal is a constant
+                if (source_signal->is_const()) {
+
+                    // Check if in consts map
+                    if (!consts_map_.count(source_signal->get_id())) {
+                        consts_map_[source_signal->get_id()] = source_signal;
+                    }
+                }
 
                 // Check if connection already exists
                 if (!check_if_connection_exists(sink_signal, conn)) {
@@ -599,6 +615,10 @@ unsigned long SignalGraph::get_num_signals() const {
     return num_signals_;
 }
 
+unsigned long SignalGraph::get_num_mem_signals() const {
+    return num_mem_signals_;
+}
+
 unsigned long SignalGraph::get_num_local_signals() const {
     return num_local_signals_;
 }
@@ -654,7 +674,7 @@ void SignalGraph::write_signals_to_dot_graph() {
         if (sig_it->second->is_signal()) {
 
             // Check if signal is to be ignored
-            if (!check_if_ignore_signal_basename(sig_it->second)) {
+            if (!check_if_ignore_signal(sig_it->second)) {
     
                 // Check if signal is local (IVL generated)
                 if (!sig_it->second->is_ivl_generated()) {

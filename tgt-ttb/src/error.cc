@@ -182,7 +182,7 @@ void Error::check_signal_not_multidimensional(sig_map_t signals, ivl_signal_t si
 void Error::check_lvals_not_concatenated(unsigned int num_lvals, ivl_statement_t statement) {
     // Check for concatenated lvals
     if (num_lvals > 1) {
-        fprintf(stderr, "WARNING: concatenated lvals not supported ... skipping. \
+        fprintf(stderr, "WARNING: concatenated lvals not supported... skipping. \
             \n(File: %s -- Line: %d).\n", 
             ivl_stmt_file(statement), ivl_stmt_lineno(statement));
     }
@@ -323,8 +323,26 @@ void Error::constant_event_nexus_ptr_warning(ivl_statement_t stmt) {
         ivl_stmt_file(stmt), ivl_stmt_lineno(stmt));
 }
 
+void Error::unkown_event_source_signal_warning(ivl_statement_t stmt) {
+    fprintf(stderr, "WARNING: cannot determine event source signal... skipping. \
+        \n(File: %s -- Line: %d).\n", 
+        ivl_stmt_file(stmt), ivl_stmt_lineno(stmt));
+}
+
 void Error::stask_statement_type_warning(ivl_statement_t stmt) {
     fprintf(stderr, "WARNING: IVL_ST_STASK not supported... skipping. \
+        \n(File: %s -- Line: %d).\n", 
+        ivl_stmt_file(stmt), ivl_stmt_lineno(stmt));
+}
+
+void Error::utask_statement_type_warning(ivl_statement_t stmt) {
+    fprintf(stderr, "WARNING: IVL_ST_UTASK not supported... skipping. \
+        \n(File: %s -- Line: %d).\n", 
+        ivl_stmt_file(stmt), ivl_stmt_lineno(stmt));
+}
+
+void Error::while_statement_type_warning(ivl_statement_t stmt) {
+    fprintf(stderr, "WARNING: IVL_ST_WHILE not supported... skipping. \
         \n(File: %s -- Line: %d).\n", 
         ivl_stmt_file(stmt), ivl_stmt_lineno(stmt));
 }

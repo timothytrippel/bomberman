@@ -50,6 +50,9 @@ using namespace std;
 #define IGNORE_FILEPATH_FLAG  "ignore_filepath"
 #define IGNORE_CONSTANTS_FLAG "ignore_consts" 
 
+// CMD-Line Argument Defaults
+#define MEM_SIG_SIZE_DEFAULT 128
+
 // Define Indexes
 #define LOGIC_OUTPUT_PIN_NEXUS_INDEX      0
 #define LPM_PART_SELECT_INPUT_NEXUS_INDEX 0

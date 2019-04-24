@@ -44,9 +44,6 @@ class Connection {
                    Signal*        sink, 
                    signal_slice_t source_slice, 
                    signal_slice_t sink_slice);
-        
-        // Destructors
-        ~Connection();
 
         // Operators
         bool operator==(const Connection& conn) const;

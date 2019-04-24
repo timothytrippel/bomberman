@@ -46,10 +46,9 @@ class SignalGraph {
 
         // Signal Enumeration
         void find_all_signals(ivl_scope_t* scopes, unsigned int num_scopes);
-        bool check_if_ignore_signal_basename(Signal* signal)      const;
-        bool check_if_ignore_signal_fullname(Signal* signal)      const;
-        bool check_if_ignore_signal_basename(ivl_signal_t signal) ;
-        bool check_if_ignore_signal_fullname(ivl_signal_t signal) ;
+        bool check_if_ignore_signal(ivl_signal_t signal)         const;
+        bool check_if_ignore_signal(Signal* signal)              const;
+        bool check_if_ignore_mem_signal(ivl_signal_t mem_signal) const;
         
         // Connection Enumeration
         bool check_if_connection_exists(
@@ -79,6 +78,7 @@ class SignalGraph {
         // Stats Counters
         unsigned long get_num_connections()   const;
         unsigned long get_num_signals()       const;
+        unsigned long get_num_mem_signals()   const;
         unsigned long get_num_local_signals() const;
         unsigned long get_num_constants()     const;
 
@@ -95,17 +95,23 @@ class SignalGraph {
         // Stats Counters
         unsigned long num_signals_;           // number of signals enumerated in design
         unsigned long num_signals_ignored_;   // number of signals ignored
+        unsigned long num_mem_signals_;       // number of signals ignored
         unsigned long num_local_signals_;     // number of local signals optimized away
         unsigned long num_constants_;         // number of constants enumerated in design
         unsigned long num_connections_;       // number of connections enumerated in design
         unsigned long num_local_connections_; // number of local connections to be processed
 
+        // Configs
+        unsigned int mem_signal_size_; // threshold for classifying a memory signal
+
         // Graph Data
-        DotGraph*  dg_;                    // dot graph object
-        sig_map_t  signals_map_;           // IVL signal to Signal object map
-        conn_map_t connections_map_;       // sink signal to connections map
-        conn_map_t local_connections_map_; // local signal connections to be processed
-        string_map_t signals_to_ignore_;   // names of signals to ignore
+        DotGraph*    dg_;                    // dot graph object
+        sig_map_t    signals_map_;           // IVL signal to Signal object map
+        consts_map_t consts_map_;            // Const ID to Signal object map
+        conn_map_t   connections_map_;       // sink signal to connections map
+        conn_map_t   local_connections_map_; // local signal connections to be processed
+        string_map_t signals_to_ignore_;     // names of signals to ignore (user input)
+        sig_set_t    mem_signals_to_ignore_; // pointers of memory signals to ignore
 
         // Signal Enumeration
         void find_signals(ivl_scope_t scope);
@@ -118,6 +124,7 @@ class SignalGraph {
 
         // Destructor Helpers
         void delete_signals_map();
+        void delete_constants_map();
         void delete_connections_queue(conn_q_t* conn_q);
         void delete_connections_map();
 }; 

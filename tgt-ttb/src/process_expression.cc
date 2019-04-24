@@ -12,6 +12,7 @@ expressions are processed as combinational logic.
 
 // Standard Headers
 #include <cmath>
+#include <typeinfo>
 
 // TTB Headers
 #include "ttb_typedefs.h"
@@ -102,12 +103,11 @@ unsigned int Tracker::process_expression_signal(
     // Get signal array index
     array_indexi = process_array_index_expression(source_ivl_signal, ivl_expr_oper1(expression), statement, ws + WS_TAB);
 
-    // Check if signal is to be ignored
-    if (!sg_->check_if_ignore_signal_fullname(source_ivl_signal)) {
+    // Check if signal is a mem signal (not in the signals map)
+    if (!sg_->check_if_ignore_mem_signal(source_ivl_signal)) {
 
         // Get signal object
         source_signal = sg_->get_signal_from_ivl_signal(source_ivl_signal);
-        // source_signal = new Signal(source_ivl_signal);
 
         // Iterate over array indexi
         for (unsigned int i = 0; i < array_indexi.size(); i++) {
@@ -137,6 +137,10 @@ unsigned int Tracker::process_expression_number(
     // Get expression signal
     Signal* source_signal = new Signal(expression);
 
+    // if (source_signal->get_fullname().find(string("const.3886.00010101000000000000000000000011")) != string::npos) {
+    //     exit(1);
+    // }
+
     // Push source node to source nodes queue
     push_source_signal(source_signal, 0, ws + WS_TAB);
 
@@ -155,8 +159,8 @@ unsigned int Tracker::process_expression_select(
     Signal* base           = NULL;
 
     // MSB/LSB slice of base computed from index expression
-    unsigned int msb = 0;
-    int          lsb = 0;
+    int msb = 0;
+    int lsb = 0;
 
     // Number of base signals added to source signals queue
     // Note: should only be one
@@ -165,7 +169,6 @@ unsigned int Tracker::process_expression_select(
 
     // Process base expression
     num_base_exprs = process_expression(ivl_expr_oper1(expression), statement, ws + WS_TAB);
-    // base = source_signals_.get_back_signal();
 
     // Select base signal
     fprintf(DEBUG_PRINTS_FILE_PTR, "%snum base exprs: %d\n", ws.c_str(), num_base_exprs);
@@ -205,9 +208,11 @@ unsigned int Tracker::process_expression_select(
 
         // Free the memory if it is a constant
         if (!potential_base->is_signal()) {
+
             delete(potential_base);
             potential_base = NULL;
             num_consts_popped++;
+
         } else if (potential_base != base) {
 
             // ERROR if there is more than one potential base signal
@@ -215,11 +220,12 @@ unsigned int Tracker::process_expression_select(
         }
     }
     
-    // Check if that the base signal is NOT arrayed
+    // Check that the base signal is NOT arrayed
     if (!base->is_arrayed()) {
 
         // Re-push base signal to source signals queue
         push_source_signal(base, 0, ws);
+
     } else {
 
         // ERROR on nested array selects (i.e. a base signal that is arrayed)
@@ -230,8 +236,6 @@ unsigned int Tracker::process_expression_select(
     num_base_exprs -= num_consts_popped;
 
     // Check that base IVL signal was found
-    // assert(num_base_exprs == 1 && "ERROR-Tracker::process_expression_select: more than one base expression processed.\n");
-    // assert(base->is_signal() && "ERROR-Tracker::process_expression_select: base expression not a signal.\n");
     assert(base && "ERROR-Tracker::process_expression_select: expression select base signal not found.\n");
 
     // Get select LSB
@@ -245,13 +249,13 @@ unsigned int Tracker::process_expression_select(
     // Check if MSB is greater than MSB of base signal and LSB
     // is less than LSB of base signal. If yes, do NOT set source
     // slice as this is a nested select index of an arrayed signal.
-    if (msb <= base->get_source_slice(base).msb &&
-        lsb >= base->get_source_slice(base).lsb) {
-
+    signal_slice_t slice = base->get_source_slice(base);
+    if (msb <= (int) slice.msb && lsb >= (int) slice.lsb) {
+        
         fprintf(DEBUG_PRINTS_FILE_PTR, "%supdating source slice with index select...\n", ws.c_str());
         
         // Track source slice
-        set_source_slice(base, msb, lsb, ws);    
+        set_source_slice(base, msb, lsb, ws);
     }
     
     return num_base_exprs;
@@ -403,7 +407,7 @@ vector<unsigned int> Tracker::process_array_index_expression(
 
     // Process index expression
     num_signals_processed = process_expression(expression, statement, ws);
-
+    
     // Check that only one signal was processed
     assert(num_signals_processed == 1 && 
         "ERROR-Tracker::process_array_index_expression: more than one index expr. processed.\n");
@@ -464,11 +468,11 @@ int Tracker::process_index_expression(
 
     unsigned int num_signals_processed = 0;
     Signal*      index_signal          = NULL;
-    int          index                 = 0;
+    unsigned int index                 = 0;
 
     // Check if expression type is IVL_EX_NONE
     if (ivl_expr_type(expression) == IVL_EX_NONE) {
-        return 0;
+        return index;
     }
 
     // Process index expression

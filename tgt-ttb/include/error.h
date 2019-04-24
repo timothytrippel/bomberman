@@ -70,6 +70,9 @@ class Error {
         // Warnings
         static void constant_event_nexus_ptr_warning(ivl_statement_t stmt);
         static void stask_statement_type_warning(ivl_statement_t stmt);
+        static void utask_statement_type_warning(ivl_statement_t stmt);
+        static void while_statement_type_warning(ivl_statement_t stmt);
+        static void unkown_event_source_signal_warning(ivl_statement_t stmt);
         // Other
         static void not_supported(const char* message);
         static void null_ivl_obj_type();
