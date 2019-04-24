@@ -198,7 +198,7 @@ class Tracker {
 		    ivl_statement_t statement,  
 		    string          ws);
 
-		unsigned int process_index_expression(
+		int process_index_expression(
 			ivl_expr_t      expression,
 		    ivl_statement_t statement,  
 		    string          ws);
@@ -316,6 +316,16 @@ class Tracker {
         
         // Config Loading
         void process_cmd_line_args(cmd_args_map_t* cmd_args);
+
+        // Other
+        static void print_string_list(vector<string> str_list);
+        static void print_statement_hdl(ivl_statement_t statement, string ws);
+        static string get_file_line(ivl_statement_t statement);
+        static string get_event_signal_basename(string fullname);
+        static vector<string> tokenize_string(string s, char delimeter);
+        static vector<string> get_event_sensitivity_list(string hdl_code_line);
+        static vector<string> remove_string_from_list(vector<string> str_list, string str2remove);
+        static vector<string> convert_fullnames_to_basenames(vector<string> signals_list);
 };
 
 #endif

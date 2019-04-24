@@ -117,6 +117,31 @@ bool Signal::operator!=(const Signal& sig) const {
 }
 
 // ----------------------------------------------------------------------------------
+// ------------------------------- Static Getters -----------------------------------
+// ----------------------------------------------------------------------------------
+
+string Signal::get_fullname(ivl_signal_t ivl_signal) {
+	string scopename = string(ivl_scope_name(ivl_signal_scope(ivl_signal)));
+	string basename  = string(ivl_signal_basename(ivl_signal));
+	string fullname  = scopename + string(".") + basename;
+
+	return fullname;
+}
+
+string Signal::get_const_bitstring(ivl_net_const_t ivl_const) {
+
+	// Get bitstring
+	string bitstring = string(
+    	ivl_const_bits(ivl_const), 
+    	(size_t) ivl_const_width(ivl_const) );
+
+	// Reverse bitstring to MSB->LSB order
+    reverse(bitstring.begin(), bitstring.end());
+
+    return bitstring;
+}
+
+// ----------------------------------------------------------------------------------
 // ---------------------------------- Getters ---------------------------------------
 // ----------------------------------------------------------------------------------
 

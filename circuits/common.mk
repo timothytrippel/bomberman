@@ -26,7 +26,7 @@ $(TARGET).dot: $(SOURCES) $(TESTBENCH)
 
 # Building the IVL Target Module
 tgt-ttb: 
-	$(MAKE) -C $(TGT_TTB_DIR)
+	$(MAKE) -C $(TGT_TTB_DIR) -j8
 
 .PHONY: clean tgt-ttb
 

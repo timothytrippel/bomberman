@@ -182,10 +182,9 @@ void Error::check_signal_not_multidimensional(sig_map_t signals, ivl_signal_t si
 void Error::check_lvals_not_concatenated(unsigned int num_lvals, ivl_statement_t statement) {
     // Check for concatenated lvals
     if (num_lvals > 1) {
-        fprintf(stderr, "NOT-SUPPORTED: concatenated lvals (File: %s -- Line: %d).\n", 
+        fprintf(stderr, "WARNING: concatenated lvals not supported ... skipping. \
+            \n(File: %s -- Line: %d).\n", 
             ivl_stmt_file(statement), ivl_stmt_lineno(statement));
-
-        exit(PROCEDURAL_CONNECTIONS_ERROR);
     }
 }
 
@@ -299,7 +298,7 @@ void Error::zero_event_nexus_ptrs(ivl_statement_t stmt) {
 }
 
 void Error::constant_event_nexus_ptr(ivl_statement_t stmt) {
-    fprintf(stderr, "NOT-SUPPORTED: constant event nexus pointer. \
+    fprintf(stderr, "ERROR: constant event nexus pointer not supported. \
         \n(File: %s -- Line: %d).\n", 
         ivl_stmt_file(stmt), ivl_stmt_lineno(stmt));
 
@@ -312,4 +311,20 @@ void Error::multiple_valid_event_nexus_ptrs(ivl_statement_t stmt) {
         ivl_stmt_file(stmt), ivl_stmt_lineno(stmt));
 
     exit(PROCEDURAL_CONNECTIONS_ERROR);
+}
+
+// ------------------------------------------------------------
+// ---------------- Error Reporting: WARNINGS -----------------
+// ------------------------------------------------------------
+
+void Error::constant_event_nexus_ptr_warning(ivl_statement_t stmt) {
+    fprintf(stderr, "WARNING: skipping constant event nexus pointer. \
+        \n(File: %s -- Line: %d).\n", 
+        ivl_stmt_file(stmt), ivl_stmt_lineno(stmt));
+}
+
+void Error::stask_statement_type_warning(ivl_statement_t stmt) {
+    fprintf(stderr, "WARNING: IVL_ST_STASK not supported... skipping. \
+        \n(File: %s -- Line: %d).\n", 
+        ivl_stmt_file(stmt), ivl_stmt_lineno(stmt));
 }

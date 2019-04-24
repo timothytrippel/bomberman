@@ -103,7 +103,7 @@ unsigned int Tracker::process_expression_signal(
     array_indexi = process_array_index_expression(source_ivl_signal, ivl_expr_oper1(expression), statement, ws + WS_TAB);
 
     // Check if signal is to be ignored
-    if (!sg_->check_if_ignore_signal(source_ivl_signal)) {
+    if (!sg_->check_if_ignore_signal_fullname(source_ivl_signal)) {
 
         // Get signal object
         source_signal = sg_->get_signal_from_ivl_signal(source_ivl_signal);
@@ -115,14 +115,16 @@ unsigned int Tracker::process_expression_signal(
             // Push source node to source nodes queue
             push_source_signal(source_signal, array_indexi[i], ws + WS_TAB);
         }
-    }
 
-    // Check if array index was a signal or a constant
-    if (array_index_is_signal_) {
-        array_index_is_signal_ = false;
-        return (array_indexi.size() + 1);
+        // Check if array index was a signal or a constant
+        if (array_index_is_signal_) {
+            array_index_is_signal_ = false;
+            return (array_indexi.size() + 1);
+        } else {
+            return 1;    
+        }
     } else {
-        return 1;    
+        return 0;
     }
 }
 
@@ -154,7 +156,7 @@ unsigned int Tracker::process_expression_select(
 
     // MSB/LSB slice of base computed from index expression
     unsigned int msb = 0;
-    unsigned int lsb = 0;
+    int          lsb = 0;
 
     // Number of base signals added to source signals queue
     // Note: should only be one
@@ -389,7 +391,6 @@ vector<unsigned int> Tracker::process_array_index_expression(
 
     unsigned int         num_signals_processed   = 0;
     unsigned int         num_array_inds          = 0;
-    unsigned int         num_possible_array_inds = 0;
     Signal*              index_signal            = NULL;
     signal_slice_t       source_slice            = {0, 0};
     vector<unsigned int> indexi;
@@ -434,16 +435,11 @@ vector<unsigned int> Tracker::process_array_index_expression(
         num_array_inds = pow(2, source_slice.msb - source_slice.lsb + 1);
 
         // Check that number of array indexi is possible
-        num_possible_array_inds = 
-            ivl_signal_array_count(base_ivl_signal) - 
-            ivl_signal_array_base(base_ivl_signal);
-
         fprintf(DEBUG_PRINTS_FILE_PTR, "%snum indicies (%d) / num possible indicies (%d)\n", 
             ws.c_str(), 
             num_array_inds, 
-            num_possible_array_inds);
-
-        assert(num_array_inds <= num_possible_array_inds && 
+            ivl_signal_array_count(base_ivl_signal));
+        assert(num_array_inds <= ivl_signal_array_count(base_ivl_signal) && 
             "ERROR-Tracker::process_array_index_expression: some array indices not possible.\n");
 
         // Push all possible array indexi to vector
@@ -461,14 +457,14 @@ vector<unsigned int> Tracker::process_array_index_expression(
     return indexi;
 }
 
-unsigned int Tracker::process_index_expression(
+int Tracker::process_index_expression(
     ivl_expr_t      expression,
     ivl_statement_t statement,  
     string          ws) {
 
     unsigned int num_signals_processed = 0;
     Signal*      index_signal          = NULL;
-    unsigned int index                 = 0;
+    int          index                 = 0;
 
     // Check if expression type is IVL_EX_NONE
     if (ivl_expr_type(expression) == IVL_EX_NONE) {
@@ -491,7 +487,7 @@ unsigned int Tracker::process_index_expression(
     // e.g. signals: signal_a[signal_b] <= signal_c;
     // --OR--
     // e.g. signals: signal_a <= signal_c[signal_b];
-    Error::check_part_select_expr(index_signal->get_ivl_type(), statement);
+    // Error::check_part_select_expr(index_signal->get_ivl_type(), statement);
 
     // Check if the index is a signal or a constant
     if (index_signal->is_const_expr()) { 
@@ -501,8 +497,10 @@ unsigned int Tracker::process_index_expression(
 
         // Free signal constant memory
         delete(index_signal);   
+
     } else if (index_signal->is_signal()) {
-        assert(false && "ERROR-Tracker::process_index_expression: signal index not supported\n");
+        // assert(false && "ERROR-Tracker::process_index_expression: signal index not supported\n");
+        index = -1;
     } else {
         assert(false && "ERROR-Tracker::process_index_expression: constant index not supported\n");
     }

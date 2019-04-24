@@ -104,6 +104,10 @@ class Signal {
         bool operator==(const Signal& sig) const;
         bool operator!=(const Signal& sig) const;
 
+        // Static Getters
+        static string get_fullname(ivl_signal_t ivl_signal);
+        static string get_const_bitstring(ivl_net_const_t ivl_const);
+
         // General Getters
         string         get_fullname()     const;
         string         get_basename()     const;

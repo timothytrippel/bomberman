@@ -181,7 +181,7 @@ void SignalGraph::find_signals(ivl_scope_t scope) {
     } 
 }
 
-bool SignalGraph::check_if_ignore_signal(Signal* signal) const {
+bool SignalGraph::check_if_ignore_signal_basename(Signal* signal) const {
     
     // Check if ignore map is empty
     if (!signals_to_ignore_.empty()) {
@@ -195,17 +195,70 @@ bool SignalGraph::check_if_ignore_signal(Signal* signal) const {
     return false;
 }
 
-bool SignalGraph::check_if_ignore_signal(ivl_signal_t signal) const { 
+bool SignalGraph::check_if_ignore_signal_fullname(Signal* signal) const {
     
     // Check if ignore map is empty
     if (!signals_to_ignore_.empty()) {
-        return signals_to_ignore_.count(ivl_signal_basename(signal));
+
+        // Check that signal is not a constant (only ignore signals)
+        if (signal->is_signal()) {
+            return signals_to_ignore_.count(signal->get_fullname());
+        }
+    }
+
+    return false;
+}
+
+bool SignalGraph::check_if_ignore_signal_basename(ivl_signal_t signal) { 
+    
+    string basename = string(ivl_signal_basename(signal));
+
+    // printf("BASENAME: %s\n", basename.c_str());
+
+    // printf("Signals to Ignore:\n");
+    // string_map_t::iterator it = signals_to_ignore_.begin();
+    // while (it != signals_to_ignore_.end()) {
+    //    printf("%s\n", it->first.c_str());
+    //    it++; 
+    // }
+
+    // Check if ignore map is empty
+    if (!signals_to_ignore_.empty()) {
+        return signals_to_ignore_.count(basename);
+    }
+
+    return false;
+}
+
+bool SignalGraph::check_if_ignore_signal_fullname(ivl_signal_t signal) { 
+    
+    string fullname = Signal::get_fullname(signal);
+
+    // printf("FULLNAME: %s\n", fullname.c_str());
+
+    // printf("Signals to Ignore:\n");
+    // string_map_t::iterator it = signals_to_ignore_.begin();
+    // while (it != signals_to_ignore_.end()) {
+    //    printf("%s\n", it->first.c_str());
+    //    it++; 
+    // }
+
+    // Check if ignore map is empty
+    if (!signals_to_ignore_.empty()) {
+        return signals_to_ignore_.count(fullname);
     }
 
     return false;
 }
 
 void SignalGraph::add_signal(ivl_signal_t signal) {
+
+    // Skip arrayed signals that are memories
+    if (ivl_signal_array_count(signal) > 128) {
+        signals_to_ignore_[Signal::get_fullname(signal)];
+        num_signals_ignored_++;
+        return;
+    }
 
     // Add signal to map
     signals_map_[signal] = new Signal(signal);
@@ -220,7 +273,7 @@ void SignalGraph::add_signal(ivl_signal_t signal) {
     Error::check_signal_not_multidimensional(signals_map_, signal);
 
     // Check if signal is to be ignored
-    if (!check_if_ignore_signal(signal)) {
+    if (!check_if_ignore_signal_basename(signal)) {
 
         // Initialize signal connections queue
         // Ignore local (IVL) generated signals.
@@ -313,7 +366,7 @@ bool SignalGraph::add_connection(
     if (in_signals_map(source_signal) || source_signal->is_const()) {
 
         // Do not process connections to source signals to be ignored
-        if (!check_if_ignore_signal(source_signal)) {
+        if (!check_if_ignore_signal_basename(source_signal)) {
 
             // Do not process connections to ivl-generated source signals
             if (!source_signal->is_ivl_generated()) {
@@ -391,9 +444,9 @@ void SignalGraph::track_local_signal_connection(
     fprintf(DEBUG_PRINTS_FILE_PTR, "%sTracking local signal connection.\n", ws.c_str());
 
     // Check if connecting signal is already in signals map,
-    // i.e. it is an ivl_signal. If it is not in the signals map,
-    // check that it is a constant signal (i.e. an ivl_const or
-    // ivl_expr). 
+    // i.e. it is an ivl_signal or an ignored signal. If it is not 
+    // in the signals map, check that it is a constant signal 
+    // (i.e. an ivl_const or ivl_expr). 
     //
     // **NOTE**: Constants are NOT stored in signals map for
     // memory efficiency, but references to them are stored in
@@ -601,7 +654,7 @@ void SignalGraph::write_signals_to_dot_graph() {
         if (sig_it->second->is_signal()) {
 
             // Check if signal is to be ignored
-            if (!check_if_ignore_signal(sig_it->second)) {
+            if (!check_if_ignore_signal_basename(sig_it->second)) {
     
                 // Check if signal is local (IVL generated)
                 if (!sig_it->second->is_ivl_generated()) {

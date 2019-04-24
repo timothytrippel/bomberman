@@ -67,6 +67,9 @@ class Error {
         static void unknown_part_select_lpm_type(ivl_lpm_type_t lpm_type);
         static void unknown_statement_type(ivl_statement_type_t statement_type);
         static void unknown_expression_type(ivl_expr_type_t expression_type);
+        // Warnings
+        static void constant_event_nexus_ptr_warning(ivl_statement_t stmt);
+        static void stask_statement_type_warning(ivl_statement_t stmt);
         // Other
         static void not_supported(const char* message);
         static void null_ivl_obj_type();

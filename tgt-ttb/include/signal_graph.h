@@ -46,8 +46,10 @@ class SignalGraph {
 
         // Signal Enumeration
         void find_all_signals(ivl_scope_t* scopes, unsigned int num_scopes);
-        bool check_if_ignore_signal(Signal*      signal) const;
-        bool check_if_ignore_signal(ivl_signal_t signal) const;
+        bool check_if_ignore_signal_basename(Signal* signal)      const;
+        bool check_if_ignore_signal_fullname(Signal* signal)      const;
+        bool check_if_ignore_signal_basename(ivl_signal_t signal) ;
+        bool check_if_ignore_signal_fullname(ivl_signal_t signal) ;
         
         // Connection Enumeration
         bool check_if_connection_exists(

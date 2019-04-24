@@ -15,6 +15,9 @@ Graphviz .dot file.
 
 // Standard Headers
 #include <cassert>
+#include <fstream>
+#include <limits>
+#include <algorithm>
 
 // IVL API Header
 #include <ivl_target.h>
@@ -27,6 +30,148 @@ Graphviz .dot file.
 #include "tracker.h"
 #include "reporter.h"
 #include "error.h"
+
+// ------------------------------------------------------------
+// -------------------------- Other ---------------------------
+// ------------------------------------------------------------
+
+string Tracker::get_file_line(ivl_statement_t statement) {
+
+    // String on line: <line_num>
+    string line_string;
+
+    // Create file stream object
+    fstream file(ivl_stmt_file(statement));
+
+    // Go to beginning of the file
+    file.seekg(ios::beg);
+
+    // Seek to line number of interest
+    for(unsigned int i = 0; i < ivl_stmt_lineno(statement) - 1; i++){
+        file.ignore(numeric_limits<streamsize>::max(),'\n');
+    }
+
+    // Set line string
+    getline(file, line_string);
+
+    return line_string;
+}
+
+void Tracker::print_statement_hdl(ivl_statement_t statement, string ws) {
+    
+    string source_code_line = Tracker::get_file_line(statement);
+
+    // Print HDL file and line number of event
+    fprintf(DEBUG_PRINTS_FILE_PTR, "%sHDL file: %s; line: %u\n", 
+        ws.c_str(), 
+        ivl_stmt_file(statement),
+        ivl_stmt_lineno(statement));
+
+    // Print HDL code of event
+    fprintf(DEBUG_PRINTS_FILE_PTR, "%sHDL code line: %s\n", 
+        ws.c_str(), 
+        source_code_line.c_str());
+}
+
+void Tracker::print_string_list(vector<string> str_list) {
+
+    // define iterator
+    vector<string>::iterator it = str_list.begin();
+
+    fprintf(DEBUG_PRINTS_FILE_PTR, "String List:\n");
+
+    // iterate over list items
+    while (it != str_list.end()) {
+
+        // print list item
+        fprintf(DEBUG_PRINTS_FILE_PTR, "%s\n", (*it).c_str());
+
+        // increment iterator
+        it++;
+    }
+}
+
+vector<string> Tracker::tokenize_string(string s, char delimeter) {
+    
+    size_t position = 0;
+    string token;
+    vector<string> tokens;
+
+    // Tokenize full name string by delimeter
+    while ((position = s.find(delimeter)) != string::npos) {
+        token = s.substr(0, position);
+        tokens.push_back(token);
+        s.erase(0, position + 1);
+    }
+
+    // Push remaining string to token list
+    tokens.push_back(s);
+
+    return tokens;
+}
+
+vector<string> Tracker::remove_string_from_list(vector<string> str_list, string str2remove) {
+
+    // Iterate over list
+    for(unsigned int i = 0; i < str_list.size(); i++) {
+        
+        // Check if string is to be removed
+        if(str_list[i] == str2remove) {
+            str_list.erase(str_list.begin() + i);
+            --i;
+        }
+    }
+
+    return str_list;
+}
+
+vector<string> Tracker::get_event_sensitivity_list(string hdl_code_line) {
+
+    // Remove Trailing ')'
+    hdl_code_line.erase(
+        remove(hdl_code_line.begin(), hdl_code_line.end(), ')'), 
+        hdl_code_line.end());
+
+    // Split HDL code line by '('
+    vector<string> signals_list = Tracker::tokenize_string(hdl_code_line, '(');
+
+    // Pop the front half
+    signals_list.erase(signals_list.begin());
+
+    // Remove key words from signals list
+    signals_list = Tracker::remove_string_from_list(signals_list, string("posedge"));
+    signals_list = Tracker::remove_string_from_list(signals_list, string("negedge"));
+    signals_list = Tracker::remove_string_from_list(signals_list, string("or"));
+    signals_list = Tracker::remove_string_from_list(signals_list, string("and"));
+
+    // Last token (substring) is the basename
+    return signals_list;
+}
+
+string Tracker::get_event_signal_basename(string fullname) {
+
+    // Tokenize full name string by '.' delimeter
+    vector<string> tokens = tokenize_string(fullname, '.');
+
+    // Last token (substring) is the basename
+    return tokens.back();
+}
+
+vector<string> Tracker::convert_fullnames_to_basenames(vector<string> signals_list) {
+
+    // Signal basenames list
+    vector<string> signal_basenames_list;
+
+    // Iterate over list
+    for(unsigned int i = 0; i < signals_list.size(); i++) {
+        
+        // Convert signal fullname to basename
+        signal_basenames_list.push_back(
+            Tracker::get_event_signal_basename(signals_list[i]));
+    }
+
+    return signal_basenames_list;
+}
 
 // ------------------------------------------------------------
 // -------------- CMD Line Arguments Processing ---------------

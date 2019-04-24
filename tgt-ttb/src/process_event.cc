@@ -26,11 +26,21 @@ unsigned int Tracker::process_event_nexus(
     string          ws) {
 
     // Source IVL signal
-    ivl_signal_t temp_sig          = NULL;
-    ivl_signal_t source_ivl_signal = NULL;
+    ivl_signal_t    temp_sig          = NULL;
+    ivl_net_const_t temp_const        = NULL;
+    ivl_signal_t    source_ivl_signal = NULL;
+
+    // Sensitivity list in HDL
+    vector<string> signals_list;
+
+    // Source signal counter
+    unsigned int   num_possible_signals = 0;
 
     // fprintf(DEBUG_PRINTS_FILE_PTR, 
     //     "%sfound %d event nexus ptrs\n", ws.c_str(), ivl_nexus_ptrs(nexus));
+
+    // Get line of source code file
+    string source_code_line = Tracker::get_file_line(statement);
 
     // Get event nexus pointer IVL signal (source signal)
     if (ivl_nexus_ptrs(nexus) == 1) {
@@ -40,7 +50,6 @@ unsigned int Tracker::process_event_nexus(
 
     } else if (ivl_nexus_ptrs(nexus) > 1) {
 
-
         // Find IVL source signal whose scope matches that of the event itself
         for (unsigned int i = 0; i < ivl_nexus_ptrs(nexus); i++) {
 
@@ -49,11 +58,11 @@ unsigned int Tracker::process_event_nexus(
             // to the event signal which are propagated during the continuous
             // logic propagation phase.
             if ((temp_sig = ivl_nexus_ptr_sig(ivl_nexus_ptr(nexus, i)))) {
-                
-                // fprintf(DEBUG_PRINTS_FILE_PTR, "%sevent nexus signal: %s.%s\n", 
-                //     ws.c_str(), 
-                //     ivl_scope_name(ivl_signal_scope(temp_sig)),
-                //     ivl_signal_basename(temp_sig));
+
+                fprintf(DEBUG_PRINTS_FILE_PTR, "%spotential event nexus signal: %s.%s\n", 
+                    ws.c_str(), 
+                    ivl_scope_name(ivl_signal_scope(temp_sig)),
+                    ivl_signal_basename(temp_sig));
 
                 // Check if scope of source signal matches scope of event
                 if (ivl_signal_scope(temp_sig) == ivl_event_scope(event) &&
@@ -61,17 +70,122 @@ unsigned int Tracker::process_event_nexus(
 
                     // Check if source signal already found
                     if (!source_ivl_signal) {
+
+                        fprintf(DEBUG_PRINTS_FILE_PTR, "%sfound event nexus signal: %s.%s\n", 
+                            ws.c_str(), 
+                            ivl_scope_name(ivl_signal_scope(temp_sig)),
+                            ivl_signal_basename(temp_sig));
+
+                        // Set source signal
                         source_ivl_signal = temp_sig;
+
                     } else {
-                        Error::multiple_valid_event_nexus_ptrs(statement);
+
+                        // Convert signal basenames to string
+                        string source_sig_basename = string(ivl_signal_basename(source_ivl_signal));
+                        string temp_sig_basename   = string(ivl_signal_basename(temp_sig));
+
+                        // Check if basename in source code line
+                        if (source_code_line.find(temp_sig_basename) == string::npos) {
+                            
+                            // if its not, the first signal was the right one
+                            continue;
+
+                        } else {
+
+                            // check if the first signal assigned as the source signal was wrong
+                            if (source_code_line.find(source_sig_basename) == string::npos) { 
+                                
+                                source_ivl_signal = temp_sig;
+
+                            } else {
+
+                                fprintf(DEBUG_PRINTS_FILE_PTR, "%sHDL code line: %s\n", 
+                                    ws.c_str(), 
+                                    source_code_line.c_str());
+
+                                // Throw Error
+                                Error::multiple_valid_event_nexus_ptrs(statement);
+                            }
+                        }
                     }
                 }
-            } else if (ivl_nexus_ptr_con(ivl_nexus_ptr(nexus, i))) {
-                Error::constant_event_nexus_ptr(statement);
+            } else if ((temp_const = ivl_nexus_ptr_con(ivl_nexus_ptr(nexus, i)))) {
+
+                // Check if scope of source (constant) signal matches scope of event
+                if (ivl_const_scope(temp_const) == ivl_event_scope(event)) {
+                    
+                    // Get bitstring
+                    string bitstring = Signal::get_const_bitstring(ivl_nexus_ptr_con(ivl_nexus_ptr(nexus, i)));
+
+                    fprintf(DEBUG_PRINTS_FILE_PTR, "%sevent nexus signal: %s.%s\n", 
+                        ws.c_str(), 
+                        ivl_scope_name(ivl_const_scope(ivl_nexus_ptr_con(ivl_nexus_ptr(nexus, i)))),
+                        bitstring.c_str());
+
+                    // Throw Warning
+                    Error::constant_event_nexus_ptr_warning(statement);
+                }
             }
         } 
     } else {
+
+        // Throw Error
         Error::zero_event_nexus_ptrs(statement);
+    }
+
+    // (if it was not, could be inside a test bench scope where signals are declared with full hierarchical path)
+    if (!source_ivl_signal) {
+
+        // Get sensitivity list (strings of signal names)
+        signals_list = Tracker::get_event_sensitivity_list(source_code_line);
+
+        // Convert list of fullnames to list of basename
+        signals_list = Tracker::convert_fullnames_to_basenames(signals_list);
+        
+        // fprintf(stdout, "*********\n");
+        // Tracker::print_string_list(signals_list);
+        // fprintf(stdout, "*********\n");
+
+        // Re-iterate over event nexus pointers
+        for (unsigned int i = 0; i < ivl_nexus_ptrs(nexus); i++) {
+
+            // Only look at signals
+            if ((temp_sig = ivl_nexus_ptr_sig(ivl_nexus_ptr(nexus, i)))) {
+
+                // Check if basename in sensitivity list
+                if(find(signals_list.begin(), 
+                        signals_list.end(), 
+                        string(ivl_signal_basename(temp_sig))) 
+                    != signals_list.end()) {
+
+                    source_ivl_signal = temp_sig;
+                    num_possible_signals++;
+                }
+            }
+        }
+    }
+
+    // Error out if more than one possible event signal
+    if (num_possible_signals > 1) {
+        Error::multiple_valid_event_nexus_ptrs(statement);
+    }
+
+    // Check that a source signal was found
+    if (!source_ivl_signal) {
+
+        // fprintf(stderr, "Event Scope: %s\n", ivl_scope_name(ivl_event_scope(event)));
+        // fprintf(stderr, "Num scope params: %d\n", ivl_scope_params(ivl_event_scope(event)));
+        // for (int i = 0; i < ivl_scope_params(ivl_event_scope(event)); i++) {
+        //     ivl_parameter_t param = ivl_scope_param(ivl_event_scope(event), i);
+        //     fprintf(stderr, "%s\n", ivl_parameter_basename(param));
+        // }
+
+        // Print HDL code, file, and line number of event
+        Tracker::print_statement_hdl(statement, ws);
+
+        // Throw Error
+        assert(false && "ERROR-Tracker::process_event_nexus: no source IVL signal found.\n");
     }
 
     // Check if CLK signal is one of source signals. If so, 
@@ -83,7 +197,7 @@ unsigned int Tracker::process_event_nexus(
     } 
     
     // Check if signal is to be ignored
-    if (!sg_->check_if_ignore_signal(source_ivl_signal)) {
+    if (!sg_->check_if_ignore_signal_fullname(source_ivl_signal)) {
 
         // Get signal object from IVL source signal
         Signal* source_signal = sg_->get_signal_from_ivl_signal(source_ivl_signal);

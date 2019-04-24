@@ -277,10 +277,10 @@ void Tracker::process_statement_assign_lval(
     ivl_expr_t   array_index_expr  = NULL; // LVal array index expression
     ivl_expr_t   part_select_expr  = NULL; // LVal part-select offset expressions
     unsigned int num_array_signals = 0;    // number of LVal array index signals
-    unsigned int array_index       = 0;    // LVal array index
-    unsigned int part_select_msb   = 0;    // LVal (sink signal) MSB
-    unsigned int part_select_lsb   = 0;    // LVal (sink signal) LSB
+    unsigned int array_index       = 0;    // LVal array inde
     unsigned int num_lvals         = 0;    // number of lvals to process
+    int          part_select_msb   = 0;    // LVal (sink signal) MSB
+    int          part_select_lsb   = 0;    // LVal (sink signal) LSB
     vector<unsigned int> array_indexi;     // LVal array indexe
 
     fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing lval(s) ...\n", ws.c_str());
@@ -291,6 +291,9 @@ void Tracker::process_statement_assign_lval(
     // Check for (NON-SUPPORTED) concatenated lvals
     // @TODO: support concatenated lvals
     Error::check_lvals_not_concatenated(num_lvals, statement);
+    if (num_lvals > 1) {
+        return;
+    }
 
     // Get lval object
     lval = ivl_stmt_lval(statement, STMT_ASSIGN_LVAL_INDEX);
@@ -301,6 +304,17 @@ void Tracker::process_statement_assign_lval(
     // Check for a (NON-SUPPORTED) nested lval
     // @TODO: support nested lvals
     Error::check_lval_not_nested(lval, statement);
+
+    // Check if LVal (sink) signal in to be ignored
+    if (sg_->check_if_ignore_signal_fullname(ivl_lval_sig(lval)) ||
+        sg_->check_if_ignore_signal_basename(ivl_lval_sig(lval))) {
+        fprintf(DEBUG_PRINTS_FILE_PTR, 
+            "%slval (sink) signal (%s.%s) is ignored\n", 
+            ws.c_str(),
+            ivl_scope_name(ivl_signal_scope(ivl_lval_sig(lval))),
+            ivl_signal_basename(ivl_lval_sig(lval)));
+        return;
+    }
 
     // Get sink signal
     sink_signal = sg_->get_signal_from_ivl_signal(ivl_lval_sig(lval));
@@ -357,8 +371,12 @@ void Tracker::process_statement_assign_lval(
         part_select_lsb = process_index_expression(part_select_expr, statement, ws + WS_TAB);
         part_select_msb = part_select_lsb + ivl_lval_width(lval) - 1;
 
-        // Track sink slice
-        set_sink_slice(sink_signal, part_select_msb, part_select_lsb, ws);
+        // Check that sink slice is valid
+        if (part_select_lsb != -1 && part_select_msb != -1) {
+
+            // Track sink slice
+            set_sink_slice(sink_signal, part_select_msb, part_select_lsb, ws);    
+        }
     }
 
     // Iterate over array indexi
@@ -492,6 +510,10 @@ void Tracker::process_statement(
             process_statement_wait(statement, ws);
             break;
 
+        case IVL_ST_STASK:
+            Error::stask_statement_type_warning(statement);
+            break;
+
         case IVL_ST_ALLOC:
         case IVL_ST_CONTRIB:
         case IVL_ST_DEASSIGN:
@@ -506,10 +528,11 @@ void Tracker::process_statement(
         case IVL_ST_RELEASE:
         case IVL_ST_REPEAT: 
         case IVL_ST_TRIGGER:
-        case IVL_ST_STASK:
         case IVL_ST_UTASK:
         case IVL_ST_WHILE:
         default:
+            // Print HDL code, file, and line number of event
+            Tracker::print_statement_hdl(statement, ws);
             Error::unknown_statement_type(ivl_statement_type(statement));
             break;
     }
