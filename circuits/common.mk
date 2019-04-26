@@ -9,10 +9,10 @@ all: script
 
 # VCD/Dot Analysis Script
 script: tgt-ttb $(TARGET).dot $(TARGET).vcd
-	@time python2 $(SCRIPTS)/analyze.py $(filter-out $<,$^)
+	@time pypy $(SCRIPTS)/analyze.py $(filter-out $<,$^)
 
 # IVL Simulation (Step 2: VCD Generation)
-$(TARGET).vcd: $(TARGET).vvp $(TARGET).dot
+$(TARGET).vcd: $(TARGET).vvp
 	@vvp $<
 
 # IVL Simulation (Step 1: Executable Generation)
