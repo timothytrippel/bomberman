@@ -18,3 +18,5 @@
 *.tgt
 *.conf
 
+# Ignore Log Files
+*.log

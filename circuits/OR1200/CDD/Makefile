@@ -1,6 +1,6 @@
-ROOT := $(CURDIR)
-
-TARGET:=or1200
+ROOT        := $(CURDIR)
+TARGET      := or1200
+TYPE        := cdd
 
 CORES       := $(ROOT)/cores
 ORPSOC_RTL  := $(CORES)/top
@@ -10,8 +10,7 @@ DBG_IF_RTL  := $(CORES)/dbg_if
 OR1200_RTL  := $(CORES)/or1200
 UART_RTL    := $(CORES)/uart16550/rtl/verilog
 RAM_RTL     := $(CORES)/ram_wb
-
-TEST_BENCH = $(CORES)/bench
+TEST_BENCH  := $(CORES)/bench
 
 SOURCES := $(wildcard $(ORPSOC_RTL)/*.v) $(wildcard $(CLKGEN_RTL)/*.v) $(wildcard $(ARBITER_RTL)/*.v) $(wildcard $(DBG_IF_RTL)/*.v) $(wildcard $(OR1200_RTL)/*.v) $(wildcard $(UART_RTL)/*.v)  $(wildcard $(RAM_RTL)/*.v) 
 SOURCES := $(filter-out %-defines.v %-params.v %_defines.v, $(SOURCES))

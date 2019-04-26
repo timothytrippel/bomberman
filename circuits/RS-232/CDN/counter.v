@@ -4,7 +4,7 @@ module counter(input wire clk, input wire evnt, output wire[127:0] count);
 
   always @(posedge clk) begin
     if (evnt)
-      counter <= ounter + 128'h1;
+      counter <= counter + 128'h1;
     else
       counter <= counter;
   end

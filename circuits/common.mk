@@ -24,11 +24,11 @@ $(TARGET).dot: $(SOURCES) $(TESTBENCH)
 	@echo "Generating DOT graph..." && \
 	time iverilog -o $@ -pclk=$(CLK_BASENAME) -t ttb $(INCLUDEDIRS) $^
 
+.PHONY: clean tgt-ttb
+
 # Building the IVL Target Module
 tgt-ttb: 
 	$(MAKE) -C $(TGT_TTB_DIR) -j8
-
-.PHONY: clean tgt-ttb
 
 cleanall: clean
 	$(MAKE) cleanall -C $(TGT_TTB_DIR)
