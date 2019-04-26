@@ -9,7 +9,7 @@ all: tgt-ttb aes rs232
 
 # Circuit Analyses
 # AES
-aes: aes-cdd aes-cdn aes-cnd aes-cnn aes-ddd aes-ddn aes-dnd aes-dnn
+aes: aes-cdd aes-cdn aes-cnd aes-cnn aes-ddd aes-ddn aes-dnd aes-dnn aes-tjfree
 
 aes-cdd:
 	$(MAKE) -C $(AES)/CDD &> $@.log
@@ -48,7 +48,7 @@ aes-tjfree:
 	@echo "Finished $@ analysis."
 
 # RS232
-rs232: rs232-cdd rs232-cdn rs232-cnd rs232-cnn rs232-ddd rs232-ddn rs232-dnd rs232-dnn
+rs232: rs232-cdd rs232-cdn rs232-cnd rs232-cnn rs232-ddd rs232-ddn rs232-dnd rs232-dnn rs232-tjfree
 
 rs232-cdd:
 	$(MAKE) -C $(RS232)/CDD &> $@.log
@@ -87,7 +87,7 @@ rs232-tjfree:
 	@echo "Finished $@ analysis."
 
 # OR1200
-or1200: or1200-cdd or1200-cdn or1200-cnd or1200-cnn or1200-ddd or1200-ddn or1200-dnd or1200-dnn
+or1200: or1200-cdd or1200-cdn or1200-cnd or1200-cnn or1200-ddd or1200-ddn or1200-dnd or1200-dnn or1200-tjfree
 
 or1200-cdd:
 	$(MAKE) -C $(OR1200)/CDD &> $@.log
