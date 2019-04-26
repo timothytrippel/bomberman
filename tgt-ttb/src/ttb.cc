@@ -23,13 +23,13 @@ Graphviz .dot file.
 #include <ivl_target.h>
 
 // TTB Headers
-#include "ttb_typedefs.h"
-#include "ttb.h"
-#include "signal.h"
-#include "signal_graph.h"
-#include "tracker.h"
-#include "reporter.h"
-#include "error.h"
+#include <ttb_typedefs.h>
+#include <ttb.h>
+#include <signal.h>
+#include <signal_graph.h>
+#include <tracker.h>
+#include <reporter.h>
+#include <error.h>
 
 // ------------------------------------------------------------
 // -------------------------- Other ---------------------------

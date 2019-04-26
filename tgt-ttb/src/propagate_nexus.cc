@@ -18,9 +18,9 @@ IVL data-structures it connects.
 // Standard Headers
 
 // TTB Headers
-#include "ttb_typedefs.h"
-#include "tracker.h"
-#include "error.h"
+#include <ttb_typedefs.h>
+#include <tracker.h>
+#include <error.h>
 
 void Tracker::propagate_nexus(ivl_nexus_t nexus, Signal* sink_signal, string ws) {
     

@@ -13,7 +13,7 @@ Graphviz .dot file.
 #include <sstream>
 
 // TTB Headers
-#include "connection.h"
+#include <connection.h>
 
 // ----------------------------------------------------------------------------------
 // ------------------------------- Constructors -------------------------------------

@@ -11,9 +11,9 @@ i.e., @(posedge), @(negedge), or @(anyedge).
 // Standard Headers
 
 // TTB Headers
-#include "ttb_typedefs.h"
-#include "tracker.h"
-#include "error.h"
+#include <ttb_typedefs.h>
+#include <tracker.h>
+#include <error.h>
 
 // ----------------------------------------------------------------------------------
 // --------------------------- SUB-PROCESSING Functions -----------------------------

@@ -12,9 +12,9 @@ Graphviz .dot file.
 // Standard Headers
 
 // TTB Headers
-#include "ttb_typedefs.h"
-#include "signal_q.h"
-#include "error.h"
+#include <ttb_typedefs.h>
+#include <signal_q.h>
+#include <error.h>
 
 // ------------------------------------------------------------
 // ------------------------ Constructors ----------------------

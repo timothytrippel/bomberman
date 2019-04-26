@@ -10,9 +10,9 @@ This function propagtes signals connected to a CONSTANT.
 // Standard Headers
 
 // TTB Headers
-#include "ttb_typedefs.h"
-#include "tracker.h"
-#include "error.h"
+#include <ttb_typedefs.h>
+#include <tracker.h>
+#include <error.h>
 
 // ----------------------------------------------------------------------------------
 // ------------------------------- Helper Functions ---------------------------------

@@ -16,9 +16,9 @@ nexus is connected to the INPUT of a LOGIC device.
 // Standard Headers
 
 // TTB Headers
-#include "ttb_typedefs.h"
-#include "tracker.h"
-#include "error.h"
+#include <ttb_typedefs.h>
+#include <tracker.h>
+#include <error.h>
 
 // ----------------------------------------------------------------------------------
 // ------------------------------- Helper Functions ---------------------------------

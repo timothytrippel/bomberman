@@ -20,9 +20,9 @@ Graphviz .dot file.
 #include <string>
 
 // TTB Headers
-#include "ttb_typedefs.h"
-#include "signal.h"
-#include "error.h"
+#include <ttb_typedefs.h>
+#include <signal.h>
+#include <error.h>
 
 // Import STD Namespace
 using namespace std;

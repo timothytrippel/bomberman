@@ -18,10 +18,10 @@ Graphviz .dot file.
 #include <string>
 
 // TTB Headers
-#include "ttb_typedefs.h"
-#include "connection.h"
-#include "dot_graph.h"
-#include "error.h"
+#include <ttb_typedefs.h>
+#include <connection.h>
+#include <dot_graph.h>
+#include <error.h>
 
 // ------------------------------------------------------------
 // ----------------------- Constructors -----------------------

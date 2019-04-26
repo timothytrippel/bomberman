@@ -13,9 +13,9 @@ Graphviz .dot file.
 #include <fstream>
 
 // TTB Headers
-#include "ttb_typedefs.h"
-#include "signal_graph.h"
-#include "error.h"
+#include <ttb_typedefs.h>
+#include <signal_graph.h>
+#include <error.h>
 
 // ------------------------------------------------------------
 // ------------------------ Constructors ----------------------

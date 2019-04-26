@@ -23,8 +23,8 @@ Graphviz .dot file.
 #include <ivl_target.h>
 
 // TTB Headers
-#include "signal.h"
-#include "connection.h"
+#include <signal.h>
+#include <connection.h>
 
 // Import STD Namespace
 using namespace std;

@@ -20,11 +20,11 @@ Graphviz .dot file.
 #include <string>
 
 // TTB Headers
-#include "ttb_typedefs.h"
-#include "ttb.h"
-#include "signal.h"
-#include "signal_graph.h"
-#include "reporter.h"
+#include <ttb_typedefs.h>
+#include <ttb.h>
+#include <signal.h>
+#include <signal_graph.h>
+#include <reporter.h>
 
 // ------------------------------------------------------------
 // ----------------------- Constructors -----------------------

@@ -15,9 +15,9 @@ outputs of module so we know the direction of information flow.
 #include <cstdio>
 
 // TTB Headers
-#include "ttb_typedefs.h"
-#include "tracker.h"
-#include "error.h"
+#include <ttb_typedefs.h>
+#include <tracker.h>
+#include <error.h>
 
 const char* Tracker::get_signal_port_type_as_string(ivl_signal_t signal) {
 	switch (ivl_signal_port(signal)) {
