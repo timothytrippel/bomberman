@@ -19,6 +19,7 @@ Graphviz .dot file.
 // Standard Headers
 #include <string>
 #include <map>
+#include <vector>
 
 // IVL API Header
 #include <ivl_target.h>

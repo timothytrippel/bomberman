@@ -5,7 +5,7 @@ AES         := AES-T500
 RS232       := RS-232
 OR1200      := OR1200
 
-all: tgt-ttb aes rs232
+all: tgt-ttb aes rs232 or1200
 
 # Circuit Analyses
 # AES
