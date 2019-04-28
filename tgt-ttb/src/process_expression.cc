@@ -12,7 +12,7 @@ expressions are processed as combinational logic.
 
 // Standard Headers
 #include <cmath>
-#include <typeinfo>
+#include <cassert>
 
 // TTB Headers
 #include <ttb_typedefs.h>
