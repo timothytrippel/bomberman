@@ -181,13 +181,13 @@ void Reporter::root_scopes(ivl_scope_t* scopes, unsigned int num_scopes) const {
     }
 }
 
-void Reporter::num_signals(unsigned long num_signals) const {
+void Reporter::num_signals(unsigned long num_sigs) const {
 
     // Check that file has been opened for writing report
     assert(file_ptr_ != NULL && "ERROR: reporter file ptr is NULL.\n");
 
     // Print number of signals enumerated in design
-    fprintf(file_ptr_, "Number of signals found: %lu\n", num_signals);
+    fprintf(file_ptr_, "Number of signals found: %lu\n", num_sigs);
 }
 
 void Reporter::signal_names(sig_map_t signals_map) const {

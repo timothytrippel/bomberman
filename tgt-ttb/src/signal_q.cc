@@ -10,6 +10,7 @@ Graphviz .dot file.
 */
 
 // Standard Headers
+#include <cassert>
 
 // TTB Headers
 #include <ttb_typedefs.h>
@@ -42,7 +43,7 @@ Signal* SignalQ::get_signal(unsigned int index) const {
 		"ERROR-SignalQ::get_signal: signal and ID queues should be the same size.\n");
 
 	// Check that index is within the size bounds
-	assert(index < signal_q_.size() && index >= 0 &&
+	assert(index < signal_q_.size() &&
 		"ERROR-SignalQ::get_signal: index outsize queue bounds.\n");
 
 	// Signal/ID to return

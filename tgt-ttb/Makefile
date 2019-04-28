@@ -13,11 +13,11 @@ INSTALL_PROGRAM := ${INSTALL}
 INSTALL_DATA    := ${INSTALL} -m 644
 
 # Directory Structure
-IVL_DIR     := /Users/ti27457/Repos/iverilog
+IVL_DIR     := /home/ttrippel/iverilog
 INCLUDE_DIR := include
 SRC_DIR     := src
 BUILD_DIR   := build
-BIN_DIR     := /Users/ti27457/Repos/iverilog/lib/ivl
+BIN_DIR     := $(IVL_DIR)/lib/ivl
 
 # Compiler Configurations
 CC          := g++

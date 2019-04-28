@@ -65,7 +65,7 @@ class Reporter {
         void line_separator() const;
         void configurations(cmd_args_map_t* cmd_args) const;
         void root_scopes(ivl_scope_t* scopes, unsigned int num_scopes) const;
-        void num_signals(unsigned long num_signals) const;
+        void num_signals(unsigned long num_sigs) const;
         void graph_stats(SignalGraph* sg) const;
         void signal_names(sig_map_t signals_map) const;
     

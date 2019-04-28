@@ -10,7 +10,7 @@ Graphviz .dot file.
 */
 
 // Standard Headers
-#include <fstream>
+#include <cassert>
 
 // TTB Headers
 #include <ttb_typedefs.h>

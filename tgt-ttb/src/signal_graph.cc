@@ -11,6 +11,7 @@ Graphviz .dot file.
 
 // Standard Headers
 #include <fstream>
+#include <cassert>
 
 // TTB Headers
 #include <ttb_typedefs.h>
@@ -724,7 +725,7 @@ void SignalGraph::load_signals_to_ignore(string file_path) {
     fprintf(DEBUG_PRINTS_FILE_PTR, "Loading signal (base)names to ignore:\n");
 
     // Ignore file stream object
-    ifstream file_stream = ifstream(file_path);
+    ifstream file_stream (file_path);
 
     // Signal basename (line) read from file stream
     string signal_basename;

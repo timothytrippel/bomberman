@@ -11,6 +11,8 @@ Graphviz .dot file.
 
 // Standard Headers
 #include <sstream>
+#include <algorithm>
+#include <cassert>
 
 // TTB Headers
 #include <ttb_typedefs.h>
@@ -367,7 +369,7 @@ string Signal::get_signal_fullname() const {
 			string(".") + 
 			get_signal_basename() +
 			string(".") + 
-			to_string(id_));	
+			to_string((long long unsigned int) id_));	
 	} else {
 		return (get_signal_scopename() + string(".") + get_signal_basename());	
 	}
@@ -418,7 +420,7 @@ string Signal::get_const_fullname() const {
 
     // Get (unique) constant prefix
     // string scopename = ivl_scope_name(ivl_const_scope(ivl_object_.ivl_const)); 
-    string const_prefix = string("const.") + to_string(id_) + string(".");
+    string const_prefix = string("const.") + to_string((long long unsigned int) id_) + string(".");
 
     return (const_prefix + get_const_bitstring());
 }
@@ -426,7 +428,7 @@ string Signal::get_const_fullname() const {
 unsigned int Signal::get_const_msb() const {
 
 	// Check MSB is not negative
-    assert((ivl_const_width(ivl_object_.ivl_const) >= 0) && \
+    assert((ivl_const_width(ivl_object_.ivl_const) >= 1) && \
         "NOT-SUPPORTED: negative MSB index.\n");
 
     return ivl_const_width(ivl_object_.ivl_const) - 1;
@@ -450,7 +452,7 @@ string Signal::get_expr_bitstring() const {
 string Signal::get_expr_fullname() const {
 
     // Get (unique) constant prefix
-	string const_prefix = string("const.") + to_string(id_) + string(".");
+	string const_prefix = string("const.") + to_string((long long unsigned int) id_) + string(".");
 
     return (const_prefix + get_expr_bitstring());
 }
@@ -610,7 +612,7 @@ void Signal::shift_source_slice(int num_bits, string ws) {
 	// Negative is left shift, Positive is right shift
 
 	// Check that resulting MSB and LSB are not negative
-	assert((source_msb_ + num_bits) >= 0 && (source_lsb_ + num_bits) >= 0 && 
+	assert(((int) source_msb_ + num_bits) >= 0 && ((int) source_lsb_ + num_bits) >= 0 && 
 		"ERROR-Signal::shift_source_slice: shift will cause negative indices.\n");
 
 	// Debug Print
@@ -636,7 +638,7 @@ void Signal::shift_sink_slice(int num_bits, string ws) {
 	// Negative is left shift, Positive is right shift
 
 	// Check that resulting MSB and LSB are not negative
-	assert((sink_msb_ + num_bits) >= 0 && (sink_lsb_ + num_bits) >= 0 && 
+	assert(((int) sink_msb_ + num_bits) >= 0 && ((int) sink_lsb_ + num_bits) >= 0 && 
 		"ERROR-Signal::shift_sink_slice: shift will cause negative indices.\n");
 
 	// Debug Print

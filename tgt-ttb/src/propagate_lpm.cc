@@ -205,15 +205,15 @@ void Tracker::process_lpm_concat(
         // Get input nexus
         input_nexus = ivl_lpm_data(lpm, i);
 
-        // Each input nexus should have either 2 or 3 nexus pointers:
-        // 1) one to the LPM device and 2) a (non-local) signal, or
-        // 1) one to the LPM device, 2) one to a local signal, and 
-        // 3) one to a constant device.
+        /* Each input nexus should have either 2 or 3 nexus pointers:
+        1) one to the LPM device and 2) a (non-local) signal, or
+        1) one to the LPM device, 2) one to a local signal, and 
+        3) one to a constant device.
 
-        // assert((ivl_nexus_ptrs(input_nexus) == 2 ||
-        //         ivl_nexus_ptrs(input_nexus) == 3) && 
-        //     "NOT-SUPPORTED: LPM-CONCAT device input \
-        //     nexus with more than 2 nexus pointers.\n");
+        assert((ivl_nexus_ptrs(input_nexus) == 2 ||
+                ivl_nexus_ptrs(input_nexus) == 3) && 
+            "NOT-SUPPORTED: LPM-CONCAT device input \
+            nexus with more than 2 nexus pointers.\n"); */
 
         // Find input nexus ptr to a signal object
         for (unsigned int j = 0; j < ivl_nexus_ptrs(input_nexus); j++) {
