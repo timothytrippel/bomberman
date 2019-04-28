@@ -13,7 +13,8 @@ INSTALL_PROGRAM := ${INSTALL}
 INSTALL_DATA    := ${INSTALL} -m 644
 
 # Directory Structure
-IVL_DIR     := /home/ttrippel/iverilog
+IVL_DIR     := /Users/ti27457/Repos/iverilog
+# IVL_DIR     := /home/ttrippel/iverilog
 INCLUDE_DIR := include
 SRC_DIR     := src
 BUILD_DIR   := build
@@ -22,6 +23,7 @@ BIN_DIR     := $(IVL_DIR)/lib/ivl
 # Compiler Configurations
 CC          := g++
 CFLAGS      := -I$(IVL_DIR) -I$(INCLUDE_DIR) -fpic -std=gnu++0x -Wall -Wextra -Wshadow -g -O2
+# CFLAGS      := -I$(IVL_DIR) -I$(INCLUDE_DIR) -fpic -shared -std=gnu++0x -Wall -Wextra -Wshadow -g -O2
 
 # Source/Target Files
 TGT = ttb
@@ -36,6 +38,7 @@ all:
 
 $(TGT): $(OBJS)
 	$(CC) -undefined suppress -flat_namespace $(CFLAGS) -o $@.tgt $^ 
+# 	$(CC) -flat_namespace $(CFLAGS) -o $@.tgt $^ 
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cc
 	@mkdir -p $(BUILD_DIR)
