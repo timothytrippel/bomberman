@@ -9,6 +9,7 @@ i.e., @(posedge), @(negedge), or @(anyedge).
 */
 
 // Standard Headers
+#include <algorithm>
 
 // TTB Headers
 #include <ttb_typedefs.h>
