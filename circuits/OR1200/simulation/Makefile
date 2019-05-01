@@ -28,22 +28,22 @@ VMEMS := $(patsubst $(SRC_DIR)/%,$(VMEM_DIR)/%,$(SRCS:.c=.vmem))
 all: $(VMEMS)
 
 # Convert object file to VMEM file
-$(VMEM_DIR)/%.vmem: $(BIN_DIR)/%.bin binutils
-	@mkdir -p $(VMEM_DIR)
+$(VMEM_DIR)/%.vmem: $(BIN_DIR)/%.bin $(UTILS_DIR)/bin2vmem
+	@mkdir -p $(VMEM_DIR) && \
 	$(UTILS_DIR)/bin2vmem $< > $@
 
 # Convert ELF object file to binary file
 $(BIN_DIR)/%.bin: $(BUILD_DIR)/%.elf
-	@mkdir -p $(BIN_DIR)
-	or1k-elf-objdump -D $< > $<.asm
+	@mkdir -p $(BIN_DIR) && \
+	or1k-elf-objdump -D $< > $<.asm && \
 	or1k-elf-objcopy -O binary $< $@
 
 # Cross-Compile C program to ELF object file
 $(BUILD_DIR)/%.elf: $(SRC_DIR)/%.c
-	@mkdir -p $(BUILD_DIR)
+	@mkdir -p $(BUILD_DIR) && \
 	$(CC) $(CFLAGS) $(BTLDR_DIR)/bootloader.S $< -o $@
 
-.PHONY: binutils clean
+.PHONY: all binutils clean
 
 # Build binary formating utils
 binutils:

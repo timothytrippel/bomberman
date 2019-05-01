@@ -4,10 +4,11 @@ SCRIPTS     :=../scripts
 AES         := aes-t500
 UART        := uart
 OR1200      := or1200
-SIM_VMEMS   := $(OR1200)/simulation/vmem
+OR1200_SIM  := $(OR1200)/simulation
+OR1200_VMEM := $(OR1200_SIM)/vmem
 
 # OR1200 Simulation Program
-OR1200_PROGRAM := hello_world
+OR1200_PROGRAM := $(OR1200_VMEM)/hello_world.vmem
 
 all: tgt-ttb aes uart or1200
 
@@ -31,11 +32,15 @@ uart-%:
 	$(MAKE) -C $(UART)/$(TYPE) &> $@.log && \
 	echo "Finished $@ analysis."
 
-or1200-%: 
+or1200-%: $(OR1200_PROGRAM)
 	@$(eval TYPE:=$(word 2, $(subst -, ,$@))) \
-	cp $(SIM_VMEMS)/$(OR1200_PROGRAM).vmem $(OR1200)/$(TYPE)/sram.vmem && \
-	$(MAKE) -C $(OR1200)/$(TYPE) &> $@.log && \
+	cp $(OR1200_PROGRAM) $(OR1200)/$(TYPE)/sram.vmem && \
+	$(MAKE) -C $(OR1200)/$(TYPE) && \
 	echo "Finished $@ analysis."
+# 	&> $@.log
+
+%.vmem:
+	$(MAKE) -C $(OR1200_SIM)
 
 # Building the TTB IVL Target Module
 tgt-ttb: 
