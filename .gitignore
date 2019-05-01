@@ -1,8 +1,10 @@
 # Ignore MacOS .DS_Store Files
 *.DS_Store
 
-# Ignore Generated VCD Files
+# Ignore Simulation Files
 *.vcd
+*.vmem
+*.asm
 
 # Ignore TTB Generated Files
 *.dot
