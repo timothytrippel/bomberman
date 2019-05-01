@@ -4,13 +4,12 @@
 # Affiliation: MIT Lincoln Laboratory
 # Description:
 
-# This is Makefile to build a custom backend target module for the Icarus 
+# This Makefile builds a custom backend target module for the Icarus 
 # Verilog compiler frontend.
 # -----------------------------------------------------------------------------
 
-INSTALL         := /usr/bin/install -c
-INSTALL_PROGRAM := ${INSTALL}
-INSTALL_DATA    := ${INSTALL} -m 644
+INSTALL      := /usr/bin/install -c
+INSTALL_DATA := ${INSTALL} -m 644
 
 # Directory Structure
 IVL_DIR     := /Users/ti27457/Repos/iverilog
@@ -47,12 +46,12 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cc
 confs: ./generate_tgt_confs.sh
 	./generate_tgt_confs.sh $(TGT)
 
-.PHONY: install uninstall clean 
+.PHONY: install uninstall clean cleanall
 
 install:
-	$(INSTALL_PROGRAM) ./$(TGT).tgt  "$(BIN_DIR)/$(TGT).tgt"
-	$(INSTALL_DATA)    $(TGT).conf   "$(BIN_DIR)/$(TGT).conf"
-	$(INSTALL_DATA)    $(TGT)-s.conf "$(BIN_DIR)/$(TGT)-s.conf"
+	$(INSTALL)      ./$(TGT).tgt  "$(BIN_DIR)/$(TGT).tgt"
+	$(INSTALL_DATA) $(TGT).conf   "$(BIN_DIR)/$(TGT).conf"
+	$(INSTALL_DATA) $(TGT)-s.conf "$(BIN_DIR)/$(TGT)-s.conf"
 
 uninstall:
 	rm -f $(BIN_DIR)/$(TGT).tgt

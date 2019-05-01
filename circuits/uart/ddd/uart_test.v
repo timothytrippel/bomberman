@@ -75,6 +75,7 @@
 //
 //`define DATA_BUS_WIDTH_8
 `include "timescale.v"
+`define TEST_NAME_STRING "uart-ddd"
 module uart_test ();
 
 `include "uart_defines.v"
@@ -196,8 +197,8 @@ wb_mast wbm2(// Outputs
 // The test sequence
 initial
 begin
-	$display("* VCD in %s\n", "uart.vcd");
-	$dumpfile("uart.vcd");
+  $display("* VCD in %s\n", {`TEST_NAME_STRING,".vcd"});
+  $dumpfile({`TEST_NAME_STRING,".vcd"});
 	$dumpvars(0);
   #1 wb_rst_ir = 1;
   #10 wb_rst_ir = 0;

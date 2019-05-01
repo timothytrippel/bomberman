@@ -54,7 +54,7 @@
 //
 // Generate debug messages during simulation
 //
-//`define OR1200_VERBOSE
+// `define OR1200_VERBOSE
 
 //  `define OR1200_ASIC
 ////////////////////////////////////////////////////////
@@ -136,7 +136,7 @@
 //
 // Do not implement Insn cache
 //
-`define OR1200_NO_IC
+// `define OR1200_NO_IC
 
 //
 // Do not implement Data MMU

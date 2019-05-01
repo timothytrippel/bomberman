@@ -408,7 +408,7 @@ module or1200_monitor;
 `ifdef OR1200_MONITOR_VERBOSE_NOPS
        // Note that the 'expect' scripts in or1ksim's test suite look for strings
        // like "exit(1)", therefore something like "exit(  1)" would fail.
-       $display("exit(%0d)",r3);
+       $display("\nexit(%0d)",r3);
 `endif	   
 	   $finish;
 	end

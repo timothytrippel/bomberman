@@ -17,22 +17,22 @@
 //
 // Define to enable lookup file generation
 //
-//`define OR1200_MONITOR_LOOKUP
+`define OR1200_MONITOR_LOOKUP
 
 //
 // Define to enable SPR access log file generation
 //
-//`define OR1200_MONITOR_SPRS
+`define OR1200_MONITOR_SPRS
 
 //
 // Enable logging of state during execution
 //
-//`define OR1200_MONITOR_EXEC_STATE
+`define OR1200_MONITOR_EXEC_STATE
 
 //
 // Enable disassembly of instructions in execution state log
 //
-//`define OR1200_MONITOR_EXEC_LOG_DISASSEMBLY
+`define OR1200_MONITOR_EXEC_LOG_DISASSEMBLY
 
 //
 // Enable verbose report l.nops (to both general log file and stdout)

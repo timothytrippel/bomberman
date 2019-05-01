@@ -140,6 +140,9 @@ module ram_wb_b3(
 	  end
 // synthesis translate_on
 	$readmemh(memory_file, mem);
+  $display("Memory Address Width (Bits): %12d", mem_adr_width);
+  $display("Memory Size (Num Words):     %12d", mem_words);
+  $display("Memory Size (Num Bytes):     %12d", mem_size_bytes);
    end
    
    assign wb_rty_o = 0;

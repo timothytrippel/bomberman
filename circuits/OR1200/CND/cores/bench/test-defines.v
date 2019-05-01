@@ -1,5 +1,8 @@
 `define RTL_SIM
 //`define SIMULATOR_MODELSIM
-`define TEST_NAME_STRING "or1200-simple"
+`define TEST_NAME_STRING "or1200-cnd"
 `define VCD
-//`define PROCESSOR_MONITOR_ENABLE_LOGS
+`define VCD_DEPTH 0 // 0 = all
+`define VCD_PATH orpsoc_testbench.dut
+// `define PROCESSOR_MONITOR_ENABLE_LOGS
+// `define END_TIME 1000000

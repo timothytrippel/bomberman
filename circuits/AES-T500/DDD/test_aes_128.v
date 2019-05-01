@@ -35,7 +35,7 @@ module test_aes_128;
 	);
 
 	initial begin
-    $dumpfile("aes.vcd");
+    $dumpfile("aes-ddd.vcd");
     $dumpvars(0, uut);
 		clk = 0;
 		state = 0;

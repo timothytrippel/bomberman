@@ -474,8 +474,7 @@ module orpsoc_testbench;
 
 `ifdef VCD
    reg vcd_go = 0;
-   always @(vcd_go)
-     begin : fjfk
+   always @(vcd_go) begin
 //	   integer r, t;
 // `ifdef VCD_DELAY
 //	#(`VCD_DELAY);
@@ -499,13 +498,12 @@ end*/
  `else
   `define VCD_SUFFIX   ".vcd"
  `endif
- `define TEST_NAME_STRING "or1200"
-	$display("* VCD in %s\n", {"",`TEST_NAME_STRING,`VCD_SUFFIX});
+	$display("* VCD in %s\n", {`TEST_NAME_STRING,`VCD_SUFFIX});
 	$dumpfile({`TEST_NAME_STRING,`VCD_SUFFIX});
  `ifndef VCD_DEPTH
   `define VCD_DEPTH 0
  `endif 
-	$dumpvars(`VCD_DEPTH, dut);
+	$dumpvars(`VCD_DEPTH, `VCD_PATH);
 
 /*for(r = 0; r < 1000; r = r + 1)begin 
   for(t = 0; t < 10; t = t + 1) begin

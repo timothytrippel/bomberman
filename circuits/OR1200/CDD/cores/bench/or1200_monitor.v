@@ -408,7 +408,7 @@ module or1200_monitor;
 `ifdef OR1200_MONITOR_VERBOSE_NOPS
        // Note that the 'expect' scripts in or1ksim's test suite look for strings
        // like "exit(1)", therefore something like "exit(  1)" would fail.
-       $display("exit(%0d)",r3);
+       $display("\nexit(%0d)",r3);
 `endif	   
 	   $finish;
 	end
@@ -482,7 +482,7 @@ module or1200_monitor;
 	 if (addr[`SDRAM_BANK_SEL_BITS] == 2'b00)
 	   begin
 	      
-	      //$display("%t: get_insn_from_sdram bank0, word 0x%h, (%h and %h in SDRAM)", $time, word_addr, `SDRAM_TOP.Bank0[{word_addr,1'b0}], `SDRAM_TOP.Bank0[{word_addr,1'b1}]);	      
+	      $display("%t: get_insn_from_sdram bank0, word 0x%h, (%h and %h in SDRAM)", $time, word_addr, `SDRAM_TOP.Bank0[{word_addr,1'b0}], `SDRAM_TOP.Bank0[{word_addr,1'b1}]);	      
 	      insn[15:0] = `SDRAM_TOP.Bank0[{word_addr,1'b1}];
 	      insn[31:16] = `SDRAM_TOP.Bank0[{word_addr,1'b0}];
 	   end
