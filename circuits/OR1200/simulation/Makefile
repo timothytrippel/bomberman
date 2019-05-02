@@ -43,13 +43,16 @@ $(BUILD_DIR)/%.elf: $(SRC_DIR)/%.c
 	@mkdir -p $(BUILD_DIR) && \
 	$(CC) $(CFLAGS) $(BTLDR_DIR)/bootloader.S $< -o $@
 
-.PHONY: all binutils clean
+.PHONY: all binutils clean cleanall
 
 # Build binary formating utils
-binutils:
+$(UTILS_DIR)/bin2vmem:
 	$(MAKE) -C $(UTILS_DIR)
 
+cleanall: clean
+	$(MAKE) clean -C $(UTILS_DIR)	
+
 clean:
-	@rm -rf $(BUILD_DIR)
-	@rm -rf $(BIN_DIR)
-	@rm -rf $(VMEM_DIR)
+	rm -rf $(BUILD_DIR)
+	rm -rf $(BIN_DIR)
+	rm -rf $(VMEM_DIR)

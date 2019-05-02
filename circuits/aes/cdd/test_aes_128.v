@@ -49,11 +49,11 @@ module test_aes_128;
          */
         @ (negedge clk);
         # 2;
-        state = 128'h3243f6a8_885a308d_313198a2_e0370734;
-        key   = 128'h2b7e1516_28aed2a6_abf71588_09cf4f3c;
+        state = 128'h32_43_f6_a8_88_5a_30_8d_31_31_98_a2_e0_37_07_34;
+        key   = 128'h2b_7e_15_16_28_ae_d2_a6_ab_f7_15_88_09_cf_4f_3c;
         #10;
-        state = 128'h00112233_44556677_8899aabb_ccddeeff;
-        key   = 128'h00010203_04050607_08090a0b_0c0d0e0f;
+        state = 128'h00_11_22_33_44_55_66_77_88_99_aa_bb_cc_dd_ee_ff;
+        key   = 128'h00_01_02_03_04_05_06_07_08_09_0a_0b_0c_0d_0e_0f;
         #10;
         state = 128'h0;
         key   = 128'h0;
@@ -64,7 +64,7 @@ module test_aes_128;
         state = 128'h1;
         key   = 128'h0;
         #170;
-        if (out !== 128'h3925841d02dc09fbdc118597196a0b32)
+        if (out !== 128'h39_25_84_1d_02_dc_09_fb_dc_11_85_97_19_6a_0b_32)
           begin $display("E"); $finish; end
         #10;
         if (out !== 128'h69_c4_e0_d8_6a_7b_04_30_d8_cd_b7_80_70_b4_c5_5a)
