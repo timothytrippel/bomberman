@@ -13,6 +13,10 @@ OR1200_PROGRAM := $(OR1200_VMEM)/hello_world.vmem
 # Check if log parameter set
 ifndef LOG
 	LOG := 0
+else
+	ifndef OUT_DIR
+		OUT_DIR := logs
+	endif
 endif
 
 # Check if VCD only parameter set
@@ -29,13 +33,18 @@ all: tgt-ttb aes uart or1200
 
 # Circuit Analyses
 # AES
-aes: aes-cdd aes-cdn aes-cnd aes-cnn aes-ddd aes-ddn aes-dnd aes-dnn aes-tjfree
+aes: output_dir aes-cdd aes-cdn aes-cnd aes-cnn aes-ddd aes-ddn aes-dnd aes-dnn aes-tjfree
 
 # UART
-uart: uart-cdd uart-cdn uart-cnd uart-cnn uart-ddd uart-ddn uart-dnd uart-dnn uart-tjfree
+uart: output_dir uart-cdd uart-cdn uart-cnd uart-cnn uart-ddd uart-ddn uart-dnd uart-dnn uart-tjfree
 
 # OR1200
-or1200: or1200-cdd or1200-cdn or1200-cnd or1200-cnn or1200-ddd or1200-ddn or1200-dnd or1200-dnn or1200-tjfree
+or1200: output_dir or1200-cdd or1200-cdn or1200-cnd or1200-cnn or1200-ddd or1200-ddn or1200-dnd or1200-dnn or1200-tjfree
+
+output_dir:
+	if [ $(LOG) != 0 ]; then \
+		mkdir -p $(OUT_DIR); \
+	fi
 
 aes-%:
 	@echo "Starting $@ analysis..."; \
@@ -43,7 +52,7 @@ aes-%:
 	if [ $(LOG) == 0 ]; then \
 		$(MAKE) -C $(AES)/$(TYPE); \
 	else \
-		$(MAKE) -C $(AES)/$(TYPE) &> $@.log; \
+		$(MAKE) -C $(AES)/$(TYPE) &> $(OUT_DIR)/$@.log; \
 	fi; \
 	echo "Finished $@ analysis."
 
@@ -53,7 +62,7 @@ uart-%:
 	if [ $(LOG) == 0 ]; then \
 		$(MAKE) -C $(UART)/$(TYPE); \
 	else \
-		$(MAKE) -C $(UART)/$(TYPE) &> $@.log; \
+		$(MAKE) -C $(UART)/$(TYPE) &> $(OUT_DIR)/$@.log; \
 	fi; \
 	echo "Finished $@ analysis."
 
@@ -64,7 +73,7 @@ or1200-%: $(OR1200_PROGRAM)
 	if [ $(LOG) == 0 ]; then \
 		$(MAKE) -C $(OR1200)/$(TYPE); \
 	else \
-		$(MAKE) -C $(OR1200)/$(TYPE) &> $@.log; \
+		$(MAKE) -C $(OR1200)/$(TYPE) &> $(OUT_DIR)/$@.log; \
 	fi; \
 	echo "Finished $@ analysis."
 
@@ -75,7 +84,7 @@ or1200-%: $(OR1200_PROGRAM)
 tgt-ttb: 
 	$(MAKE) -C $(TGT_TTB_DIR)
 
-.PHONY: clean clean-aes clean-uart clean-or1200 tgt-ttb aes uart or1200
+.PHONY: clean clean-aes clean-uart clean-or1200 tgt-ttb output_dir aes uart or1200
 
 clean: clean-aes clean-uart clean-or1200
 	@$(RM) *.log
