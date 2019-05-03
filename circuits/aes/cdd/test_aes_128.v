@@ -48,7 +48,7 @@ module test_aes_128;
          * TIMEGRP "out" OFFSET = OUT 2.2 ns BEFORE "clk" HIGH;
          */
         @ (negedge clk);
-        # 2;
+        #2;
         state = 128'h32_43_f6_a8_88_5a_30_8d_31_31_98_a2_e0_37_07_34;
         key   = 128'h2b_7e_15_16_28_ae_d2_a6_ab_f7_15_88_09_cf_4f_3c;
         #10;
