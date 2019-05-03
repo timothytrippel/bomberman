@@ -87,7 +87,6 @@ tgt-ttb:
 .PHONY: clean clean-aes clean-uart clean-or1200 tgt-ttb output_dir aes uart or1200
 
 clean: clean-aes clean-uart clean-or1200
-	@$(RM) *.log
 
 clean-aes:
 	$(MAKE) clean -C $(AES)/cdd
