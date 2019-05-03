@@ -33,20 +33,20 @@ all: tgt-ttb aes uart or1200
 
 # Circuit Analyses
 # AES
-aes: output_dir aes-cdd aes-cdn aes-cnd aes-cnn aes-ddd aes-ddn aes-dnd aes-dnn aes-tjfree
+aes: aes-cdd aes-cdn aes-cnd aes-cnn aes-ddd aes-ddn aes-dnd aes-dnn aes-tjfree
 
 # UART
-uart: output_dir uart-cdd uart-cdn uart-cnd uart-cnn uart-ddd uart-ddn uart-dnd uart-dnn uart-tjfree
+uart: uart-cdd uart-cdn uart-cnd uart-cnn uart-ddd uart-ddn uart-dnd uart-dnn uart-tjfree
 
 # OR1200
-or1200: output_dir or1200-cdd or1200-cdn or1200-cnd or1200-cnn or1200-ddd or1200-ddn or1200-dnd or1200-dnn or1200-tjfree
+or1200: or1200-cdd or1200-cdn or1200-cnd or1200-cnn or1200-ddd or1200-ddn or1200-dnd or1200-dnn or1200-tjfree
 
 output_dir:
 	if [ $(LOG) != 0 ]; then \
 		mkdir -p $(OUT_DIR); \
-	fi
+	fi;
 
-aes-%:
+aes-%: output_dir
 	@echo "Starting $@ analysis..."; \
 	$(eval TYPE:=$(word 2, $(subst -, ,$@))) \
 	if [ $(LOG) == 0 ]; then \
@@ -56,7 +56,7 @@ aes-%:
 	fi; \
 	echo "Finished $@ analysis."
 
-uart-%:
+uart-%: output_dir
 	@echo "Starting $@ analysis..."; \
 	$(eval TYPE:=$(word 2, $(subst -, ,$@))) \
 	if [ $(LOG) == 0 ]; then \
@@ -66,7 +66,7 @@ uart-%:
 	fi; \
 	echo "Finished $@ analysis."
 
-or1200-%: $(OR1200_PROGRAM)
+or1200-%: $(OR1200_PROGRAM) output_dir
 	@echo "Starting $@ analysis..."; \
 	$(eval TYPE:=$(word 2, $(subst -, ,$@))) \
 	cp $(OR1200_PROGRAM) $(OR1200)/$(TYPE)/sram.vmem; \
