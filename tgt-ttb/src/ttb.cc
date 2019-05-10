@@ -247,9 +247,9 @@ void Tracker::find_continuous_connections() {
         if (!current_signal->is_ivl_generated()) {
 
             // Print signal name and port type
-            fprintf(DEBUG_PRINTS_FILE_PTR, "%s (%s):\n", 
+            DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, "%s (%s):\n", 
                 current_signal->get_fullname().c_str(),
-                get_signal_port_type_as_string(current_signal->get_ivl_signal()));
+                get_signal_port_type_as_string(current_signal->get_ivl_signal()));)
 
             // fprintf(DEBUG_PRINTS_FILE_PTR, "Dims = %d, Base = %d; Count = %d; Swapped = %d\n", 
             //     ivl_signal_dimensions(it->first),
@@ -283,7 +283,7 @@ void Tracker::find_continuous_connections() {
                 } else {
 
                     // Nexus is NULL --> skip it
-                    fprintf(DEBUG_PRINTS_FILE_PTR, "%sskipping (NULL) nexus for signal word %d\n", WS_TAB, i);
+                    DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, "%sskipping (NULL) nexus for signal word %d\n", WS_TAB, i);)
                 }
             }
         }
@@ -401,14 +401,15 @@ int target_design(ivl_design_t design) {
     reporter->print_message(FINAL_STATS_MESSAGE);
     reporter->graph_stats(sg);
     reporter->end_task();
+    reporter->line_separator();
     
     // Delete Objects
-    // reporter->start_task(DESTROY_MESSAGE);
+    DEBUG_DESTRUCTORS(reporter->start_task(DESTROY_MESSAGE);)
     delete(cmd_args);
     delete(tracker);
     delete(sg);
-    // reporter->end_task();
-    // reporter->line_separator();
+    DEBUG_DESTRUCTORS(reporter->end_task();)
+    DEBUG_DESTRUCTORS(reporter->line_separator();)
     delete(reporter);
 
     return 0;

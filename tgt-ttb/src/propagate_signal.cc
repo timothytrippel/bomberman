@@ -288,7 +288,7 @@ bool Tracker::propagate_signal(
 
 		} else if (source_port == IVL_SIP_INOUT || sink_port == IVL_SIP_INOUT) {
 			// INOUT
-			fprintf(stderr, "WARNING: sink signal port type (IVL_SIP_INOUT) not supported ... skipping.\n");
+			DEBUG_PRINT(fprintf(stderr, "WARNING: sink signal port type (IVL_SIP_INOUT) not supported ... skipping.\n");)
 			// Error::not_supported("sink signal port type (IVL_SIP_INOUT).");
 		} else {
 			// OTHER

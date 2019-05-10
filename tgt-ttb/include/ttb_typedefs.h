@@ -66,8 +66,20 @@ using namespace std;
 #define DESTRUCTOR_PRINTS_FILE_PTR stdout
 
 // Other Defines
-#define LINE_SEPARATOR        "------------------------------------------------------------"
-#define WS_TAB                "--"
+#define LINE_SEPARATOR "--------------------------------------------------------------------------------"
+#define WS_TAB         "--"
+
+// Enable/Disable Debug Printing
+// #define DEBUG
+
+// Debug Printing Macros
+#ifdef DEBUG 
+	#define DEBUG_PRINT(x)       x
+	#define DEBUG_DESTRUCTORS(x) x
+#else 
+	#define DEBUG_PRINT(x)
+	#define DEBUG_DESTRUCTORS(x)
+#endif
 
 // ------------------------------------------------------------
 // ------------------------ String Map ------------------------

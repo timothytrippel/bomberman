@@ -117,8 +117,8 @@ void Tracker::process_statement_wait(
 
     // Push number of source signals processed at this depth
     push_scope_depth(num_nodes_processed);
-    fprintf(DEBUG_PRINTS_FILE_PTR, "%spushed %d source signal(s) to stack\n", 
-        ws.c_str(), num_nodes_processed);
+    DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, "%spushed %d source signal(s) to stack\n", 
+        ws.c_str(), num_nodes_processed);)
 
     // Get/process sub-statement
     if ((sub_statement = ivl_stmt_sub_stmt(statement))) {
@@ -151,8 +151,8 @@ void Tracker::process_statement_condit(
     
     // Push number of source signals processed at this depth
     push_scope_depth(num_nodes_processed);
-    fprintf(DEBUG_PRINTS_FILE_PTR, "%spushed %d source signals(s) to stack\n", 
-        ws.c_str(), num_nodes_processed);
+    DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, "%spushed %d source signals(s) to stack\n", 
+        ws.c_str(), num_nodes_processed);)
 
     // Process true/false sub-statements to propagate 
     // source signals to sink signals
@@ -179,16 +179,16 @@ void Tracker::process_statement_assign_rval(
     Signal*      source_signal       = NULL; // source node to connect to
 
     // Process rval expression
-    fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing rval(s) ...\n", ws.c_str());
+    DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing rval(s) ...\n", ws.c_str());)
     num_nodes_processed = process_expression(ivl_stmt_rval(statement), statement, ws + WS_TAB);
 
     // Push number of source nodes processed at this depth
     push_scope_depth(num_nodes_processed);
-    fprintf(DEBUG_PRINTS_FILE_PTR, "%spushed %d source signal(s) to queue\n", 
-        ws.c_str(), num_nodes_processed);
+    DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, "%spushed %d source signal(s) to queue\n", 
+        ws.c_str(), num_nodes_processed);)
 
     // Add connection(s)
-    fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing connections ...\n", ws.c_str());
+    DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing connections ...\n", ws.c_str());)
     for (int i = (source_signals_.get_num_signals() - 1); i >= 0; i--) {
 
         // Get source signal
@@ -230,8 +230,8 @@ void Tracker::process_statement_assign_rval(
         // them later. Otherwise, process normally.
         if (sink_signal->is_ivl_generated()) {
 
-            fprintf(DEBUG_PRINTS_FILE_PTR, 
-                "%slval is IVL generated, storing connection...\n", ws.c_str());
+            DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, 
+                "%slval is IVL generated, storing connection...\n", ws.c_str());)
 
             sg_->track_local_signal_connection(
                 sink_signal, 
@@ -242,8 +242,8 @@ void Tracker::process_statement_assign_rval(
 
         } else if (source_signal->is_ivl_generated()) {
 
-            fprintf(DEBUG_PRINTS_FILE_PTR, 
-                "%srval is IVL generated, storing connection...\n", ws.c_str());
+            DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, 
+                "%srval is IVL generated, storing connection...\n", ws.c_str());)
 
             sg_->track_local_signal_connection(
                 sink_signal, 
@@ -284,7 +284,7 @@ void Tracker::process_statement_assign_lval(
     int          part_select_lsb   = 0;    // LVal (sink signal) LSB
     vector<unsigned int> array_indexi;     // LVal array indexe
 
-    fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing lval(s) ...\n", ws.c_str());
+    DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing lval(s) ...\n", ws.c_str());)
 
     // Get number of lvals
     num_lvals = ivl_stmt_lvals(statement);
@@ -313,11 +313,11 @@ void Tracker::process_statement_assign_lval(
     if (sg_->check_if_ignore_mem_signal(ivl_sink_signal) ||
         sg_->check_if_ignore_signal(ivl_sink_signal)) {
         
-        fprintf(DEBUG_PRINTS_FILE_PTR, 
+        DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, 
             "%slval (sink) signal (%s.%s) is ignored\n", 
             ws.c_str(),
             ivl_scope_name(ivl_signal_scope(ivl_sink_signal)),
-            ivl_signal_basename(ivl_sink_signal));
+            ivl_signal_basename(ivl_sink_signal));)
 
         return;
     }
@@ -367,12 +367,12 @@ void Tracker::process_statement_assign_lval(
     // Push number of array source signals processed at this depth
     // (NOTE: max of 1 currently is supported.)
     push_scope_depth(num_array_signals);
-    fprintf(DEBUG_PRINTS_FILE_PTR, "%spushed %d source signal(s) to queue\n", 
-                ws.c_str(), num_array_signals);
+    DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, "%spushed %d source signal(s) to queue\n", 
+                ws.c_str(), num_array_signals);)
 
     // Process lval part select expression (if necessary)
     if ((part_select_expr = ivl_lval_part_off(lval))) {
-        fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing lval part select ...\n", ws.c_str());
+        DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing lval part select ...\n", ws.c_str());)
 
         // Get part-select MSB/LSB
         part_select_lsb = process_index_expression(part_select_expr, statement, ws + WS_TAB);
@@ -393,17 +393,17 @@ void Tracker::process_statement_assign_lval(
         array_index = array_indexi.back();
         array_indexi.pop_back();
 
-        fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing lval array index (%d) ...\n", ws.c_str(), array_index);
+        DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing lval array index (%d) ...\n", ws.c_str(), array_index);)
 
         // Set sink signal ID
         sink_signal->set_id(array_index);
 
         // Print LVal sink signal selects
-        fprintf(DEBUG_PRINTS_FILE_PTR, "%ssink signal: %s[%d:%d]\n", 
+        DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, "%ssink signal: %s[%d:%d]\n", 
             ws.c_str(),
             sink_signal->get_fullname().c_str(),
             part_select_msb,
-            part_select_lsb);
+            part_select_lsb);)
 
         // Process RVals associated with current LVal
         process_statement_assign_rval(sink_signal, statement, ws);
@@ -475,8 +475,8 @@ void Tracker::process_statement(
     ivl_statement_t statement, 
     string          ws) {
 
-    fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing statement (%s)\n", 
-        ws.c_str(), get_statement_type_as_string(statement));
+    DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing statement (%s)\n", 
+        ws.c_str(), get_statement_type_as_string(statement));)
 
     switch (ivl_statement_type(statement)) {
 

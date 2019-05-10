@@ -43,15 +43,15 @@ void Tracker::propagate_nexus(ivl_nexus_t nexus, Signal* sink_signal, string ws)
         for (unsigned int nexus_ind = 0; nexus_ind < ivl_nexus_ptrs(nexus); nexus_ind++) {
 
             nexus_ptr = ivl_nexus_ptr(nexus, nexus_ind);
-            fprintf(DEBUG_PRINTS_FILE_PTR, "%sNexus %d", ws.c_str(), nexus_ind);
+            DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, "%sNexus %d", ws.c_str(), nexus_ind);)
 
             // Determine type of Nexus
             if ((source_signal = ivl_nexus_ptr_sig(nexus_ptr))){
 
                 // BASE-CASE: nexus target object is a SIGNAL
-                fprintf(DEBUG_PRINTS_FILE_PTR, " -- SIGNAL -- %s (%s)\n", 
+                DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, " -- SIGNAL -- %s (%s)\n", 
                     sg_->get_signal_from_ivl_signal(source_signal)->get_fullname().c_str(), 
-                    get_signal_port_type_as_string(source_signal));   
+                    get_signal_port_type_as_string(source_signal));)
 
                 // Set ID of (potential) source signal (arrayed signals)
                 sg_->get_signal_from_ivl_signal(source_signal)->set_id(ivl_nexus_ptr_pin(nexus_ptr));
@@ -62,7 +62,7 @@ void Tracker::propagate_nexus(ivl_nexus_t nexus, Signal* sink_signal, string ws)
             } else if ((source_logic = ivl_nexus_ptr_log(nexus_ptr))) {
                 
                 // Nexus target object is a LOGIC
-                fprintf(DEBUG_PRINTS_FILE_PTR, " -- LOGIC -- %s\n", get_logic_type_as_string(source_logic));
+                DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, " -- LOGIC -- %s\n", get_logic_type_as_string(source_logic));)
                 if (!proccessed_signal) {
                     propagate_logic(source_logic, nexus, sink_signal, ws);
                 }
@@ -70,7 +70,7 @@ void Tracker::propagate_nexus(ivl_nexus_t nexus, Signal* sink_signal, string ws)
             } else if ((source_lpm = ivl_nexus_ptr_lpm(nexus_ptr))) {
                 
                 // Nexus target object is a LPM
-                fprintf(DEBUG_PRINTS_FILE_PTR, " -- LPM -- %s\n", get_lpm_type_as_string(source_lpm));
+                DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, " -- LPM -- %s\n", get_lpm_type_as_string(source_lpm));)
                 if (!proccessed_signal) {
                     // ivl_lpm_q() returns the output nexus. If the 
                     // output nexus is NOT the same as the root nexus, 
@@ -84,7 +84,7 @@ void Tracker::propagate_nexus(ivl_nexus_t nexus, Signal* sink_signal, string ws)
             } else if ((source_constant = ivl_nexus_ptr_con(nexus_ptr))) {
                 
                 // Nexus target object is a CONSTANT
-                fprintf(DEBUG_PRINTS_FILE_PTR, " -- CONSTANT -- %s\n", get_const_type_as_string(source_constant));
+                DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, " -- CONSTANT -- %s\n", get_const_type_as_string(source_constant));)
                 if (!proccessed_signal) {
                     propagate_constant(source_constant, sink_signal, ws);
                 }
@@ -101,6 +101,6 @@ void Tracker::propagate_nexus(ivl_nexus_t nexus, Signal* sink_signal, string ws)
         explored_nexi_.erase(nexus);
 
     } else {
-        fprintf(DEBUG_PRINTS_FILE_PTR, "%sWARNING: nexus already explored (possible loop)... skipping\n", ws.c_str());
+        DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, "%sWARNING: nexus already explored (possible loop)... skipping\n", ws.c_str());)
     }
 }

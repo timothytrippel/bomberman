@@ -578,9 +578,9 @@ void Signal::reset_slices() {
 void Signal::set_source_slice(unsigned int msb, unsigned int lsb, string ws) {
 
 	// Debug Print
-    fprintf(DEBUG_PRINTS_FILE_PTR, 
+    DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, 
     	"%sSetting SOURCE slice [%u:%u]\n", 
-        ws.c_str(), msb, lsb);
+        ws.c_str(), msb, lsb);)
 
 	source_slice_modified_ = true;
 	source_msb_            = msb;
@@ -590,9 +590,9 @@ void Signal::set_source_slice(unsigned int msb, unsigned int lsb, string ws) {
 void Signal::set_sink_slice(unsigned int msb, unsigned int lsb, string ws) {
 
 	// Debug Print
-    fprintf(DEBUG_PRINTS_FILE_PTR, 
+    DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, 
     	"%sSetting SINK slice [%u:%u]\n", 
-        ws.c_str(), msb, lsb);
+        ws.c_str(), msb, lsb);)
 
 	sink_slice_modified_ = true;
 	sink_msb_            = msb;
@@ -616,14 +616,14 @@ void Signal::shift_source_slice(int num_bits, string ws) {
 		"ERROR-Signal::shift_source_slice: shift will cause negative indices.\n");
 
 	// Debug Print
-    fprintf(DEBUG_PRINTS_FILE_PTR, 
+    DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, 
     	"%sShifting SOURCE slice [%u:%u] by %d to [%u:%u]\n", 
         ws.c_str(), 
         source_msb_, 
         source_lsb_, 
         num_bits, 
         source_msb_ + num_bits,
-        source_lsb_ + num_bits);
+        source_lsb_ + num_bits);)
 
     // Shift MSB/LSB
 	source_lsb_ += num_bits;
@@ -642,14 +642,14 @@ void Signal::shift_sink_slice(int num_bits, string ws) {
 		"ERROR-Signal::shift_sink_slice: shift will cause negative indices.\n");
 
 	// Debug Print
-    fprintf(DEBUG_PRINTS_FILE_PTR, 
+    DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, 
     	"%sShifting SINK slice [%u:%u] by %d to [%u:%u]\n", 
         ws.c_str(), 
         sink_msb_, 
         sink_lsb_, 
         num_bits, 
         sink_msb_ + num_bits,
-        sink_lsb_ + num_bits);
+        sink_lsb_ + num_bits);)
 
     // Shift MSB/LSB
 	sink_lsb_ += num_bits;

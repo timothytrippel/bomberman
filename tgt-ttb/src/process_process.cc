@@ -39,8 +39,8 @@ const char* Tracker::get_process_type_as_string(ivl_process_t process) {
 
 int Tracker::process_process(ivl_process_t process) {
 
-    fprintf(DEBUG_PRINTS_FILE_PTR, "processing process (%s)\n", 
-        get_process_type_as_string(process));
+    DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, "processing process (%s)\n", 
+        get_process_type_as_string(process));)
 
     switch (ivl_process_type(process)) {
         case IVL_PR_ALWAYS:
@@ -66,10 +66,10 @@ int Tracker::process_process(ivl_process_t process) {
 
             break;
         case IVL_PR_INITIAL:
-            fprintf(DEBUG_PRINTS_FILE_PTR, "WARNING: Ignoring INITIAL block...\n");
+            DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, "WARNING: Ignoring INITIAL block...\n");)
             break;
         case IVL_PR_FINAL:
-            fprintf(DEBUG_PRINTS_FILE_PTR, "WARNING: Ignoring FINAL block...\n");
+            DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, "WARNING: Ignoring FINAL block...\n");)
             break;
         default:
             Error::not_supported("process statement type (UNKOWN).");

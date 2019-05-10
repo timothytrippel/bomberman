@@ -39,7 +39,7 @@ DotGraph::DotGraph(string p): file_ptr_(NULL) {
 
 DotGraph::~DotGraph() {
 
-    fprintf(DESTRUCTOR_PRINTS_FILE_PTR, "Executing DotGraph destructor...\n");
+    DEBUG_DESTRUCTORS(fprintf(DESTRUCTOR_PRINTS_FILE_PTR, "Executing DotGraph destructor...\n");)
 
     // Close file if its open and not STDOUT
     if (file_ptr_ && (file_ptr_ != stdout)) {
@@ -76,9 +76,9 @@ void DotGraph::add_node(Signal* signal, string ws) const {
     if (file_ptr_) {   
 
         // Debug Print
-        fprintf(DEBUG_PRINTS_FILE_PTR, "%sADDING NODE (%s)\n", 
+        DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, "%sADDING NODE (%s)\n", 
             ws.c_str(), 
-            signal->get_fullname().c_str());
+            signal->get_fullname().c_str());)
 
         // Print to dot file
         fprintf(file_ptr_, "\t\"%s\" [shape=%s, label=\"%s%s\"];\n", 
@@ -100,14 +100,14 @@ void DotGraph::add_connection(Connection* conn, string ws) const {
     if (file_ptr_) {
 
         // Debug Print
-        fprintf(DEBUG_PRINTS_FILE_PTR, "%sADDING CONNECTION: %s[%u:%u] --> %s[%u:%u]\n", 
+        DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, "%sADDING CONNECTION: %s[%u:%u] --> %s[%u:%u]\n", 
             ws.c_str(),
             conn->get_source()->get_fullname().c_str(),
             conn->get_source_msb(),
             conn->get_source_lsb(),
             conn->get_sink()->get_fullname().c_str(),
             conn->get_sink_msb(),
-            conn->get_sink_lsb());
+            conn->get_sink_lsb());)
 
         // Add connection to .dot file
         fprintf(file_ptr_, "\t\"%s\" -> \"%s\"[label=\"%s\"];\n", 

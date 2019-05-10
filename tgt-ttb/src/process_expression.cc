@@ -171,14 +171,14 @@ unsigned int Tracker::process_expression_select(
     num_base_exprs = process_expression(ivl_expr_oper1(expression), statement, ws + WS_TAB);
 
     // Select base signal
-    fprintf(DEBUG_PRINTS_FILE_PTR, "%snum base exprs: %d\n", ws.c_str(), num_base_exprs);
+    DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, "%snum base exprs: %d\n", ws.c_str(), num_base_exprs);)
     for (unsigned int i = 0; i < num_base_exprs; i++) {
 
         // Get potential base signal
         potential_base = source_signals_.get_back_signal(i);
 
-        fprintf(DEBUG_PRINTS_FILE_PTR, "%spotential base signal:    %s\n", 
-            ws.c_str(), potential_base->get_fullname().c_str());
+        DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, "%spotential base signal:    %s\n", 
+            ws.c_str(), potential_base->get_fullname().c_str());)
 
         // Check if potential_base is a signal (not a constant)
         if (potential_base->is_signal()) {
@@ -188,8 +188,8 @@ unsigned int Tracker::process_expression_select(
 
                 // Assign base signal
                 base = source_signals_.get_back_signal(i);
-                fprintf(DEBUG_PRINTS_FILE_PTR, "%sbase signal identified:   %s\n", 
-                    ws.c_str(), base->get_fullname().c_str());
+                DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, "%sbase signal identified:   %s\n", 
+                    ws.c_str(), base->get_fullname().c_str());)
 
             } else {
 
@@ -244,7 +244,7 @@ unsigned int Tracker::process_expression_select(
     // Get MSB of select
     msb = lsb + ivl_expr_width(expression) - 1;
 
-    fprintf(DEBUG_PRINTS_FILE_PTR, "%sindex select:   [%u:%u]\n", ws.c_str(), msb, lsb);
+    DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, "%sindex select:   [%u:%u]\n", ws.c_str(), msb, lsb);)
 
     // Check if MSB is greater than MSB of base signal and LSB
     // is less than LSB of base signal. If yes, do NOT set source
@@ -252,7 +252,7 @@ unsigned int Tracker::process_expression_select(
     signal_slice_t slice = base->get_source_slice(base);
     if (msb <= (int) slice.msb && lsb >= (int) slice.lsb) {
         
-        fprintf(DEBUG_PRINTS_FILE_PTR, "%supdating source slice with index select...\n", ws.c_str());
+        DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, "%supdating source slice with index select...\n", ws.c_str());)
         
         // Track source slice
         set_source_slice(base, msb, lsb, ws);
@@ -439,10 +439,10 @@ vector<unsigned int> Tracker::process_array_index_expression(
         num_array_inds = pow(2, source_slice.msb - source_slice.lsb + 1);
 
         // Check that number of array indexi is possible
-        fprintf(DEBUG_PRINTS_FILE_PTR, "%snum indicies (%d) / num possible indicies (%d)\n", 
+        DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, "%snum indicies (%d) / num possible indicies (%d)\n", 
             ws.c_str(), 
             num_array_inds, 
-            ivl_signal_array_count(base_ivl_signal));
+            ivl_signal_array_count(base_ivl_signal));)
         assert(num_array_inds <= ivl_signal_array_count(base_ivl_signal) && 
             "ERROR-Tracker::process_array_index_expression: some array indices not possible.\n");
 
@@ -521,8 +521,8 @@ unsigned int Tracker::process_expression(
     ivl_statement_t statement,  
     string          ws) {
 
-    fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing expression (%s)\n", 
-        ws.c_str(), get_expr_type_as_string(expression));
+    DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing expression (%s)\n", 
+        ws.c_str(), get_expr_type_as_string(expression));)
 
     switch (ivl_expr_type(expression)) {
         case IVL_EX_NONE:

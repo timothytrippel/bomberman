@@ -107,8 +107,8 @@ Signal* Tracker::get_source_signal(unsigned int index) const {
 
 Signal* Tracker::pop_source_signal(string ws) {
 
-	fprintf(DEBUG_PRINTS_FILE_PTR, "%spopping %d source signal(s) from stack\n", 
-        ws.c_str(), 1);
+	DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, "%spopping %d source signal(s) from stack\n", 
+        ws.c_str(), 1);)
 
 	// Pop source signal
     return source_signals_.pop_signal();
@@ -116,8 +116,8 @@ Signal* Tracker::pop_source_signal(string ws) {
 
 void Tracker::pop_source_signals(unsigned int num_signals, string ws) {
 
-	fprintf(DEBUG_PRINTS_FILE_PTR, "%spopping %d source signal(s) from stack\n", 
-        ws.c_str(), num_signals);
+	DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, "%spopping %d source signal(s) from stack\n", 
+        ws.c_str(), num_signals);)
 	
 	// Pop source signals
 	source_signals_.pop_signals(num_signals);
@@ -133,10 +133,10 @@ void Tracker::push_source_signal(
     	"ERROR: attempting to push NULL source signal to queue.\n");
 
     // Debug Print
-    fprintf(DEBUG_PRINTS_FILE_PTR, "%spushing source signal (name: %s, ID: %u) to stack\n", 
+    DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, "%spushing source signal (name: %s, ID: %u) to stack\n", 
         ws.c_str(), 
         source_signal->get_fullname().c_str(),
-        id);
+        id);)
 
     // Push source signal to stack
     source_signals_.push_signal(source_signal, id);

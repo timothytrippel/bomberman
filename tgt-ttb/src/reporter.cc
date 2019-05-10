@@ -60,7 +60,7 @@ Reporter::Reporter(const char* p) {
 
 Reporter::~Reporter() {
     
-    fprintf(DESTRUCTOR_PRINTS_FILE_PTR, "Executing Reporter destructor...\n");
+    DEBUG_DESTRUCTORS(fprintf(DESTRUCTOR_PRINTS_FILE_PTR, "Executing Reporter destructor...\n");)
 
     // Close file if its open and not STDOUT
     if (file_ptr_ && (file_ptr_ != stdout)) {
@@ -122,7 +122,7 @@ void Reporter::end_task() {
     execution_time = (clock() - start_time) / (double) CLOCKS_PER_SEC;
 
     // Print execution time
-    fprintf(file_ptr_, "\nExecution Time: %f (s)\n", execution_time);
+    fprintf(file_ptr_, "Execution Time: %f (s)\n", execution_time);
 }
 
 // ------------------------------------------------------------
@@ -136,7 +136,7 @@ void Reporter::print_message(const char* message) const {
 
     // Print init message
     line_separator();
-    fprintf(file_ptr_, "%s\n\n", message);
+    fprintf(file_ptr_, "%s\n", message);
 }
 
 void Reporter::line_separator() const {

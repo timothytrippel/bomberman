@@ -66,34 +66,34 @@ SignalGraph::SignalGraph(cmd_args_map_t* cmd_args) {
 
 SignalGraph::~SignalGraph() {
 
-    fprintf(DESTRUCTOR_PRINTS_FILE_PTR, 
-        "Executing SignalGraph destructor...\n");
+    DEBUG_DESTRUCTORS(fprintf(DESTRUCTOR_PRINTS_FILE_PTR, 
+        "Executing SignalGraph destructor...\n");)
 
     // 1. Delete Connections in connections_map_
-    fprintf(DESTRUCTOR_PRINTS_FILE_PTR, 
-        "Destroying connections map...\n");
+    DEBUG_DESTRUCTORS(fprintf(DESTRUCTOR_PRINTS_FILE_PTR, 
+        "Destroying connections map...\n");)
     delete_connections_map();
     assert(!connections_map_.size() && 
         "ERROR: some connections remain un-deleted.\n");
 
 
     // 2. Delete Signals in signals_map_
-    fprintf(DESTRUCTOR_PRINTS_FILE_PTR, 
-        "   Destroying signals map...\n");
+    DEBUG_DESTRUCTORS(fprintf(DESTRUCTOR_PRINTS_FILE_PTR, 
+        "   Destroying signals map...\n");)
     delete_signals_map();
     assert(!signals_map_.size() && 
         "ERROR: some signals remain un-deleted.\n");
 
     // 3. Delete Constants (Signals) in consts_map_
-    fprintf(DESTRUCTOR_PRINTS_FILE_PTR, 
-        "   Destroying constants map...\n");
+    DEBUG_DESTRUCTORS(fprintf(DESTRUCTOR_PRINTS_FILE_PTR, 
+        "   Destroying constants map...\n");)
     delete_constants_map();
     assert(!consts_map_.size() && 
         "ERROR: some constants remain un-deleted.\n");
 
     // 4. Close DotGraph file if it is still open
-    fprintf(DESTRUCTOR_PRINTS_FILE_PTR, 
-        "   Destroying DotGraph...\n");
+    DEBUG_DESTRUCTORS(fprintf(DESTRUCTOR_PRINTS_FILE_PTR, 
+        "   Destroying DotGraph...\n");)
     dg_->save_graph();
     delete(dg_);
     dg_ = NULL;
@@ -410,14 +410,14 @@ bool SignalGraph::add_connection(
                     num_connections_++;  
 
                 } else {
-                    fprintf(DEBUG_PRINTS_FILE_PTR, "%sconnection (from %s[%u:%u] to %s[%u:%u]) already exists...\n", 
+                    DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, "%sconnection (from %s[%u:%u] to %s[%u:%u]) already exists...\n", 
                         ws.c_str(),
                         conn->get_source()->get_fullname().c_str(),
                         conn->get_source_msb(),
                         conn->get_source_lsb(),
                         conn->get_sink()->get_fullname().c_str(),
                         conn->get_sink_msb(),
-                        conn->get_sink_lsb());
+                        conn->get_sink_lsb());)
                 }
 
                 return true;
@@ -458,7 +458,7 @@ void SignalGraph::track_local_signal_connection(
     assert(!sink_signal->is_const() && 
         "ERROR: sink signal cannot be a constant.\n");
 
-    fprintf(DEBUG_PRINTS_FILE_PTR, "%sTracking local signal connection.\n", ws.c_str());
+    DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, "%sTracking local signal connection.\n", ws.c_str());)
 
     // Check if connecting signal is already in signals map,
     // i.e. it is an ivl_signal or an ignored signal. If it is not 
@@ -493,14 +493,14 @@ void SignalGraph::track_local_signal_connection(
 
             } else {
 
-                fprintf(DEBUG_PRINTS_FILE_PTR, "%slocal connection (from %s[%u:%u] to %s[%u:%u]) already exists...\n", 
+                DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, "%slocal connection (from %s[%u:%u] to %s[%u:%u]) already exists...\n", 
                         ws.c_str(),
                         conn->get_source()->get_fullname().c_str(),
                         conn->get_source_msb(),
                         conn->get_source_lsb(),
                         conn->get_sink()->get_fullname().c_str(),
                         conn->get_sink_msb(),
-                        conn->get_sink_lsb());
+                        conn->get_sink_lsb());)
 
             }
         } else {

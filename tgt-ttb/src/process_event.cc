@@ -37,8 +37,8 @@ unsigned int Tracker::process_event_nexus(
     // Source signal counter
     unsigned int   num_possible_signals = 0;
 
-    // fprintf(DEBUG_PRINTS_FILE_PTR, 
-    //     "%sfound %d event nexus ptrs\n", ws.c_str(), ivl_nexus_ptrs(nexus));
+    // DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, 
+    //     "%sfound %d event nexus ptrs\n", ws.c_str(), ivl_nexus_ptrs(nexus));)
 
     // Get line of source code file
     string source_code_line = Tracker::get_file_line(statement);
@@ -60,10 +60,10 @@ unsigned int Tracker::process_event_nexus(
             // logic propagation phase.
             if ((temp_sig = ivl_nexus_ptr_sig(ivl_nexus_ptr(nexus, i)))) {
 
-                fprintf(DEBUG_PRINTS_FILE_PTR, "%spotential event nexus signal: %s.%s\n", 
+                DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, "%spotential event nexus signal: %s.%s\n", 
                     ws.c_str(), 
                     ivl_scope_name(ivl_signal_scope(temp_sig)),
-                    ivl_signal_basename(temp_sig));
+                    ivl_signal_basename(temp_sig));)
 
                 // Check if scope of source signal matches scope of event
                 if (ivl_signal_scope(temp_sig) == ivl_event_scope(event) &&
@@ -72,10 +72,10 @@ unsigned int Tracker::process_event_nexus(
                     // Check if source signal already found
                     if (!source_ivl_signal) {
 
-                        fprintf(DEBUG_PRINTS_FILE_PTR, "%sfound event nexus signal: %s.%s\n", 
+                        DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, "%sfound event nexus signal: %s.%s\n", 
                             ws.c_str(), 
                             ivl_scope_name(ivl_signal_scope(temp_sig)),
-                            ivl_signal_basename(temp_sig));
+                            ivl_signal_basename(temp_sig));)
 
                         // Set source signal
                         source_ivl_signal = temp_sig;
@@ -101,9 +101,9 @@ unsigned int Tracker::process_event_nexus(
 
                             } else {
 
-                                fprintf(DEBUG_PRINTS_FILE_PTR, "%sHDL code line: %s\n", 
+                                DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, "%sHDL code line: %s\n", 
                                     ws.c_str(), 
-                                    source_code_line.c_str());
+                                    source_code_line.c_str());)
 
                                 // Throw Error
                                 Error::multiple_valid_event_nexus_ptrs(statement);
@@ -119,10 +119,10 @@ unsigned int Tracker::process_event_nexus(
                     // Get bitstring
                     string bitstring = Signal::get_const_bitstring(ivl_nexus_ptr_con(ivl_nexus_ptr(nexus, i)));
 
-                    fprintf(DEBUG_PRINTS_FILE_PTR, "%sevent nexus signal: %s.%s\n", 
+                    DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, "%sevent nexus signal: %s.%s\n", 
                         ws.c_str(), 
                         ivl_scope_name(ivl_const_scope(ivl_nexus_ptr_con(ivl_nexus_ptr(nexus, i)))),
-                        bitstring.c_str());
+                        bitstring.c_str());)
 
                     // Throw Warning
                     Error::constant_event_nexus_ptr_warning(statement);
@@ -144,9 +144,9 @@ unsigned int Tracker::process_event_nexus(
         // Convert list of fullnames to list of basename
         signals_list = Tracker::convert_fullnames_to_basenames(signals_list);
         
-        // fprintf(stdout, "*********\n");
+        // DEBUG_PRINT(fprintf(stdout, "*********\n");
         // Tracker::print_string_list(signals_list);
-        // fprintf(stdout, "*********\n");
+        // fprintf(stdout, "*********\n");)
 
         // Re-iterate over event nexus pointers
         for (unsigned int i = 0; i < ivl_nexus_ptrs(nexus); i++) {
@@ -191,7 +191,7 @@ unsigned int Tracker::process_event_nexus(
     // it means we have entered an always block, and subsequent
     // sink signals should be marked as FFs.
     if (check_if_clk_signal(source_ivl_signal)) {
-        fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocess is clocked\n", ws.c_str());
+        DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocess is clocked\n", ws.c_str());)
         set_inside_ff_block();
     } 
     
@@ -227,7 +227,7 @@ unsigned int Tracker::process_event(
 
     // Iterate through nexi associated with an POS-EDGE event
     if ((num_posedge_nexus_ptrs = ivl_event_npos(event))) {
-        fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing event @posedge\n", ws.c_str());
+        DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing event @posedge\n", ws.c_str());)
         for (unsigned int j = 0; j < num_posedge_nexus_ptrs; j++) {
             event_nexus = ivl_event_pos(event, j);      
             num_nodes_processed += process_event_nexus(
@@ -237,7 +237,7 @@ unsigned int Tracker::process_event(
 
     // Iterate through nexi associated with an NEG-EDGE event
     if ((num_negedge_nexus_ptrs = ivl_event_nneg(event))) {
-        fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing event @negedge\n", ws.c_str());
+        DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing event @negedge\n", ws.c_str());)
         for (unsigned int j = 0; j < num_negedge_nexus_ptrs; j++) {
             event_nexus = ivl_event_neg(event, j);      
             num_nodes_processed += process_event_nexus(
@@ -247,7 +247,7 @@ unsigned int Tracker::process_event(
 
     // Iterate through nexi associated with an ANY-EDGE event
      if ((num_anyedge_nexus_ptrs = ivl_event_nany(event))) {
-        fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing event @anyedge\n", ws.c_str());
+        DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, "%sprocessing event @anyedge\n", ws.c_str());)
         for (unsigned int j = 0; j < num_anyedge_nexus_ptrs; j++) {
             event_nexus = ivl_event_any(event, j);  
             num_nodes_processed += process_event_nexus(
