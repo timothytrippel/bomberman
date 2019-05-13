@@ -19,12 +19,12 @@ else
 	endif
 endif
 
-# Check if VCD only parameter set
+# Check if VCC_ONLY parameter set
 ifndef VCD_ONLY
 	VCD_ONLY := 0
 endif
 
-# Check if DOT only parameter set
+# Check if DOT_ONLY parameter set
 ifndef DOT_ONLY
 	DOT_ONLY := 0
 endif

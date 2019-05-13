@@ -5,6 +5,11 @@ SCRIPTS     :=../../../scripts
 # Configurations
 CLK_BASENAME := clk
 
+# Check if NUM_TESTS parameter set, default is 1
+ifndef NUM_TESTS
+	NUM_TESTS := 1
+endif
+
 all: script
 
 # VCD/Dot Analysis Script
@@ -13,16 +18,16 @@ script: $(TARGET)-$(TYPE).dot $(TARGET)-$(TYPE).vcd
 
 # IVL Simulation (Step 2: VCD Generation)
 $(TARGET)-$(TYPE).vcd: $(TARGET)-$(TYPE).vvp
-	@vvp $< +num_tests=10
+	@vvp $< +num_tests=$(NUM_TESTS)
 
 # IVL Simulation (Step 1: Executable Generation)
 $(TARGET)-$(TYPE).vvp: $(SOURCES) $(TESTBENCH)
-	@iverilog -t vvp -o $@ $(INCLUDEDIRS) $^
+	@iverilog -t vvp -o $@ $^
 
 # IVL Target TTB Module Analysis
 $(TARGET)-$(TYPE).dot: $(SOURCES) $(TESTBENCH)
 	@echo "Generating DOT graph..." && \
-	time iverilog -o $@ -pclk=$(CLK_BASENAME) -t ttb $(INCLUDEDIRS) $^
+	time iverilog -o $@ -pclk=$(CLK_BASENAME) -t ttb $^
 
 .PHONY: clean
 
