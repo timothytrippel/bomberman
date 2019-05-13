@@ -101,7 +101,7 @@ module ttb_test_aes_128;
         $display("Starting %4d tests...", num_tests);
 
         // Open VCD file
-        $dumpfile({`VCD_FILENAME,num_tests,".vcd"});
+        $dumpfile({`VCD_FILENAME,".vcd"});
         $dumpvars(0, dut);
 
         // Initialize values
