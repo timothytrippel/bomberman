@@ -1,6 +1,9 @@
 # Ignore MacOS .DS_Store Files
 *.DS_Store
 
+# Ignore Linux tmp files
+*._*
+
 # Ignore Simulation Files
 *.vcd
 *.vmem

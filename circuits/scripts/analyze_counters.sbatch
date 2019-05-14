@@ -1,10 +1,8 @@
 #!/bin/bash
 
-#SBATCH --job-name=analyze_counters            # Job name
 #SBATCH --mail-type=NONE                       # Mail events (NONE, BEGIN, END, FAIL, ALL)
 #SBATCH --mail-user=timothy.trippel@ll.mit.edu # Where to send mail	
 #SBATCH --ntasks=1                             # Run on a single CPU
-#SBATCH --mem=64gb                             # Job memory request
 #SBATCH --time=12:00:00                        # Time limit hrs:min:sec
 #SBATCH --output=/dev/null                     # Standard output and error log
 

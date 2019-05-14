@@ -1,6 +1,5 @@
 #!/bin/bash
 
-#SBATCH --job-name=gen_dot                     # Job name
 #SBATCH --mail-type=NONE                       # Mail events (NONE, BEGIN, END, FAIL, ALL)
 #SBATCH --mail-user=timothy.trippel@ll.mit.edu # Where to send mail	
 #SBATCH --ntasks=1                             # Run on a single CPU
