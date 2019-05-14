@@ -13,7 +13,9 @@ BASE_DIR='/home/gridsan/TI27457/ttb'
 OUTPUT_DIR="${BASE_DIR}/circuits/aes-logs"
 
 # Resources
-MEMORY=128gb
+PROCESSOR=opteron
+# PROCESSOR=xeon-e5
+MEMORY=64gb
 
 # Flags
 OVERWRITE_RESULTS=0
@@ -27,10 +29,12 @@ HDL_BASE_DIR="${BASE_DIR}/circuits/${DESIGN}"
 TROJAN_TYPES='cdd cdn cnd cnn ddd ddn dnd dnn tjfree'
 
 # Test Range
-# NUM_TEST_INCREMENT=10
-# NUM_TESTS_RANGE=11
-NUM_TEST_INCREMENT=1000
-NUM_TESTS_RANGE=100001
+# NUM_TEST_START=10
+# NUM_TEST_INCREMENT=1
+# NUM_TESTS_RANGE=10
+NUM_TEST_START=1000
+NUM_TEST_INCREMENT=50
+NUM_TESTS_RANGE=2000
 
 #-------------------------------------------------------------------------------
 # System Configurations (DO NOT EDIT)
@@ -54,16 +58,19 @@ gen_dot() {
 	if [[ $INTERACTIVE -eq 1 ]]; then
 
 		# Run job interactively
+		pushd ${HDL_BASE_DIR}/${TTYPE} > /dev/null
 		source ${SLURM_SCRIPTS_DIR}/gen_dot.sbatch
+		popd > /dev/null
 	else
 
 		# Run job non-interactively
-		sbatch \
-			-D ${HDL_BASE_DIR}/${TTYPE} \
-			--job-name=${DESIGN}.${TTYPE}.dot \
-			--constraint=opteron \
-			--export=OUTPUT_DIR=${OUTPUT_DIR},DESIGN=${DESIGN},TTYPE=${TTYPE},CLK_BASENAME=${CLK_BASENAME} \
-			${SLURM_SCRIPTS_DIR}/gen_dot.sbatch > /dev/null
+		DOT_JOB_ID=$(\
+			sbatch \
+				-D ${HDL_BASE_DIR}/${TTYPE} \
+				--job-name=${DESIGN}.${TTYPE}.dot \
+				--constraint=opteron \
+				--export=OUTPUT_DIR=${OUTPUT_DIR},DESIGN=${DESIGN},TTYPE=${TTYPE},CLK_BASENAME=${CLK_BASENAME} \
+				${SLURM_SCRIPTS_DIR}/gen_dot.sbatch)
 	fi	
 }
 
@@ -71,7 +78,9 @@ gen_vvp() {
 	if [[ $INTERACTIVE -eq 1 ]]; then
 
 		# Run job interactively
+		pushd ${HDL_BASE_DIR}/${TTYPE} > /dev/null
 		source ${SLURM_SCRIPTS_DIR}/gen_vvp.sbatch
+		popd > /dev/null
 	else
 
 		# Run job non-interactively
@@ -80,7 +89,7 @@ gen_vvp() {
 			-D ${HDL_BASE_DIR}/${TTYPE} \
 			--job-name=${DESIGN}.${TTYPE}.vvp \
 			--constraint=opteron \
-			--export=OUTPUT_DIR=${OUTPUT_DIR},DESIGN=${DESIGN},TTYPE=${TTYPE} \
+			--export=OUTPUT_DIR=${OUTPUT_DIR},DESIGN=${DESIGN},TTYPE=${TTYPE},NUM_TESTS=${NUM_TESTS} \
 			${SLURM_SCRIPTS_DIR}/gen_vvp.sbatch)
 	fi	
 }
@@ -89,7 +98,9 @@ gen_vcd() {
 	if [[ $INTERACTIVE -eq 1 ]]; then
 
 		# Run job interactively
+		pushd ${HDL_BASE_DIR}/${TTYPE} > /dev/null
 		source ${SLURM_SCRIPTS_DIR}/gen_vcd.sbatch
+		popd > /dev/null
 	else
 
 		# Run job non-interactively
@@ -97,7 +108,7 @@ gen_vcd() {
 			sbatch \
 				-D ${HDL_BASE_DIR}/${TTYPE} \
 				--job-name=${DESIGN}.${TTYPE}.${NUM_TESTS}.vcd \
-				--constraint=xeon-e5 \
+				--constraint=${PROCESSOR} \
 				--dependency=afterok:${VVP_JOB_ID##* } \
 				--export=OUTPUT_DIR=${OUTPUT_DIR},DESIGN=${DESIGN},TTYPE=${TTYPE},NUM_TESTS=${NUM_TESTS} \
 				--mem=${MEMORY} \
@@ -109,15 +120,17 @@ analyze_counters() {
 	if [[ $INTERACTIVE -eq 1 ]]; then
 
 		# Run job interactively
+		pushd ${HDL_BASE_DIR}/${TTYPE} > /dev/null
 		source ${SLURM_SCRIPTS_DIR}/analyze_counters.sbatch
+		popd > /dev/null
 	else
 
 		# Run job non-interactively
 		sbatch \
 			-D ${HDL_BASE_DIR}/${TTYPE} \
 			--job-name=${DESIGN}.${TTYPE}.${NUM_TESTS}.ac \
-			--constraint=xeon-e5 \
-			--dependency=afterok:${VCD_JOB_ID##* } \
+			--constraint=${PROCESSOR} \
+			--dependency=afterok:${DOT_JOB_ID##* },${VCD_JOB_ID##* } \
 			--export=OUTPUT_DIR=${OUTPUT_DIR},DESIGN=${DESIGN},TTYPE=${TTYPE},NUM_TESTS=${NUM_TESTS} \
 			--mem=${MEMORY} \
 			${SLURM_SCRIPTS_DIR}/analyze_counters.sbatch > /dev/null
@@ -138,13 +151,13 @@ for TTYPE in ${TROJAN_TYPES}; do
 	# Generate DOT file and VVP simulation binary
 	echo "Starting CFG analysis of ${TTYPE} Trojans..."
 	gen_dot
-	gen_vvp
 
 	# Launch test bench simulations
-	for (( NUM_TESTS=${NUM_TEST_INCREMENT}; NUM_TESTS<=${NUM_TESTS_RANGE}; NUM_TESTS += ${NUM_TEST_INCREMENT} )); do	
+	for (( NUM_TESTS=${NUM_TEST_START}; NUM_TESTS<=${NUM_TESTS_RANGE}; NUM_TESTS += ${NUM_TEST_INCREMENT} )); do	
 
 		# Generate VCD file and analyze for counters
 		echo "Starting simulation with ${NUM_TESTS} tests ..."
+		gen_vvp
 		gen_vcd
 		analyze_counters
 

@@ -25,7 +25,8 @@ echo "Trojan Type: ${TTYPE}"   >> ${DOT_LOG_FILE}
 
 # Generate DOT file (data flow graph)
 (time iverilog \
-	-o ${DESIGN}-${TTYPE}.dot \
+	-o ${DESIGN}.${TTYPE}.dot \
 	-pclk=${CLK_BASENAME} \
+	-DVCD_FILENAME=\"${DESIGN}.${TTYPE}.vcd\" \
 	-t ttb \
 	`find . -type f -name "*.v" -not -name test_aes_128.v`) >> ${DOT_LOG_FILE} 2>&1

@@ -22,5 +22,6 @@ echo "Generating VCD file with ${NUM_TESTS} test cases..." >> ${VCD_LOG_FILE}
 
 # Generate VCD file
 (time vvp \
-	${DESIGN}-${TTYPE}.vvp \
+	${DESIGN}.${TTYPE}.${NUM_TESTS}.vvp \
+	-DVCD_FILENAME=\"${DESIGN}.${TTYPE}.${NUM_TESTS}.vcd\" \
 	+num_tests=${NUM_TESTS}) >> ${VCD_LOG_FILE} 2>&1

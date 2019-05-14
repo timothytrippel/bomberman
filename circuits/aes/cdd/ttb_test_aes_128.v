@@ -19,7 +19,6 @@
 
 // Defines
 `define CLOCK_PERIOD      10
-`define VCD_FILENAME      "aes-cdd"
 `define AES_CYCLE_LATENCY 21
 `define AES_KEY_SIZE      128
 `define STATE_LFSR_SEED   128'hDEAD_BEEF_DEAD_BEEF_DEAD_BEEF_DEAD_BEEF
@@ -101,7 +100,7 @@ module ttb_test_aes_128;
         $display("Starting %4d tests...", num_tests);
 
         // Open VCD file
-        $dumpfile({`VCD_FILENAME,".vcd"});
+        $dumpfile(`VCD_FILENAME);
         $dumpvars(0, dut);
 
         // Initialize values

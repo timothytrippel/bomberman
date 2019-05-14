@@ -20,5 +20,5 @@ date     >> ${ANALYSIS_LOG_FILE}
 # Analyze design for counters
 (time pypy \
 	${OUTPUT_DIR}/../../scripts/analyze.py \
-	${DESIGN}-${TTYPE}.dot \
-	${DESIGN}-${TTYPE}.vcd) >> ${ANALYSIS_LOG_FILE} 2>&1
+	${DESIGN}.${TTYPE}.dot \
+	${DESIGN}.${TTYPE}.${NUM_TESTS}.vcd) >> ${ANALYSIS_LOG_FILE} 2>&1

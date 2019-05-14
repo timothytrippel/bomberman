@@ -11,7 +11,7 @@
 set -e
 
 # Set VCD log file
-VVP_LOG_FILE=${OUTPUT_DIR}/${DESIGN}.${TTYPE}.vvp.log
+VVP_LOG_FILE=${OUTPUT_DIR}/${DESIGN}.${TTYPE}.${NUM_TESTS}.vvp.log
 
 # Print Job Info
 pwd      >  ${VVP_LOG_FILE}
@@ -24,5 +24,6 @@ echo "Generating VVP simulation binary..." >> ${VVP_LOG_FILE}
 # Generate (VVP) simulation binary
 (time iverilog \
 	-t vvp \
-	-o ${DESIGN}-${TTYPE}.vvp \
+	-o ${DESIGN}.${TTYPE}.${NUM_TESTS}.vvp \
+	-DVCD_FILENAME=\"${DESIGN}.${TTYPE}.${NUM_TESTS}.vcd\" \
 	`find . -type f -name "*.v" -not -name test_aes_128.v`) >> ${VVP_LOG_FILE} 2>&1
