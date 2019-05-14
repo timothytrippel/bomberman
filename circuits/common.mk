@@ -35,6 +35,6 @@ cleanall: clean
 	@$(MAKE) cleanall -C $(TGT_TTB_DIR)
 
 clean:
-	@$(RM) $(TARGET)-$(TYPE).vcd
-	@$(RM) $(TARGET)-$(TYPE).vvp 
-	@$(RM) $(TARGET)-$(TYPE).dot 
+	@$(RM) *.vcd
+	@$(RM) *.vvp 
+	@$(RM) *.dot 
