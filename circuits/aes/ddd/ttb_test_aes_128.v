@@ -31,7 +31,6 @@ module ttb_test_aes_128;
 
     // Command Line Args
     reg [31:0] num_tests;
-    reg load_status;
 
     // Clock
     reg lfsr_clk;
