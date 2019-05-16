@@ -170,11 +170,6 @@ def main():
 	# Report number of malicious counters and constants
 	##
 	print "-------------------------------------------------"
-	print "Analysis complete."
-	num_skipped_signals   = len(skipped.keys())
-	num_dmalicious_signals = len(malicious.keys())
-	num_constant_signals  = len(constants.keys())
-	print "-------------------------------------------------"
 	print "Coalesced:"
 	print "	# Possible:  " + str(len(coal_counters))
 	print "	# Not Simd:  " + str(len(coal_skipped))
@@ -188,6 +183,7 @@ def main():
 	print "	# Constants: " + str(len(dist_constants))
 	print "	# Malicous:  " + str(len(dist_malicious))
 	print "-------------------------------------------------"
+	print "Analysis complete."
 	print
 
 	##
