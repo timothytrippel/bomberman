@@ -260,7 +260,8 @@ module uart_test ();
     
     initial begin
         $dumpfile(`VCD_FILENAME);
-        $dumpvars(0, uart1);
+        // $dumpvars(0, uart1);
+        $dumpvars(0);
     end
 
     //--------------------------------------------------------------------------------
@@ -317,6 +318,7 @@ module uart_test ();
             wbm1.wb_wr1(0, 4'b1, {24'b0, byte});
             @(posedge clk);
             @(posedge clk);
+            #(1)
             lfsr_enable_i = 1'b1;
         end
     endtask
@@ -493,7 +495,7 @@ module uart_test ();
                 receivebyte1();
 
                 // Check that recieved bytes is correct
-                if ( data1_o[7:0] !== comp_random_byte_o)
+                if (data1_o[7:0] !== comp_random_byte_o)
                   begin $display("ERROR: send/receive of byte 0x%2h failed.", data1_o[7:0]); $finish; end
                 
                 // Update compare LFSR

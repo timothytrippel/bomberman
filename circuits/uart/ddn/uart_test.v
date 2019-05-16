@@ -317,6 +317,7 @@ module uart_test ();
             wbm1.wb_wr1(0, 4'b1, {24'b0, byte});
             @(posedge clk);
             @(posedge clk);
+            #(1)
             lfsr_enable_i = 1'b1;
         end
     endtask
