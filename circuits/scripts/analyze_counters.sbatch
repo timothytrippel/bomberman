@@ -21,4 +21,5 @@ date     >> ${ANALYSIS_LOG_FILE}
 (time pypy \
 	${OUTPUT_DIR}/../../scripts/analyze.py \
 	${DESIGN}.${TTYPE}.dot \
-	${DESIGN}.${TTYPE}.${NUM_TESTS}.vcd) >> ${ANALYSIS_LOG_FILE} 2>&1
+	${DESIGN}.${TTYPE}.${NUM_TESTS}.vcd \
+	${OUTPUT_DIR}/${DESIGN}.${TTYPE}.${NUM_TESTS}.json) >> ${ANALYSIS_LOG_FILE} 2>&1

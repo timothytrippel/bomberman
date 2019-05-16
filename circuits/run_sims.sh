@@ -6,6 +6,7 @@
 
 # Design
 DESIGNS='uart'
+# DESIGNS='aes'
 CLK_BASENAME='clk'
 
 # Directories
@@ -21,16 +22,16 @@ OVERWRITE_RESULTS=0
 INTERACTIVE=0
 
 # Trojan Types
-TROJAN_TYPES='cdd'
-# TROJAN_TYPES='cdd cdn cnd cnn ddd ddn dnd dnn tjfree'
+# TROJAN_TYPES='cdd'
+TROJAN_TYPES='cdd cdn cnd cnn ddd ddn dnd dnn tjfree'
 
 # Test Range
 NUM_TEST_START=1
 NUM_TEST_INCREMENT=1
-NUM_TESTS_RANGE=1
-# NUM_TEST_START=1000
+NUM_TESTS_RANGE=16
+# NUM_TEST_START=50
 # NUM_TEST_INCREMENT=50
-# NUM_TESTS_RANGE=2000
+# NUM_TESTS_RANGE=3000
 
 #-------------------------------------------------------------------------------
 # System Configurations (DO NOT EDIT)

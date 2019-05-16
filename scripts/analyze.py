@@ -5,6 +5,7 @@ import re
 import sys
 import time
 import pprint
+import json
 
 # Custom Modules
 from hdl_signal          import HDL_Signal
@@ -66,8 +67,8 @@ def main():
 	##
 	# Check argv
 	##
-	if (len(sys.argv) != 3):
-		print "Usage: ./analyze.py <dot file> <vcd file>"
+	if (len(sys.argv) != 4):
+		print "Usage: ./analyze.py <input dot file> <input vcd file> <output json file>"
 		sys.exit(-1)
 
 	##
@@ -78,8 +79,9 @@ def main():
 	##
 	# Input Files
 	##
-	dot_file = sys.argv[1]
-	vcd_file = sys.argv[2]
+	dot_file  = sys.argv[1]
+	vcd_file  = sys.argv[2]
+	json_file = sys.argv[3]
 
 	##
 	# Parse dot file
@@ -167,7 +169,7 @@ def main():
 	print
 
 	##
-	# Report number of malicious counters and constants
+	# Report stats
 	##
 	print "-------------------------------------------------"
 	print "Coalesced:"
@@ -185,6 +187,23 @@ def main():
 	print "-------------------------------------------------"
 	print "Analysis complete."
 	print
+
+	##
+	# Write stats to JSON file
+	##
+	stats = {
+		"coal_total"    : len(coal_counters),
+		"coal_not_simd" : len(coal_skipped),
+		"coal_constants": len(coal_constants),
+		"coal_malicious": len(coal_malicious),
+		"dist_total"    : len(dist_counters),
+		"dist_not_simd" : len(dist_skipped),
+		"dist_constants": len(dist_constants),
+		"dist_malicious": len(dist_malicious)
+	}
+	with open(json_file, 'w') as jf:  
+		json.dump(stats, jf)
+	jf.close()
 
 	##
 	# Stop Overall Timer
