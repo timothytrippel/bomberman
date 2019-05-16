@@ -149,9 +149,9 @@ def main():
 	##
 	print "-------------------------------------------------"
 	print "Finding malicious distributed signals..."
-	start_time                    = time.time()
-	constants, malicious, skipped = classify_counters(dist_counters, {}, {}, {})
-	end_time                      = time.time()
+	start_time = time.time()
+	dist_constants, dist_malicious, dist_skipped = classify_counters(dist_counters, {}, {}, {})
+	end_time = time.time()
 	calculate_and_print_time(start_time, end_time)
 	print
 
@@ -160,9 +160,9 @@ def main():
 	##
 	print "-------------------------------------------------"
 	print "Finding malicious coalesced signals..."
-	start_time                    = time.time()
-	constants, malicious, skipped = classify_counters(coal_counters, constants, malicious, skipped)
-	end_time                      = time.time()
+	start_time = time.time()
+	coal_constants, coal_malicious, coal_skipped = classify_counters(coal_counters, {}, {}, {})
+	end_time = time.time()
 	calculate_and_print_time(start_time, end_time)
 	print
 
@@ -172,13 +172,22 @@ def main():
 	print "-------------------------------------------------"
 	print "Analysis complete."
 	num_skipped_signals   = len(skipped.keys())
-	num_malicious_signals = len(malicious.keys())
+	num_dmalicious_signals = len(malicious.keys())
 	num_constant_signals  = len(constants.keys())
-	print "	Num. Possible Coalesced:   " + str(len(dist_counters))
-	print "	Num. Possible Distributed: " + str(len(coal_counters))
-	print "	Num. Not Simulated:        " + str(num_skipped_signals)
-	print "	Num. Malicous:             " + str(num_malicious_signals)
-	print "	Num. Constants:            " + str(num_constant_signals)
+	print "-------------------------------------------------"
+	print "Coalesced:"
+	print "	# Possible:  " + str(len(coal_counters))
+	print "	# Not Simd:  " + str(len(coal_skipped))
+	print "	# Constants: " + str(len(coal_constants))
+	print "	# Malicous:  " + str(len(coal_malicious))
+
+	print "-------------------------------------------------"
+	print "Distributed:"
+	print "	# Possible:  " + str(len(dist_counters))
+	print "	# Not Simd:  " + str(len(dist_skipped))
+	print "	# Constants: " + str(len(dist_constants))
+	print "	# Malicous:  " + str(len(dist_malicious))
+	print "-------------------------------------------------"
 	print
 
 	##
