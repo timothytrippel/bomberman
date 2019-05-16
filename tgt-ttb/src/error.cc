@@ -346,3 +346,9 @@ void Error::while_statement_type_warning(ivl_statement_t stmt) {
         \n(File: %s -- Line: %d).\n", 
         ivl_stmt_file(stmt), ivl_stmt_lineno(stmt));
 }
+
+void Error::repeat_statement_type_warning(ivl_statement_t stmt) {
+    fprintf(stderr, "WARNING: IVL_ST_REPEAT not supported... skipping. \
+        \n(File: %s -- Line: %d).\n", 
+        ivl_stmt_file(stmt), ivl_stmt_lineno(stmt));
+}

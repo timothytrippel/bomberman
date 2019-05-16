@@ -529,6 +529,10 @@ void Tracker::process_statement(
             Error::while_statement_type_warning(statement);
             break;
 
+        case IVL_ST_REPEAT:
+            Error::repeat_statement_type_warning(statement);
+            break;
+
         case IVL_ST_ALLOC:
         case IVL_ST_CONTRIB:
         case IVL_ST_DEASSIGN:
@@ -541,7 +545,6 @@ void Tracker::process_statement(
         case IVL_ST_FORK_JOIN_NONE:
         case IVL_ST_FREE:
         case IVL_ST_RELEASE:
-        case IVL_ST_REPEAT: 
         case IVL_ST_TRIGGER:
         default:
             // Print HDL code, file, and line number of event

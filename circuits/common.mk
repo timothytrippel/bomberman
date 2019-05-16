@@ -18,16 +18,16 @@ script: $(TARGET)-$(TYPE).dot $(TARGET)-$(TYPE).vcd
 
 # IVL Simulation (Step 2: VCD Generation)
 $(TARGET)-$(TYPE).vcd: $(TARGET)-$(TYPE).vvp
-	@vvp $< +num_tests=$(NUM_TESTS)
+	vvp $< -DVCD_FILENAME=\"$@\" +num_tests=$(NUM_TESTS)
 
 # IVL Simulation (Step 1: Executable Generation)
 $(TARGET)-$(TYPE).vvp: $(SOURCES) $(TESTBENCH)
-	@iverilog -t vvp -o $@ $^
+	@iverilog -t vvp -o $@ -DVCD_FILENAME=\"$(TARGET)-$(TYPE).vcd\" $^
 
 # IVL Target TTB Module Analysis
 $(TARGET)-$(TYPE).dot: $(SOURCES) $(TESTBENCH)
 	@echo "Generating DOT graph..." && \
-	time iverilog -o $@ -pclk=$(CLK_BASENAME) -t ttb $^
+	time iverilog -o $@ -pclk=$(CLK_BASENAME) -DVCD_FILENAME=\"${DESIGN}.${TTYPE}.vcd\" -t ttb $^
 
 .PHONY: clean
 
