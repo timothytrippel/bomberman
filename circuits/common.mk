@@ -22,12 +22,12 @@ $(TARGET)-$(TYPE).vcd: $(TARGET)-$(TYPE).vvp
 
 # IVL Simulation (Step 1: Executable Generation)
 $(TARGET)-$(TYPE).vvp: $(SOURCES) $(TESTBENCH)
-	@iverilog -t vvp -o $@ -DVCD_FILENAME=\"$(TARGET)-$(TYPE).vcd\" $^
+	@iverilog -t vvp -o $@ -DVCD_FILENAME=\"$(TARGET)-$(TYPE).vcd\" $(INCLUDEDIRS) $^
 
 # IVL Target TTB Module Analysis
 $(TARGET)-$(TYPE).dot: $(SOURCES) $(TESTBENCH)
 	@echo "Generating DOT graph..." && \
-	time iverilog -o $@ -pclk=$(CLK_BASENAME) -DVCD_FILENAME=\"${DESIGN}.${TTYPE}.vcd\" -t ttb $^
+	time iverilog -o $@ -pclk=$(CLK_BASENAME) -DVCD_FILENAME=\"${DESIGN}.${TTYPE}.vcd\" -t ttb $(INCLUDEDIRS) $^
 
 .PHONY: clean
 

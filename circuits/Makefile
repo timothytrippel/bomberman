@@ -8,7 +8,8 @@ OR1200_SIM  := $(OR1200)/simulation
 OR1200_VMEM := $(OR1200_SIM)/vmem
 
 # OR1200 Simulation Program
-OR1200_PROGRAM := $(OR1200_VMEM)/hello_world.vmem
+# OR1200_PROGRAM := $(OR1200_VMEM)/hello_world.vmem
+OR1200_PROGRAM := $(OR1200_VMEM)/basicmath.vmem
 
 # Check if log parameter set
 ifndef LOG
@@ -19,7 +20,7 @@ else
 	endif
 endif
 
-# Check if VCC_ONLY parameter set
+# Check if VCD_ONLY parameter set
 ifndef VCD_ONLY
 	VCD_ONLY := 0
 endif
@@ -42,7 +43,7 @@ uart: uart-cdd uart-cdn uart-cnd uart-cnn uart-ddd uart-ddn uart-dnd uart-dnn ua
 or1200: or1200-cdd or1200-cdn or1200-cnd or1200-cnn or1200-ddd or1200-ddn or1200-dnd or1200-dnn or1200-tjfree
 
 output_dir:
-	if [ $(LOG) != 0 ]; then \
+	@if [ $(LOG) != 0 ]; then \
 		mkdir -p $(OUT_DIR); \
 	fi;
 
