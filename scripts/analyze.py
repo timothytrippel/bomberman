@@ -11,7 +11,7 @@ import json
 from hdl_signal          import HDL_Signal
 from connection          import Connection
 from parse_dot           import parse_file
-from Verilog_VCD         import parse_vcd, debug_print_vcd
+from Verilog_VCD         import parse_vcd, get_timescale
 from distributed_counter import generate_distributed_counters
 from coalesced_counter   import generate_coalesced_counters
 
@@ -47,14 +47,18 @@ def classify_counters(counters, constants, malicious, skipped):
 
 		# Compute number of possible unique counter values
 		max_possible_values = 2 ** counter.width
+		print "Values Seen:", len(counter_value_set) 
+		print "Possible Values:", max_possible_values
 
 		# Classify counter as a counter or malicious
-		if len(counter_value_set) == 1 and counter.name not in constants:
-			print "Constant: " + counter.name
-			constants[counter.name] = True
-		elif len(counter_value_set) < max_possible_values and counter.name not in malicious:
-			print "Possible Malicious Symbol: " + counter.name
-			malicious[counter.name] = True
+		if len(counter_value_set) == 1:
+			if counter.name not in constants:
+				print "Constant: " + counter.name
+				constants[counter.name] = True
+		elif len(counter_value_set) < max_possible_values:
+			if counter.name not in malicious:
+				print "Possible Malicious Symbol: " + counter.name
+				malicious[counter.name] = True
 
 	return constants, malicious, skipped
 
@@ -101,6 +105,9 @@ def main():
 	start_time = time.time()
 	vcd        = parse_vcd(vcd_file, types={"reg", "wire"})
 	update_signals_with_vcd(signals, vcd)
+	timescale_str = get_timescale()
+	timescale = timescale_str.rstrip('fpnums')
+	print "Timescale:", timescale_str
 	end_time   = time.time()
 	calculate_and_print_time(start_time, end_time)
 
@@ -120,7 +127,7 @@ def main():
 	print "-------------------------------------------------"
 	print "Generating Distributed Counters..."
 	start_time    = time.time()
-	dist_counters = generate_distributed_counters(signals)
+	dist_counters = generate_distributed_counters(signals, timescale)
 	end_time      = time.time()
 	print "Found " + str(len(dist_counters)) + " possible distributed counters."
 	if DEBUG_PRINTS and dist_counters:

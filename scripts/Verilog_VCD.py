@@ -29,6 +29,7 @@ def list_sigs(file) :
 def parse_vcd(file, only_sigs=0, types={"reg", "wire"}, use_stdout=0, siglist=[], opt_timescale=''):
 	"""Parse input VCD file into data structure.
 	Also, print t-v pairs to STDOUT, if requested."""
+	global endtime
 
 	usigs = {}
 	for i in siglist:
@@ -168,6 +169,7 @@ def calc_mult (statement, opt_timescale=''):
 	Return numeric multiplier.
 	Also sets the package timescale variable.
 	""" 
+	global timescale
 
 
 	fields = statement.split()
@@ -230,10 +232,10 @@ def calc_mult (statement, opt_timescale=''):
 
 	return ((mult * scale) / new_scale)
 
-def get_timescale() :
+def get_timescale():
 	return timescale
 
-def get_endtime() :
+def get_endtime():
 	return endtime
 
 def is_signal_vectored(signal):

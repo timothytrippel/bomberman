@@ -19,7 +19,7 @@ split:
 
 # VCD/Dot Analysis Script
 script: tgt-ttb $(TGT)/$(TGT).vcd $(TGT)/$(TGT).dot
-	python2 $(SCRIPTS)/analyze.py $(TGT)/$(TGT).dot $(TGT)/$(TGT).vcd
+	pypy $(SCRIPTS)/analyze.py $(TGT)/$(TGT).dot $(TGT)/$(TGT).vcd $(TGT)/$(TGT).json 
 
 # IVL Simulation (Step 2: VCD Generation)
 $(TGT)/$(TGT).vcd: $(TGT)/$(TGT).vvp $(TGT)/$(TGT).dot
@@ -38,13 +38,18 @@ $(TGT)/$(TGT).dot: $(TGT)/$(TGT).v $(TGT)/$(TGT)_tb.v
 tgt-ttb: 
 	$(MAKE) -C $(TGT_TTB_DIR)
 
-.PHONY: clean tgt-ttb counter d_ff split
+.PHONY: cleanall tgt-ttb counter d_ff split
 
 cleanall:
 	@$(MAKE) clean TGT=counter
 	@$(MAKE) clean TGT=d_ff
 	@$(MAKE) clean TGT=split
-# 	$(MAKE) cleanall -C $(TGT_TTB_DIR)
+# 	@$(MAKE) cleanall -C $(TGT_TTB_DIR)
 
 clean:
-	@rm -f $(TGT)/$(TGT).vcd $(TGT)/$(TGT).vvp $(TGT)/$(TGT).dot $(TGT)/$(TGT).pdf
+	@rm -f $(TGT)/$(TGT).vcd 
+	@rm -f $(TGT)/$(TGT).vvp 
+	@rm -f $(TGT)/$(TGT).dot 
+	@rm -f $(TGT)/$(TGT).pdf
+	@rm -f $(TGT)/$(TGT).json
+

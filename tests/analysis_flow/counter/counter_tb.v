@@ -18,7 +18,8 @@ module counter_tb;
     #11;
     rst = 0;
 
-    #200;
+    // #200;
+    #150;
     $finish;
   end
 endmodule

@@ -32,7 +32,13 @@ def build_deps(sig, msb, lsb, ffs = [], seen = {}):
 
 	return ffs
 
-def generate_distributed_counters(signals):
+def add_time_value(dist_counter, hdl_signal, msb, lsb, time, values):
+	if time in dist_counter.time_values:
+		dist_counter.time_values[time] += values[hdl_signal.width - msb - 1: hdl_signal.width - lsb]
+	else:
+		dist_counter.time_values[time]  = values[hdl_signal.width - msb - 1: hdl_signal.width - lsb]
+
+def generate_distributed_counters(signals, timescale):
 	seen = {}
 	dist_counters = []
 
@@ -66,12 +72,19 @@ def generate_distributed_counters(signals):
 		dist_counter           = HDL_Signal(dist_counter_name, -1, 0)
 		dist_counter_simulated = True
 		
-		# Piece together simulated time values from dist. counter signals
-		# dist_counter.debug_print()
-		for ref_signal in ffs:
-			hdl_signal = signals[ref_signal.fullname()]
-			msb        = ref_signal.msb
-			lsb        = ref_signal.lsb
+		# Get (sorted) list of time values of signals changing
+		tvs = set()
+		for source_signal in ffs:
+			for tv in signals[source_signal.fullname()].time_values.keys():
+				tvs.add(tv)
+		tvs = sorted(tvs)
+
+		# Piece together simulated time values from dist. counter signals.
+		# Sort source signals by number of VCD time values
+		for source_signal in ffs:
+			hdl_signal = signals[source_signal.fullname()]
+			msb        = source_signal.msb
+			lsb        = source_signal.lsb
 			width      = msb - lsb + 1
 			# print "REF Signal:"
 			# print "	NAME:  %s" % (hdl_signal.name)
@@ -83,18 +96,45 @@ def generate_distributed_counters(signals):
 			dist_counter.width += width
 			dist_counter.msb    = dist_counter.lsb + dist_counter.width - 1
 
-			# Check if signal has been covered (simulated) by TB
+			# Check if source signal has been covered (simulated) by TB
 			if not hdl_signal.check_signal_simulated():
 				dist_counter_simulated = False
 				break
-			dist_counter.tb_covered = True
 
 			# Update counter time values
-			for time, values in hdl_signal.time_values.items():
-				if time in dist_counter.time_values:
-					dist_counter.time_values[time] += values[hdl_signal.width - msb - 1: hdl_signal.width - lsb]
+			for i in range(len(tvs)):
+
+				# Get time
+				time = tvs[i]
+
+				# Indicator flag
+				time_value_found = False
+
+				# Check if time value exists in VCD file:
+				if time in hdl_signal.time_values:
+					add_time_value(dist_counter, hdl_signal, msb, lsb, time, hdl_signal.time_values[time])
+					time_value_found = True
 				else:
-					dist_counter.time_values[time]  = values[hdl_signal.width - msb - 1: hdl_signal.width - lsb]
+					# Find last time a value was recorded
+					j = i
+					while j >= 0:
+
+						# Get earlier time
+						earlier_time = tvs[j]
+
+						# Check if value recorded for an earlier time
+						if earlier_time in hdl_signal.time_values:
+							add_time_value(dist_counter, hdl_signal, msb, lsb, time, hdl_signal.time_values[earlier_time])
+							time_value_found = True
+							break
+
+						# Update (earlier) time index
+						j -= 1
+
+				# Check if time value found
+				if not time_value_found:
+					print "ERROR: unkown time value for signal (%s) at time (%d)" % (source_signal.fullname(), )
+					sys.exit(1) 
 
 		# Update tb_covered flag
 		dist_counter.tb_covered = dist_counter_simulated
