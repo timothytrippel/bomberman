@@ -15,8 +15,9 @@ BTLDR_DIR   := ../../bootloader
 # Compiler Configurations
 OPTLVL := -O3
 CC     := or1k-elf-gcc
-# CFLAGS := -I$(INCLUDE_DIR) -Wall $(OPTLVL)
-CFLAGS := -I$(INCLUDE_DIR) -Wall -mnewlib $(OPTLVL) -ffreestanding -std=c99 -fomit-frame-pointer -fno-optimize-sibling-calls
+CFLAGS := -I$(INCLUDE_DIR) -Wall $(OPTLVL)
+LIBS   := -lc -lm
+# CFLAGS := -I$(INCLUDE_DIR) -Wall $(OPTLVL) -ffreestanding -std=c99 -fomit-frame-pointer -fno-optimize-sibling-calls
 
 # Source/Target Files
 SRCS := $(shell ls *.c)
@@ -36,7 +37,7 @@ all: $(BENCHMARK).vmem
 
 # Cross-Compile C program to ELF file
 %.elf: $(OBJS)
-	$(CC) $(CFLAGS) $(BTLDR_DIR)/bootloader.S $^ -o $@
+	$(CC) $(CFLAGS) $(BTLDR_DIR)/bootloader.S $^ -o $@ $(LIBS)
 
 # Cross-Compile C program to object file
 %.o: %.c

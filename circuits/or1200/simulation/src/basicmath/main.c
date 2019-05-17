@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "snipmath.h"
 #include <math.h>
-#include "../bareBench.h"
+#include "bareBench.h"
 
 /* The printf's may be removed to isolate just the math calculations */
 
