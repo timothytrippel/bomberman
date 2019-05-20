@@ -1,4 +1,4 @@
-BENCHMARK := aes
+BENCHMARK := rsa
 
 # Source/Target Files
 SRCS := $(shell ls *.c)

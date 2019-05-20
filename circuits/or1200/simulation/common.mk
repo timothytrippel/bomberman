@@ -19,10 +19,6 @@ CFLAGS := -I$(INCLUDE_DIR) -Wall $(OPTLVL)
 LIBS   := -lc -lm
 # CFLAGS := -I$(INCLUDE_DIR) -Wall $(OPTLVL) -ffreestanding -std=c99 -fomit-frame-pointer -fno-optimize-sibling-calls
 
-# Source/Target Files
-SRCS := $(shell ls *.c)
-OBJS := $(patsubst %,%,$(SRCS:.c=.o))
-
 # Make Targets
 all: $(BENCHMARK).vmem
 
@@ -53,7 +49,7 @@ cleanall: clean
 	$(MAKE) clean -C $(UTILS_DIR)	
 
 clean:
-	rm -f *.o *.bin *.elf *.vmem
+	rm -f *.o *.bin *.elf.asm *.vmem
 
 # For debugging
 print-%  : ; @echo $* = $($*)

@@ -1,4 +1,4 @@
-BENCHMARK := aes
+BENCHMARK := blowfish
 
 # Source/Target Files
 SRCS := $(shell ls *.c)

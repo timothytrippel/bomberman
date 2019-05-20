@@ -1,4 +1,4 @@
-BENCHMARK := aes
+BENCHMARK := susan
 
 # Source/Target Files
 SRCS := $(shell ls *.c)

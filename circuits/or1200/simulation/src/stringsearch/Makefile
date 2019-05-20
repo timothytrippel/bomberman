@@ -1,4 +1,4 @@
-BENCHMARK := aes
+BENCHMARK := stringsearch
 
 # Source/Target Files
 SRCS := $(shell ls *.c)

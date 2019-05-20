@@ -1,4 +1,4 @@
-BENCHMARK := aes
+BENCHMARK := qsort
 
 # Source/Target Files
 SRCS := $(shell ls *.c)

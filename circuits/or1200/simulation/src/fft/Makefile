@@ -1,4 +1,4 @@
-BENCHMARK := aes
+BENCHMARK := fft
 
 # Source/Target Files
 SRCS := $(shell ls *.c)

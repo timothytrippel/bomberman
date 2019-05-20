@@ -1,4 +1,4 @@
-BENCHMARK := aes
+BENCHMARK := limits
 
 # Source/Target Files
 SRCS := $(shell ls *.c)

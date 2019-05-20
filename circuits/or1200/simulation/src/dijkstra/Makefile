@@ -1,4 +1,4 @@
-BENCHMARK := aes
+BENCHMARK := dijkstra
 
 # Source/Target Files
 SRCS := $(shell ls *.c)
