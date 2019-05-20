@@ -48,7 +48,8 @@ class HDL_Signal:
 			time   = tv[0]
 			values = ''.join(tv[1])
 			assert time not in self.time_values.keys()
-			self.time_values[time] = values
+			if 'x' not in values:
+				self.time_values[time] = values
 
 		# Check names and widths of matching signal in Dot file
 		assert self.lsb == int(vcd_data['lsb'])

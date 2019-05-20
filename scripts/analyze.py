@@ -66,7 +66,7 @@ def main():
 	##
 	# Set Program Switches
 	##
-	DEBUG_PRINTS = False
+	DEBUG_PRINTS = True
 
 	##
 	# Check argv

@@ -18,7 +18,7 @@ script: $(TARGET)-$(TYPE).dot $(TARGET)-$(TYPE).vcd
 
 # IVL Simulation (Step 2: VCD Generation)
 $(TARGET)-$(TYPE).vcd: $(TARGET)-$(TYPE).vvp
-	vvp $< -DVCD_FILENAME=\"$@\" +num_tests=$(NUM_TESTS)
+	@vvp $< -DVCD_FILENAME=\"$@\" +num_tests=$(NUM_TESTS)
 
 # IVL Simulation (Step 1: Executable Generation)
 $(TARGET)-$(TYPE).vvp: $(SOURCES) $(TESTBENCH)
