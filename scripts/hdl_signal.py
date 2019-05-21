@@ -48,12 +48,12 @@ class HDL_Signal:
 			time   = tv[0]
 			values = ''.join(tv[1])
 			assert time not in self.time_values.keys()
-			if 'x' not in values:
-				self.time_values[time] = values
+			# if 'x' not in values:
+			self.time_values[time] = values
 
 		# Check names and widths of matching signal in Dot file
-		assert self.lsb == int(vcd_data['lsb'])
-		assert self.msb == int(vcd_data['msb'])
+		assert self.lsb   == int(vcd_data['lsb'])
+		assert self.msb   == int(vcd_data['msb'])
 		assert self.width == int(net_dict['size'])
 
 		# self.debug_print()
@@ -78,9 +78,9 @@ class HDL_Signal:
 		print "		Is Flip-Flop:  %s" % (self.isff)
 		print "		Is Input:      %s" % (self.isinput)
 		print "		Is TB Covered: %s" % (self.tb_covered)
-		print "		Connections   (%d):" % (len(self.conn))
-		for connection in self.conn:
-			print "			%s" % (connection)
+		# print "		Connections   (%d):" % (len(self.conn))
+		# for connection in self.conn:
+		# 	print "			%s" % (connection)
 		if self.tb_covered:
 			print "		Is TB Covered: %s"   % (self.tb_covered)
 			print "		Hierarchy:     %s"   % (self.hierarchy)

@@ -10,20 +10,34 @@
 # Return non-zero exit code if any command (in this script) fails
 set -e
 
-# Set VCD log file
-VVP_LOG_FILE=${OUTPUT_DIR}/${DESIGN}.${TTYPE}.${NUM_TESTS}.vvp.log
+if [[ $LOGGING -eq 1 ]]; then
 
-# Print Job Info
-pwd      >  ${VVP_LOG_FILE}
-hostname >> ${VVP_LOG_FILE} 
-date     >> ${VVP_LOG_FILE}
+	# Set VCD log file
+	VVP_LOG_FILE=${OUTPUT_DIR}/${DESIGN}.${TTYPE}.vvp.log
 
-# Print status
-echo "Generating VVP simulation binary..." >> ${VVP_LOG_FILE}
+	# Print Job Info
+	pwd      >  ${VVP_LOG_FILE}
+	hostname >> ${VVP_LOG_FILE} 
+	date     >> ${VVP_LOG_FILE}
 
-# Generate (VVP) simulation binary
-(time iverilog \
-	-t vvp \
-	-o ${DESIGN}.${TTYPE}.${NUM_TESTS}.vvp \
-	-DVCD_FILENAME=\"${DESIGN}.${TTYPE}.${NUM_TESTS}.vcd\" \
-	`find . -type f -name "*.v" -not -name test_aes_128.v`) >> ${VVP_LOG_FILE} 2>&1
+	# Print status
+	echo "Generating VVP simulation binary..." >> ${VVP_LOG_FILE}
+
+	# Generate (VVP) simulation binary
+	(time iverilog \
+		-t vvp \
+		-o ${DESIGN}.${TTYPE}.vvp \
+		-DVCD_FILENAME=\"${DESIGN}.${TTYPE}.vcd\" \
+		`find . -type f -name "*.v" -not -name test_aes_128.v`) >> ${VVP_LOG_FILE} 2>&1
+else
+
+	# Print status
+	echo "Generating VVP simulation binary..."
+
+	# Generate (VVP) simulation binary
+	time iverilog \
+		-t vvp \
+		-o ${DESIGN}.${TTYPE}.vvp \
+		-DVCD_FILENAME=\"${DESIGN}.${TTYPE}.vcd\" \
+		`find . -type f -name "*.v" -not -name test_aes_128.v`
+fi

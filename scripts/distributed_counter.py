@@ -1,4 +1,5 @@
 # Standard Modules
+import sys
 
 # Custom Modules
 from hdl_signal import HDL_Signal
@@ -33,16 +34,21 @@ def build_deps(sig, msb, lsb, ffs = [], seen = {}):
 	return ffs
 
 def add_time_value(dist_counter, hdl_signal, msb, lsb, time, values):
+	print "MSB: %d; LSB: %d; Time: %d; Values: %s" % (msb, lsb, time, values)
 	if time in dist_counter.time_values:
+		print "HERE-1"
 		dist_counter.time_values[time] += values[hdl_signal.width - msb - 1: hdl_signal.width - lsb]
 	else:
+		print "HERE-2"
 		dist_counter.time_values[time]  = values[hdl_signal.width - msb - 1: hdl_signal.width - lsb]
+	print "After:", dist_counter.time_values[time]
 
-def generate_distributed_counters(signals, timescale):
+def generate_distributed_counters(signals):
 	seen = {}
 	dist_counters = []
 
 	for sig_name, sig in signals.iteritems():
+		
 		# Compute Dependencies
 		ffs = build_deps(sig, sig.msb, sig.lsb, [], {})
 		
@@ -81,6 +87,7 @@ def generate_distributed_counters(signals, timescale):
 
 		# Piece together simulated time values from dist. counter signals.
 		# Sort source signals by number of VCD time values
+		# print "-------------------------------------------------"
 		for source_signal in ffs:
 			hdl_signal = signals[source_signal.fullname()]
 			msb        = source_signal.msb
@@ -91,6 +98,7 @@ def generate_distributed_counters(signals, timescale):
 			# print "	MSB:   %d" % (msb)
 			# print "	LSB:   %d" % (lsb)
 			# print "	WIDTH: %d" % (width)
+			hdl_signal.debug_print()
 
 			# Update counter width and msb
 			dist_counter.width += width
@@ -115,6 +123,7 @@ def generate_distributed_counters(signals, timescale):
 					add_time_value(dist_counter, hdl_signal, msb, lsb, time, hdl_signal.time_values[time])
 					time_value_found = True
 				else:
+
 					# Find last time a value was recorded
 					j = i
 					while j >= 0:
@@ -133,7 +142,7 @@ def generate_distributed_counters(signals, timescale):
 
 				# Check if time value found
 				if not time_value_found:
-					print "ERROR: unkown time value for signal (%s) at time (%d)" % (source_signal.fullname(), )
+					print "ERROR: unkown time value for signal (%s) at time (%d)" % (source_signal.fullname(), time)
 					sys.exit(1) 
 
 		# Update tb_covered flag
@@ -145,5 +154,7 @@ def generate_distributed_counters(signals, timescale):
 			
 			# Append dist_counter to list
 			dist_counters.append(dist_counter)
+
+		break
 
 	return dist_counters

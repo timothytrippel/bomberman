@@ -9,17 +9,34 @@
 # Return non-zero exit code if any command (in this script) fails
 set -e
 
-# Set analysis log file
-ANALYSIS_LOG_FILE=${OUTPUT_DIR}/${DESIGN}.${TTYPE}.${NUM_TESTS}.ac.log
+if [[ $LOGGING -eq 1 ]]; then
 
-# Print Job Info
-pwd      >  ${ANALYSIS_LOG_FILE}
-hostname >> ${ANALYSIS_LOG_FILE} 
-date     >> ${ANALYSIS_LOG_FILE}
+	# Set analysis log file
+	ANALYSIS_LOG_FILE=${OUTPUT_DIR}/${DESIGN}.${TTYPE}.${TIME_LIMIT}.ac.log
 
-# Analyze design for counters
-(time pypy \
-	${OUTPUT_DIR}/../../scripts/analyze.py \
-	${DESIGN}.${TTYPE}.dot \
-	${DESIGN}.${TTYPE}.${NUM_TESTS}.vcd \
-	${OUTPUT_DIR}/${DESIGN}.${TTYPE}.${NUM_TESTS}.json) >> ${ANALYSIS_LOG_FILE} 2>&1
+	# Print Job Info
+	pwd      >  ${ANALYSIS_LOG_FILE}
+	hostname >> ${ANALYSIS_LOG_FILE} 
+	date     >> ${ANALYSIS_LOG_FILE}
+
+	# Analyze design for counters
+	(time pypy \
+		${OUTPUT_DIR}/../../scripts/analyze.py \
+		${START_TIME} \
+		${TIME_LIMIT} \
+		${TIME_RESOLUTION} \
+		${DESIGN}.${TTYPE}.dot \
+		${DESIGN}.${TTYPE}.vcd \
+		${OUTPUT_DIR}/${DESIGN}.${TTYPE}) >> ${ANALYSIS_LOG_FILE} 2>&1
+else
+
+	# Analyze design for counters
+	time pypy \
+		${OUTPUT_DIR}/../../scripts/analyze.py \
+		${START_TIME} \
+		${TIME_LIMIT} \
+		${TIME_RESOLUTION} \
+		${DESIGN}.${TTYPE}.dot \
+		${DESIGN}.${TTYPE}.vcd \
+		${OUTPUT_DIR}/${DESIGN}.${TTYPE}
+fi

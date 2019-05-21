@@ -9,19 +9,32 @@
 # Return non-zero exit code if any command (in this script) fails
 set -e
 
-# Set VCD log file
-VCD_LOG_FILE=${OUTPUT_DIR}/${DESIGN}.${TTYPE}.${NUM_TESTS}.vcd.log
+if [[ $LOGGING -eq 1 ]]; then
+	
+	# Set VCD log file
+	VCD_LOG_FILE=${OUTPUT_DIR}/${DESIGN}.${TTYPE}.vcd.log
 
-# Print Job Info
-pwd      >  ${VCD_LOG_FILE}
-hostname >> ${VCD_LOG_FILE} 
-date     >> ${VCD_LOG_FILE}
+	# Print Job Info
+	pwd      >  ${VCD_LOG_FILE}
+	hostname >> ${VCD_LOG_FILE} 
+	date     >> ${VCD_LOG_FILE}
 
-# Print status
-echo "Generating VCD file with ${NUM_TESTS} test cases..." >> ${VCD_LOG_FILE}
+	# Print status
+	echo "Generating VCD file with ${NUM_TESTS} test cases..." >> ${VCD_LOG_FILE}
 
-# Generate VCD file
-(time vvp \
-	${DESIGN}.${TTYPE}.${NUM_TESTS}.vvp \
-	-DVCD_FILENAME=\"${DESIGN}.${TTYPE}.${NUM_TESTS}.vcd\" \
-	+num_tests=${NUM_TESTS}) >> ${VCD_LOG_FILE} 2>&1
+	# Generate VCD file
+	(time vvp \
+		${DESIGN}.${TTYPE}.vvp \
+		-DVCD_FILENAME=\"${DESIGN}.${TTYPE}.vcd\" \
+		+num_tests=${NUM_TESTS}) >> ${VCD_LOG_FILE} 2>&1
+else
+
+	# Print status
+	echo "Generating VCD file with ${NUM_TESTS} test cases..."
+
+	# Generate VCD file
+	time vvp \
+		${DESIGN}.${TTYPE}.vvp \
+		-DVCD_FILENAME=\"${DESIGN}.${TTYPE}.vcd\" \
+		+num_tests=${NUM_TESTS}
+fi
