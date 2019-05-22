@@ -51,6 +51,8 @@ class SignalGraph {
         bool check_if_ignore_mem_signal(ivl_signal_t mem_signal) const;
         
         // Connection Enumeration
+        conn_q_t* get_connections(Signal* sink_signal);
+
         bool check_if_connection_exists(
             Signal*     sink_signal, 
             Connection* new_conn);

@@ -313,6 +313,14 @@ void Error::multiple_valid_event_nexus_ptrs(ivl_statement_t stmt) {
     exit(PROCEDURAL_CONNECTIONS_ERROR);
 }
 
+void Error::multiple_continuous_loopbacks(Signal* sink_signal) {
+    fprintf(stderr, "ERROR: >1 continous loopback connections encountered. \
+        \n(Sink Signal: %s).\n", 
+        sink_signal->get_fullname().c_str());
+
+    exit(CONCURRENT_CONNECTIONS_ERROR);    
+}
+
 // ------------------------------------------------------------
 // ---------------- Error Reporting: WARNINGS -----------------
 // ------------------------------------------------------------

@@ -84,6 +84,7 @@ class Error {
         static void multiple_valid_event_nexus_ptrs(ivl_statement_t stmt);
         static void zero_event_nexus_ptrs(ivl_statement_t stmt);
         static void constant_event_nexus_ptr(ivl_statement_t stmt);
+        static void multiple_continuous_loopbacks(Signal* sink_signal);
 };
 
 #endif

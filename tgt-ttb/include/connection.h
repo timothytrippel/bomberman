@@ -23,6 +23,7 @@ Graphviz .dot file.
 #include <ivl_target.h>
 
 // TTB Headers
+#include <ttb_typedefs.h>
 #include <signal.h>
 
 // Import STD Namespace
@@ -64,6 +65,9 @@ class Connection {
 
         // General Setters
         void set_sink(Signal* new_sink);
+
+        // Debug print
+        DEBUG_PRINT(void debug_print() const;)
 
     private:
         // Source Signal

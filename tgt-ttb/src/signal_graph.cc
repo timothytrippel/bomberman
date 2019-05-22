@@ -306,6 +306,10 @@ void SignalGraph::add_signal(ivl_signal_t signal) {
 // ----------------- Connection Enumeration -------------------
 // ------------------------------------------------------------
 
+conn_q_t* SignalGraph::get_connections(Signal* sink_signal) {
+    return connections_map_[sink_signal];
+}
+
 bool SignalGraph::check_if_connection_exists(
     Signal*     sink_signal, 
     Connection* new_conn) {

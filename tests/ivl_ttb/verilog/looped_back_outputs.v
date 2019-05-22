@@ -1,25 +1,29 @@
 module submod(
 	input in,
-	output [7:0] out
+	output reg [7:0] out
 );
 
-assign out = 4'hDEAD;
+	always @(posedge in) begin
+		out <= 8'hAD;
+	end
 
 endmodule
 
 module looped_back_outputs(
 	input in,
-	output reg [31:0] out
+	output [31:0] out
 );
 
 	submod X (
 		.in(in),
-		.out(out[31:24]),
-	)
+		.out(out[31:24])
+	);
+
+	assign out[23:16] = out[31:24];
 
 	submod Y (
 		.in(in),
 		.out(out[7:0])
-	)
+	);
 
 endmodule

@@ -132,3 +132,22 @@ string Connection::get_dot_label() const {
 void Connection::set_sink(Signal* new_sink) {
     sink_ = new_sink;
 }
+
+// ----------------------------------------------------------------------------------
+// ----------------------------------- Debug ----------------------------------------
+// ----------------------------------------------------------------------------------
+
+DEBUG_PRINT(
+void Connection::debug_print() const {
+    
+    fprintf(DEBUG_PRINTS_FILE_PTR, "%s.%d[%d:%d] <-- %s.%d[%d:%d]\n", 
+        sink_->get_fullname().c_str(),
+        sink_id_,
+        sink_msb_,
+        sink_lsb_,
+        source_->get_fullname().c_str(),
+        source_id_,
+        source_msb_,
+        source_lsb_);
+}
+)
