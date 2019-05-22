@@ -137,6 +137,8 @@ class Signal {
         void set_is_ff();
         void set_is_input();
         void set_id(unsigned int value);
+        void reset_source_slice();
+        void reset_sink_slice();
         void reset_slices();
         void set_source_slice(unsigned int msb, unsigned int lsb, string ws);
         void set_sink_slice(unsigned int msb, unsigned int lsb, string ws);

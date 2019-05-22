@@ -53,11 +53,15 @@ void Tracker::propagate_nexus(ivl_nexus_t nexus, Signal* sink_signal, string ws)
                     sg_->get_signal_from_ivl_signal(source_signal)->get_fullname().c_str(), 
                     get_signal_port_type_as_string(source_signal));)
 
-                // Set ID of (potential) source signal (arrayed signals)
-                sg_->get_signal_from_ivl_signal(source_signal)->set_id(ivl_nexus_ptr_pin(nexus_ptr));
+                // Check that source and sink signals are different
+                if (sink_signal->get_ivl_signal() != source_signal) {
 
-                // Process (potential) source signal
-                proccessed_signal |= propagate_signal(source_signal, sink_signal, ws);
+                    // Set ID of (potential) source signal (arrayed signals)
+                    sg_->get_signal_from_ivl_signal(source_signal)->set_id(ivl_nexus_ptr_pin(nexus_ptr));
+
+                    // Process (potential) source signal
+                    proccessed_signal |= propagate_signal(source_signal, sink_signal, ws);
+                }
 
             } else if ((source_logic = ivl_nexus_ptr_log(nexus_ptr))) {
                 
@@ -120,59 +124,39 @@ void Tracker::propagate_nexus(ivl_nexus_t nexus, Signal* sink_signal, string ws)
                 // If yes, this is a loopback assignment. We need to propagate back one
                 // level, updating the source signal and source ID/slice information.
                 if (sink_signal == sg_->get_signal_from_ivl_signal(source_signal)) {
-                    
-                    // Get vector of connections to sink signal
-                    conn_q_t     sink_connections    = *(sg_->get_connections(sink_signal));
-                    unsigned int num_sink_connections = sink_connections.size();
-                    bool         loopback_conn_found  = false;
-                    Connection*  conn = NULL;
 
-                    // Get source slice of (potential) loopback connection
+                    // Get sink/source signal slices
                     signal_slice_t loopback_source_slice = sink_signal->get_source_slice(sg_->get_signal_from_ivl_signal(source_signal));
+                    signal_slice_t loopback_sink_slice   = sink_signal->get_sink_slice(sink_signal);
 
-                    // Find loopback connection
-                    for (unsigned int i = 0; i < num_sink_connections; i++) {          
+                    // Check that looback has mis-matching sink/source slices
+                    if (loopback_source_slice.msb != loopback_sink_slice.msb &&
+                        loopback_source_slice.lsb != loopback_sink_slice.lsb) {
+                        
+                        DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, "%sLoopback signal found. Correcting source to %s\n",
+                            ws.c_str(),
+                            sink_signal->get_fullname().c_str());)
 
-                        // Get connection
-                        conn = sink_connections[i];
+                        // Set ID of (potential) source signal (arrayed signals)
+                        sg_->get_signal_from_ivl_signal(source_signal)->set_id(ivl_nexus_ptr_pin(nexus_ptr));
 
-                        // Check if source slice of the current source signal 
-                        // matches the sink slice of one and only one connection
-                        if (conn->get_sink_msb() == loopback_source_slice.msb &&
-                            conn->get_sink_lsb() == loopback_source_slice.lsb) {
+                        // Process (potential) source signal
+                        proccessed_signal |= propagate_signal(source_signal, sink_signal, ws);
 
-                            // Check if already found loopback connection
-                            if (!loopback_conn_found) {
+                        // Reset Slices
+                        sink_signal->reset_source_slice();
 
-                                // Mark loopback connection found
-                                loopback_conn_found = true;
+                    } else {
 
-                                DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, "%sLoopback signal found. Correcting source to %s\n",
-                                    ws.c_str(),
-                                    conn->get_source()->get_fullname().c_str());)
-
-                                // Correct source signal and slice info
-                                ivl_signal_t new_source_signal = conn->get_source()->get_ivl_signal();
-                                set_source_slice(sink_signal, conn->get_source_msb(), conn->get_source_lsb(), ws);
-
-                                // Make connection
-                                // Set ID of (potential) source signal (arrayed signals)
-                                sg_->get_signal_from_ivl_signal(new_source_signal)->set_id(ivl_nexus_ptr_pin(nexus_ptr));
-
-                                // Process (potential) source signal
-                                proccessed_signal |= propagate_signal(new_source_signal, sink_signal, ws);
-
-                            } else {
-                                Error::multiple_continuous_loopbacks(sink_signal);
-                            }
-                        }
+                        // Error
+                        Error::infinite_loopback_assignment(sink_signal);
                     }
                 }
 
             } else {
 
                 // This nexus has already been explored, do not propagate non-signal loopback assignments
-                DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, "%sWARNING: skipping non-signal loopback...\n", ws.c_str());)
+                DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, " -- WARNING: skipping non-signal loopback...\n");)
             }
         }
     }

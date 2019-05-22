@@ -64,6 +64,7 @@ class Error {
         static void unknown_ivl_obj_type(ivl_obj_type_t obj_type);
         static void unknown_nexus_type();
         static void unknown_signal_port_type(ivl_signal_port_t port_type);
+        static void unknown_signal_case(unsigned int case_type);
         static void unknown_part_select_lpm_type(ivl_lpm_type_t lpm_type);
         static void unknown_statement_type(ivl_statement_type_t statement_type);
         static void unknown_expression_type(ivl_expr_type_t expression_type);
@@ -84,7 +85,7 @@ class Error {
         static void multiple_valid_event_nexus_ptrs(ivl_statement_t stmt);
         static void zero_event_nexus_ptrs(ivl_statement_t stmt);
         static void constant_event_nexus_ptr(ivl_statement_t stmt);
-        static void multiple_continuous_loopbacks(Signal* sink_signal);
+        static void infinite_loopback_assignment(Signal* sink_signal);
 };
 
 #endif

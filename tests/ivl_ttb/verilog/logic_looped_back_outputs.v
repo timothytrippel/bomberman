@@ -9,7 +9,7 @@ module submod(
 
 endmodule
 
-module looped_back_outputs(
+module logic_looped_back_outputs(
 	input in,
 	output [31:0] out
 );
@@ -26,5 +26,5 @@ module looped_back_outputs(
 		.out(out[7:0])
 	);
 
-	assign out[15:8] = out[7:0];
+	assign out[15:8] = out[23:16] ^ out[7:0];
 endmodule

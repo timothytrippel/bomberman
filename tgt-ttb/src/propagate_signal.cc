@@ -140,6 +140,7 @@ bool Tracker::process_signal_case(
 		case 16:
 			break;
 		case 17:
+			return process_signal_connect(ivl_source_signal, sink_signal, ws);
 			break;
 		case 18:
 			// SOURCE MUST BE CHILD OF SINK
@@ -148,7 +149,7 @@ bool Tracker::process_signal_case(
 			}
 			break;
 		default:
-			// ERROR
+			Error::unknown_signal_case(case_num);
 			break;
 	}
 
@@ -167,133 +168,130 @@ bool Tracker::propagate_signal(
 	ivl_signal_port_t source_port = ivl_signal_port(ivl_source_signal);
 	ivl_signal_port_t sink_port   = ivl_signal_port(ivl_sink_signal);
 
-	// Check that source signal is different from sink signal
-	if (ivl_source_signal != ivl_sink_signal) {
-		
-		if (source_port == IVL_SIP_NONE && sink_port == IVL_SIP_NONE) {
-	
-			// Check if source and sink signals in same modules (scopes)
-			if (in_same_scope(ivl_source_signal, ivl_sink_signal)) {
+	// Process Signal Port Types
+	if (source_port == IVL_SIP_NONE && sink_port == IVL_SIP_NONE) {
 
-				// CASE 1 --> SOURCE-NONE -- SINK-NONE -- SAME MODULE
-				return process_signal_case(1, ivl_source_signal, sink_signal, ws);
-			} else {
+		// Check if source and sink signals in same modules (scopes)
+		if (in_same_scope(ivl_source_signal, ivl_sink_signal)) {
 
-				// CASE 2 --> SOURCE-NONE -- SINK-NONE -- DIFF MODULE
-				return process_signal_case(2, ivl_source_signal, sink_signal, ws);
-			}
-
-		} else if (source_port == IVL_SIP_INPUT && sink_port == IVL_SIP_NONE) {
-			
-			// Check if source and sink signals in same modules (scopes)
-			if (in_same_scope(ivl_source_signal, ivl_sink_signal)) {
-				
-				// CASE 3 --> SOURCE-INPUT -- SINK-NONE -- SAME MODULE
-				return process_signal_case(3, ivl_source_signal, sink_signal, ws);
-			} else {
-
-				// CASE 4 --> SOURCE-INPUT -- SINK-NONE -- DIFF MODULE
-				return process_signal_case(4, ivl_source_signal, sink_signal, ws);
-			}
-		} else if (source_port == IVL_SIP_OUTPUT && sink_port == IVL_SIP_NONE) {
-			
-			// Check if source and sink signals in same modules (scopes)
-			if (in_same_scope(ivl_source_signal, ivl_sink_signal)) {
-
-				// CASE 5 --> SOURCE-OUTPUT -- SINK-NONE -- SAME MODULE
-				return process_signal_case(5, ivl_source_signal, sink_signal, ws);
-			} else {
-
-				// CASE 6 --> SOURCE-OUTPUT -- SINK-NONE -- DIFF MODULE
-				return process_signal_case(6, ivl_source_signal, sink_signal, ws);
-			}
-
-		} else if (source_port == IVL_SIP_NONE && sink_port == IVL_SIP_INPUT) {
-			
-			// Check if source and sink signals in same modules (scopes)
-			if (in_same_scope(ivl_source_signal, ivl_sink_signal)) {
-
-				// CASE 7 --> SOURCE-NONE -- SINK-INPUT -- SAME MODULE
-				return process_signal_case(7, ivl_source_signal, sink_signal, ws);
-			} else {
-
-				// CASE 8 --> SOURCE-NONE -- SINK-INPUT -- DIFF MODULE
-				return process_signal_case(8, ivl_source_signal, sink_signal, ws);
-			}
-
-		} else if (source_port == IVL_SIP_INPUT && sink_port == IVL_SIP_INPUT) {
-			
-			// Check if source and sink signals in same modules (scopes)
-			if (in_same_scope(ivl_source_signal, ivl_sink_signal)) {
-
-				// CASE 9 --> SOURCE-INPUT -- SINK-INPUT -- SAME MODULE
-				return process_signal_case(9, ivl_source_signal, sink_signal, ws);
-			} else {
-
-				// CASE 10 --> SOURCE-INPUT -- SINK-INPUT -- DIFF MODULE
-				return process_signal_case(10, ivl_source_signal, sink_signal, ws);
-			}
-
-		} else if (source_port == IVL_SIP_OUTPUT && sink_port == IVL_SIP_INPUT) {
-			
-			// Check if source and sink signals in same modules (scopes)
-			if (in_same_scope(ivl_source_signal, ivl_sink_signal)) {
-
-				// CASE 11 --> SOURCE-OUTPUT -- SINK-INPUT -- SAME MODULE
-				return process_signal_case(11, ivl_source_signal, sink_signal, ws);
-			} else {
-
-				// CASE 12 --> SOURCE-OUTPUT -- SINK-INPUT -- DIFF MODULE
-				return process_signal_case(12, ivl_source_signal, sink_signal, ws);
-			}
-
-		} else if (source_port == IVL_SIP_NONE && sink_port == IVL_SIP_OUTPUT) {
-			
-			// Check if source and sink signals in same modules (scopes)
-			if (in_same_scope(ivl_source_signal, ivl_sink_signal)) {
-
-				// CASE 13 --> SOURCE-NONE -- SINK-OUTPUT -- SAME MODULE
-				return process_signal_case(13, ivl_source_signal, sink_signal, ws);
-			} else {
-
-				// CASE 14 --> SOURCE-NONE -- SINK-OUTPUT -- DIFF MODULE
-				return process_signal_case(14, ivl_source_signal, sink_signal, ws);
-			}
-
-		} else if (source_port == IVL_SIP_INPUT && sink_port == IVL_SIP_OUTPUT) {
-			
-			// Check if source and sink signals in same modules (scopes)
-			if (in_same_scope(ivl_source_signal, ivl_sink_signal)) {
-
-				// CASE 15 --> SOURCE-INPUT -- SINK-OUTPUT -- SAME MODULE
-				return process_signal_case(15, ivl_source_signal, sink_signal, ws);
-			} else {
-
-				// CASE 16 --> SOURCE-INPUT -- SINK-OUTPUT -- DIFF MODULE
-				return process_signal_case(16, ivl_source_signal, sink_signal, ws);
-			}
-
-		} else if (source_port == IVL_SIP_OUTPUT && sink_port == IVL_SIP_OUTPUT) {
-			
-			// Check if source and sink signals in same modules (scopes)
-			if (in_same_scope(ivl_source_signal, ivl_sink_signal)) {
-
-				// CASE 17 --> SOURCE-OUTPUT -- SINK-OUTPUT -- SAME MODULE
-				return process_signal_case(17, ivl_source_signal, sink_signal, ws);
-			} else {
-
-				// CASE 18 --> SOURCE-OUTPUT -- SINK-OUTPUT -- DIFF MODULE
-				return process_signal_case(18, ivl_source_signal, sink_signal, ws);
-			}
-
-		} else if (source_port == IVL_SIP_INOUT || sink_port == IVL_SIP_INOUT) {
-			// INOUT
-			DEBUG_PRINT(fprintf(stderr, "WARNING: sink signal port type (IVL_SIP_INOUT) not supported ... skipping.\n");)
-			// Error::not_supported("sink signal port type (IVL_SIP_INOUT).");
+			// CASE 1 --> SOURCE-NONE -- SINK-NONE -- SAME MODULE
+			return process_signal_case(1, ivl_source_signal, sink_signal, ws);
 		} else {
-			// OTHER
-			Error::unknown_signal_port_type(ivl_signal_port(ivl_source_signal));
+
+			// CASE 2 --> SOURCE-NONE -- SINK-NONE -- DIFF MODULE
+			return process_signal_case(2, ivl_source_signal, sink_signal, ws);
 		}
+
+	} else if (source_port == IVL_SIP_INPUT && sink_port == IVL_SIP_NONE) {
+		
+		// Check if source and sink signals in same modules (scopes)
+		if (in_same_scope(ivl_source_signal, ivl_sink_signal)) {
+			
+			// CASE 3 --> SOURCE-INPUT -- SINK-NONE -- SAME MODULE
+			return process_signal_case(3, ivl_source_signal, sink_signal, ws);
+		} else {
+
+			// CASE 4 --> SOURCE-INPUT -- SINK-NONE -- DIFF MODULE
+			return process_signal_case(4, ivl_source_signal, sink_signal, ws);
+		}
+	} else if (source_port == IVL_SIP_OUTPUT && sink_port == IVL_SIP_NONE) {
+		
+		// Check if source and sink signals in same modules (scopes)
+		if (in_same_scope(ivl_source_signal, ivl_sink_signal)) {
+
+			// CASE 5 --> SOURCE-OUTPUT -- SINK-NONE -- SAME MODULE
+			return process_signal_case(5, ivl_source_signal, sink_signal, ws);
+		} else {
+
+			// CASE 6 --> SOURCE-OUTPUT -- SINK-NONE -- DIFF MODULE
+			return process_signal_case(6, ivl_source_signal, sink_signal, ws);
+		}
+
+	} else if (source_port == IVL_SIP_NONE && sink_port == IVL_SIP_INPUT) {
+		
+		// Check if source and sink signals in same modules (scopes)
+		if (in_same_scope(ivl_source_signal, ivl_sink_signal)) {
+
+			// CASE 7 --> SOURCE-NONE -- SINK-INPUT -- SAME MODULE
+			return process_signal_case(7, ivl_source_signal, sink_signal, ws);
+		} else {
+
+			// CASE 8 --> SOURCE-NONE -- SINK-INPUT -- DIFF MODULE
+			return process_signal_case(8, ivl_source_signal, sink_signal, ws);
+		}
+
+	} else if (source_port == IVL_SIP_INPUT && sink_port == IVL_SIP_INPUT) {
+		
+		// Check if source and sink signals in same modules (scopes)
+		if (in_same_scope(ivl_source_signal, ivl_sink_signal)) {
+
+			// CASE 9 --> SOURCE-INPUT -- SINK-INPUT -- SAME MODULE
+			return process_signal_case(9, ivl_source_signal, sink_signal, ws);
+		} else {
+
+			// CASE 10 --> SOURCE-INPUT -- SINK-INPUT -- DIFF MODULE
+			return process_signal_case(10, ivl_source_signal, sink_signal, ws);
+		}
+
+	} else if (source_port == IVL_SIP_OUTPUT && sink_port == IVL_SIP_INPUT) {
+		
+		// Check if source and sink signals in same modules (scopes)
+		if (in_same_scope(ivl_source_signal, ivl_sink_signal)) {
+
+			// CASE 11 --> SOURCE-OUTPUT -- SINK-INPUT -- SAME MODULE
+			return process_signal_case(11, ivl_source_signal, sink_signal, ws);
+		} else {
+
+			// CASE 12 --> SOURCE-OUTPUT -- SINK-INPUT -- DIFF MODULE
+			return process_signal_case(12, ivl_source_signal, sink_signal, ws);
+		}
+
+	} else if (source_port == IVL_SIP_NONE && sink_port == IVL_SIP_OUTPUT) {
+		
+		// Check if source and sink signals in same modules (scopes)
+		if (in_same_scope(ivl_source_signal, ivl_sink_signal)) {
+
+			// CASE 13 --> SOURCE-NONE -- SINK-OUTPUT -- SAME MODULE
+			return process_signal_case(13, ivl_source_signal, sink_signal, ws);
+		} else {
+
+			// CASE 14 --> SOURCE-NONE -- SINK-OUTPUT -- DIFF MODULE
+			return process_signal_case(14, ivl_source_signal, sink_signal, ws);
+		}
+
+	} else if (source_port == IVL_SIP_INPUT && sink_port == IVL_SIP_OUTPUT) {
+		
+		// Check if source and sink signals in same modules (scopes)
+		if (in_same_scope(ivl_source_signal, ivl_sink_signal)) {
+
+			// CASE 15 --> SOURCE-INPUT -- SINK-OUTPUT -- SAME MODULE
+			return process_signal_case(15, ivl_source_signal, sink_signal, ws);
+		} else {
+
+			// CASE 16 --> SOURCE-INPUT -- SINK-OUTPUT -- DIFF MODULE
+			return process_signal_case(16, ivl_source_signal, sink_signal, ws);
+		}
+
+	} else if (source_port == IVL_SIP_OUTPUT && sink_port == IVL_SIP_OUTPUT) {
+		
+		// Check if source and sink signals in same modules (scopes)
+		if (in_same_scope(ivl_source_signal, ivl_sink_signal)) {
+			
+			// CASE 17 --> SOURCE-OUTPUT -- SINK-OUTPUT -- SAME MODULE
+			return process_signal_case(17, ivl_source_signal, sink_signal, ws);
+		} else {
+			
+			// CASE 18 --> SOURCE-OUTPUT -- SINK-OUTPUT -- DIFF MODULE
+			return process_signal_case(18, ivl_source_signal, sink_signal, ws);
+		}
+
+	} else if (source_port == IVL_SIP_INOUT || sink_port == IVL_SIP_INOUT) {
+		// INOUT
+		DEBUG_PRINT(fprintf(stderr, "WARNING: sink signal port type (IVL_SIP_INOUT) not supported ... skipping.\n");)
+		// Error::not_supported("sink signal port type (IVL_SIP_INOUT).");
+	} else {
+		// OTHER
+		Error::unknown_signal_port_type(ivl_signal_port(ivl_source_signal));
 	}
 
 	return false;

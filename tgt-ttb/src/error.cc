@@ -230,6 +230,12 @@ void Error::unknown_signal_port_type(ivl_signal_port_t port_type) {
     exit(CONCURRENT_CONNECTIONS_ERROR); 
 }
 
+void Error::unknown_signal_case(unsigned int case_type) {
+    fprintf(stderr, "ERROR: unkown signal case (%u).\n", case_type);
+    
+    exit(CONCURRENT_CONNECTIONS_ERROR); 
+}
+
 void Error::unknown_part_select_lpm_type(ivl_lpm_type_t lpm_type) {
     fprintf(stderr, "ERROR: unkown part select LPM type (%d).\n", (int) lpm_type);
     
@@ -313,8 +319,8 @@ void Error::multiple_valid_event_nexus_ptrs(ivl_statement_t stmt) {
     exit(PROCEDURAL_CONNECTIONS_ERROR);
 }
 
-void Error::multiple_continuous_loopbacks(Signal* sink_signal) {
-    fprintf(stderr, "ERROR: >1 continous loopback connections encountered. \
+void Error::infinite_loopback_assignment(Signal* sink_signal) {
+    fprintf(stderr, "ERROR: continous loopback assignment sink/source slices are the same. \
         \n(Sink Signal: %s).\n", 
         sink_signal->get_fullname().c_str());
 

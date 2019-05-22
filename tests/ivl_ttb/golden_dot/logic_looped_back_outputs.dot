@@ -1,0 +1,21 @@
+digraph G {
+	"logic_looped_back_outputs.in" -> "logic_looped_back_outputs.X.in"[label="[0:0]->[0:0]"];
+	"logic_looped_back_outputs.in" -> "logic_looped_back_outputs.Y.in"[label="[0:0]->[0:0]"];
+	"logic_looped_back_outputs.Y.out" -> "logic_looped_back_outputs.out"[label="[7:0]->[7:0]"];
+	"logic_looped_back_outputs.out" -> "logic_looped_back_outputs.out"[label="[23:16]->[15:8]"];
+	"logic_looped_back_outputs.out" -> "logic_looped_back_outputs.out"[label="[7:0]->[15:8]"];
+	"logic_looped_back_outputs.out" -> "logic_looped_back_outputs.out"[label="[31:24]->[23:16]"];
+	"logic_looped_back_outputs.X.out" -> "logic_looped_back_outputs.out"[label="[7:0]->[31:24]"];
+	"const.0.10101101" [shape=none, label="const.0.10101101[7:0]"];
+	"const.0.10101101" -> "logic_looped_back_outputs.X.out"[label="[7:0]->[7:0]"];
+	"logic_looped_back_outputs.X.in" -> "logic_looped_back_outputs.X.out"[label="[0:0]->[7:0]"];
+	"const.1.10101101" [shape=none, label="const.1.10101101[7:0]"];
+	"const.1.10101101" -> "logic_looped_back_outputs.Y.out"[label="[7:0]->[7:0]"];
+	"logic_looped_back_outputs.Y.in" -> "logic_looped_back_outputs.Y.out"[label="[0:0]->[7:0]"];
+	"logic_looped_back_outputs.X.in" [shape=rectangle, label="logic_looped_back_outputs.X.in[0:0]"];
+	"logic_looped_back_outputs.X.out" [shape=ellipse, label="logic_looped_back_outputs.X.out[7:0]"];
+	"logic_looped_back_outputs.Y.in" [shape=rectangle, label="logic_looped_back_outputs.Y.in[0:0]"];
+	"logic_looped_back_outputs.Y.out" [shape=ellipse, label="logic_looped_back_outputs.Y.out[7:0]"];
+	"logic_looped_back_outputs.in" [shape=rectangle, label="logic_looped_back_outputs.in[0:0]"];
+	"logic_looped_back_outputs.out" [shape=ellipse, label="logic_looped_back_outputs.out[31:0]"];
+}

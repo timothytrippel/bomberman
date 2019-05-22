@@ -566,13 +566,21 @@ void Signal::set_id(unsigned int value) {
 	id_ = value;
 }
 
-void Signal::reset_slices() {
+void Signal::reset_source_slice() {
 	source_msb_            = 0;
 	source_lsb_            = 0; 
-	sink_msb_              = 0; 
-	sink_lsb_              = 0;
 	source_slice_modified_ = false;
-	sink_slice_modified_   = false;
+}
+
+void Signal::reset_sink_slice() {
+	sink_msb_            = 0; 
+	sink_lsb_            = 0;
+	sink_slice_modified_ = false;
+}
+
+void Signal::reset_slices() {
+	reset_source_slice();
+	reset_sink_slice();
 }
 
 void Signal::set_source_slice(unsigned int msb, unsigned int lsb, string ws) {
