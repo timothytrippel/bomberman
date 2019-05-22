@@ -72,7 +72,7 @@ void DotGraph::init_graph() {
     fprintf(file_ptr_, "digraph G {\n");
 }
 
-void DotGraph::add_node(Signal* signal, string ws) const {
+void DotGraph::add_node(Signal* signal, string ws __attribute__((unused))) const {
     if (file_ptr_) {   
 
         // Debug Print
@@ -96,7 +96,7 @@ void DotGraph::add_node(Signal* signal, string ws) const {
     }
 }
 
-void DotGraph::add_connection(Connection* conn, string ws) const {
+void DotGraph::add_connection(Connection* conn, string ws __attribute__((unused))) const {
     if (file_ptr_) {
 
         // Debug Print

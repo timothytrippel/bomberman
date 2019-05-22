@@ -105,7 +105,7 @@ Signal* Tracker::get_source_signal(unsigned int index) const {
     return source_signals_.get_signal(index);
 }
 
-Signal* Tracker::pop_source_signal(string ws) {
+Signal* Tracker::pop_source_signal(string ws __attribute__((unused))) {
 
 	DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, "%spopping %d source signal(s) from stack\n", 
         ws.c_str(), 1);)
@@ -114,7 +114,7 @@ Signal* Tracker::pop_source_signal(string ws) {
     return source_signals_.pop_signal();
 }
 
-void Tracker::pop_source_signals(unsigned int num_signals, string ws) {
+void Tracker::pop_source_signals(unsigned int num_signals, string ws __attribute__((unused))) {
 
 	DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, "%spopping %d source signal(s) from stack\n", 
         ws.c_str(), num_signals);)
@@ -126,7 +126,7 @@ void Tracker::pop_source_signals(unsigned int num_signals, string ws) {
 void Tracker::push_source_signal(
 	Signal*      source_signal, 
 	unsigned int id,
-	string       ws) {
+	string       ws __attribute__((unused))) {
 
     // Check that source signal is valid (not NULL)
     assert(source_signal && 

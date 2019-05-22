@@ -583,7 +583,7 @@ void Signal::reset_slices() {
 	reset_sink_slice();
 }
 
-void Signal::set_source_slice(unsigned int msb, unsigned int lsb, string ws) {
+void Signal::set_source_slice(unsigned int msb, unsigned int lsb, string ws __attribute__((unused))) {
 
 	// Debug Print
     DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, 
@@ -595,7 +595,7 @@ void Signal::set_source_slice(unsigned int msb, unsigned int lsb, string ws) {
 	source_lsb_            = lsb;
 }
 
-void Signal::set_sink_slice(unsigned int msb, unsigned int lsb, string ws) {
+void Signal::set_sink_slice(unsigned int msb, unsigned int lsb, string ws __attribute__((unused))) {
 
 	// Debug Print
     DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, 
@@ -607,15 +607,15 @@ void Signal::set_sink_slice(unsigned int msb, unsigned int lsb, string ws) {
 	sink_lsb_            = lsb;
 }
 
-void Signal::set_source_slice(signal_slice_t source_slice, string ws) {
+void Signal::set_source_slice(signal_slice_t source_slice, string ws __attribute__((unused))) {
 	this->set_source_slice(source_slice.msb, source_slice.lsb, ws);
 }
 
-void Signal::set_sink_slice(signal_slice_t sink_slice, string ws) {
+void Signal::set_sink_slice(signal_slice_t sink_slice, string ws __attribute__((unused))) {
 	this->set_sink_slice(sink_slice.msb, sink_slice.lsb, ws);
 }
 
-void Signal::shift_source_slice(int num_bits, string ws) {
+void Signal::shift_source_slice(int num_bits, string ws __attribute__((unused))) {
 
 	// Negative is left shift, Positive is right shift
 
@@ -641,7 +641,7 @@ void Signal::shift_source_slice(int num_bits, string ws) {
 	source_slice_modified_ = true;
 }
 
-void Signal::shift_sink_slice(int num_bits, string ws) {
+void Signal::shift_sink_slice(int num_bits, string ws __attribute__((unused))) {
 	
 	// Negative is left shift, Positive is right shift
 

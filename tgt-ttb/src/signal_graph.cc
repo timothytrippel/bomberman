@@ -446,7 +446,7 @@ void SignalGraph::track_local_signal_connection(
     Signal*        source_signal,
     signal_slice_t sink_slice,
     signal_slice_t source_slice,
-    string         ws) {
+    string         ws __attribute__((unused))) {
 
     Connection* conn;
 
