@@ -34,14 +34,12 @@ def build_deps(sig, msb, lsb, ffs = [], seen = {}):
 	return ffs
 
 def add_time_value(dist_counter, hdl_signal, msb, lsb, time, values):
-	print "MSB: %d; LSB: %d; Time: %d; Values: %s" % (msb, lsb, time, values)
+	# print "MSB: %d; LSB: %d; Time: %d; Values: %s" % (msb, lsb, time, values)
 	if time in dist_counter.time_values:
-		print "HERE-1"
 		dist_counter.time_values[time] += values[hdl_signal.width - msb - 1: hdl_signal.width - lsb]
 	else:
-		print "HERE-2"
 		dist_counter.time_values[time]  = values[hdl_signal.width - msb - 1: hdl_signal.width - lsb]
-	print "After:", dist_counter.time_values[time]
+	# print "After:", dist_counter.time_values[time]
 
 def generate_distributed_counters(signals):
 	seen = {}
@@ -98,7 +96,7 @@ def generate_distributed_counters(signals):
 			# print "	MSB:   %d" % (msb)
 			# print "	LSB:   %d" % (lsb)
 			# print "	WIDTH: %d" % (width)
-			hdl_signal.debug_print()
+			# hdl_signal.debug_print()
 
 			# Update counter width and msb
 			dist_counter.width += width
@@ -154,7 +152,5 @@ def generate_distributed_counters(signals):
 			
 			# Append dist_counter to list
 			dist_counters.append(dist_counter)
-
-		break
 
 	return dist_counters

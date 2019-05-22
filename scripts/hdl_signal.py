@@ -85,7 +85,7 @@ class HDL_Signal:
 			print "		Is TB Covered: %s"   % (self.tb_covered)
 			print "		Hierarchy:     %s"   % (self.hierarchy)
 			print "		Type:          %s"   % (self.type)
-			print "		Time Values.  (%d):" % (len(self.time_values.keys()))
+			print "		Time Values   (%d):" % (len(self.time_values.keys()))
 			for time in sorted(self.time_values.keys(), key=lambda x: int(x)):
 				values = self.time_values[time]
 				print "			%4d -- %s" % (time, values)

@@ -76,14 +76,33 @@ def classify_counters(name, counters, constants, malicious, skipped, time_limit)
 		# Compute number of simulated unique counter values in time interval
 		counter_value_set = set()
 		counter_sim_times = sorted(counter.time_values.keys())
-		print "Width:", counter.width
+		
+		# Reset repested value flag
+		repeated_value = False
+
 		for sim_time in counter_sim_times:
 			if sim_time <= time_limit:
 				if 'x' not in counter.time_values[sim_time]:
-					print counter.time_values[sim_time]
-					counter_value_set.add(counter.time_values[sim_time])
+					# Check if counter value already seen
+					if counter.time_values[sim_time] in counter_value_set:
+
+						# NOT Malicious -> Continue
+						if VERBOSE: 
+							print "Repeated Value (%s) --> Not Malicious" % (counter.time_values[sim_time])
+						
+						# Set repeated value flag
+						repeated_value = True
+						break
+
+					else:
+						# print counter.time_values[sim_time]
+						counter_value_set.add(counter.time_values[sim_time])
 			else:
 				break
+
+		# Check if repeated value
+		if repeated_value:
+			continue
 
 		# Compute number of possible unique counter values
 		max_possible_values = 2 ** counter.width
@@ -114,7 +133,7 @@ def main():
 	global VERBOSE
 	global WARNINGS
 	DEBUG_PRINTS = False
-	VERBOSE      = True
+	VERBOSE      = False
 	WARNINGS     = False
 
 	##
@@ -290,7 +309,6 @@ def main():
 
 		print "Analysis complete."
 		print
-		break
 
 	##
 	# Stop Overall Timer

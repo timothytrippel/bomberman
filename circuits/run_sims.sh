@@ -26,15 +26,15 @@ TROJAN_TYPES='cdd'
 # AES    --> number of encryptions performed
 # UART   --> number of sets of 16 bytes transmitted/received
 # OR1200 --> number of (randomly selected) programs executed
-# NUM_TESTS=2000
-NUM_TESTS=50
+NUM_TESTS=2000
+# NUM_TESTS=50
 # NUM_TESTS=16
 
 # Counter Analysis Time Range
-# START_TIME=50
-START_TIME=5000
-TIME_RESOLUTION=100
-# TIME_RESOLUTION=2000
+START_TIME=0
+# START_TIME=5000
+# TIME_RESOLUTION=100
+TIME_RESOLUTION=1000
 TIME_LIMIT=-1
 
 # Flags
