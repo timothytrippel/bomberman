@@ -15,4 +15,4 @@ class CounterStats:
 		print "	# Possible:  %d" % (self.num_total)
 		print "	# Not Simd:  %d" % (self.num_not_simd)
 		print "	# Constants: %d" % (self.num_consts)
-		print "	# Malicous:  %d" % (self.num_mal)
+		print "	# Malicious: %d" % (self.num_mal)

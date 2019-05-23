@@ -33,13 +33,14 @@ def build_deps(sig, msb, lsb, ffs = [], seen = {}):
 
 	return ffs
 
-def add_time_value(dist_counter, hdl_signal, msb, lsb, time, values):
+def add_time_value(signals, dist_counter, hdl_signal, msb, lsb, time, values):
 	# print "MSB: %d; LSB: %d; Time: %d; Values: %s" % (msb, lsb, time, values)
-	if time in dist_counter.time_values:
-		dist_counter.time_values[time] += values[hdl_signal.width - msb - 1: hdl_signal.width - lsb]
+	if time in dist_counter.get_time_values(signals):
+		dist_counter.append_time_value(time, values[hdl_signal.width - msb - 1: hdl_signal.width - lsb])
 	else:
-		dist_counter.time_values[time]  = values[hdl_signal.width - msb - 1: hdl_signal.width - lsb]
-	# print "After:", dist_counter.time_values[time]
+		dist_counter.set_time_value(time, values[hdl_signal.width - msb - 1: hdl_signal.width - lsb])
+
+	# print "After:", dist_counter.get_time_value(signals, time)
 
 def generate_distributed_counters(signals):
 	seen = {}
@@ -77,11 +78,11 @@ def generate_distributed_counters(signals):
 		dist_counter_simulated = True
 		
 		# Get (sorted) list of time values of signals changing
-		tvs = set()
+		update_times = set()
 		for source_signal in ffs:
-			for tv in signals[source_signal.fullname()].time_values.keys():
-				tvs.add(tv)
-		tvs = sorted(tvs)
+			for time in signals[source_signal.fullname()].get_update_times(signals):
+				update_times.add(time)
+		update_times = sorted(update_times)
 
 		# Piece together simulated time values from dist. counter signals.
 		# Sort source signals by number of VCD time values
@@ -96,7 +97,7 @@ def generate_distributed_counters(signals):
 			# print "	MSB:   %d" % (msb)
 			# print "	LSB:   %d" % (lsb)
 			# print "	WIDTH: %d" % (width)
-			# hdl_signal.debug_print()
+			# hdl_signal.debug_print(signals)
 
 			# Update counter width and msb
 			dist_counter.width += width
@@ -108,17 +109,17 @@ def generate_distributed_counters(signals):
 				break
 
 			# Update counter time values
-			for i in range(len(tvs)):
+			for i in range(len(update_times)):
 
 				# Get time
-				time = tvs[i]
+				time = update_times[i]
 
 				# Indicator flag
 				time_value_found = False
 
 				# Check if time value exists in VCD file:
-				if time in hdl_signal.time_values:
-					add_time_value(dist_counter, hdl_signal, msb, lsb, time, hdl_signal.time_values[time])
+				if time in hdl_signal.get_time_values(signals):
+					add_time_value(signals, dist_counter, hdl_signal, msb, lsb, time, hdl_signal.get_time_value(signals, time))
 					time_value_found = True
 				else:
 
@@ -127,11 +128,11 @@ def generate_distributed_counters(signals):
 					while j >= 0:
 
 						# Get earlier time
-						earlier_time = tvs[j]
+						earlier_time = update_times[j]
 
 						# Check if value recorded for an earlier time
-						if earlier_time in hdl_signal.time_values:
-							add_time_value(dist_counter, hdl_signal, msb, lsb, time, hdl_signal.time_values[earlier_time])
+						if earlier_time in hdl_signal.get_time_values(signals):
+							add_time_value(signals, dist_counter, hdl_signal, msb, lsb, time, hdl_signal.get_time_value(signals, earlier_time))
 							time_value_found = True
 							break
 

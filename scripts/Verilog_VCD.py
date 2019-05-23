@@ -2,6 +2,7 @@
 # http://cpansearch.perl.org/src/GSULLIVAN/Verilog-VCD-0.03/lib/Verilog/VCD.pm 
 
 import re
+import sys
 import heapq
 
 global timescale
@@ -149,6 +150,9 @@ def parse_vcd(file, only_sigs=0, types={"reg", "wire"}, use_stdout=0, siglist=[]
 					if 'tv' not in data[code]:
 						data[code]['tv'] = []
 					data[code]['tv'].append((time, list(value)))
+			else:
+				print "ERROR: invalid signal code (%s) encountered in var dump." % (code)
+				sys.exit(1)
 				
 	fh.close()
 

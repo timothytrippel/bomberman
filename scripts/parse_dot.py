@@ -75,6 +75,7 @@ def parse_file(file_name):
 
 	# Parse all connections
 	lineno  =  1
+	print
 	print "Parsing connections..."
 
 	while "}" not in lines[lineno] and lineno < len(lines):
@@ -107,7 +108,8 @@ def parse_file(file_name):
 		lineno += 1
 
 	print "%d connections found." % (num_connections)
-
+	print
+	
 	assert "}" in lines[lineno]
 	assert lineno + 1 == len(lines)
 
