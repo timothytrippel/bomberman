@@ -3,7 +3,7 @@
 #SBATCH --mail-type=NONE                       # Mail events (NONE, BEGIN, END, FAIL, ALL)
 #SBATCH --mail-user=timothy.trippel@ll.mit.edu # Where to send mail	
 #SBATCH --ntasks=1                             # Run on a single CPU
-#SBATCH --time=48:00:00                        # Time limit hrs:min:sec
+#SBATCH --time=72:00:00                        # Time limit hrs:min:sec
 #SBATCH --output=/dev/null                     # Standard output and error log
 
 # Return non-zero exit code if any command (in this script) fails

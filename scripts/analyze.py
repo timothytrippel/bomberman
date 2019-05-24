@@ -136,7 +136,7 @@ def classify_counters(counter_type, signals, counters, constants, malicious, ski
 
 	return CounterStats(counter_type, counters, skipped, constants, malicious)
 
-def analyze_counters(signals, coal_counters, dist_counters, curr_time_limit):
+def analyze_counters(signals, coal_counters, dist_counters, curr_time_limit, json_base_filename):
 	
 	##
 	# Analyze Coalesced Counters
@@ -149,28 +149,28 @@ def analyze_counters(signals, coal_counters, dist_counters, curr_time_limit):
 	calculate_and_print_time(task_start_time, task_end_time)
 	print
 
-	# ##
-	# # Analyze Distributed Counters
-	# ##
-	# print
-	# print "Finding malicious distributed signals..."
-	# task_start_time    = time.time()
-	# dist_counter_stats = classify_counters("Distributed", signals, dist_counters, {}, {}, {}, curr_time_limit)
-	# task_end_time      = time.time()
-	# calculate_and_print_time(task_start_time, task_end_time)
-	# print
+	##
+	# Analyze Distributed Counters
+	##
+	print
+	print "Finding malicious distributed signals..."
+	task_start_time    = time.time()
+	dist_counter_stats = classify_counters("Distributed", signals, dist_counters, {}, {}, {}, curr_time_limit)
+	task_end_time      = time.time()
+	calculate_and_print_time(task_start_time, task_end_time)
+	print
 
-	# ##
-	# # Report stats
-	# ##
-	# coal_counter_stats.print_stats()
-	# dist_counter_stats.print_stats()
+	##
+	# Report stats
+	##
+	coal_counter_stats.print_stats()
+	dist_counter_stats.print_stats()
 
-	# ##
-	# # Write stats to JSON file
-	# ##
-	# json_filename = json_base_filename + "." + str(curr_time_limit) + ".json"
-	# export_stats_json(coal_counter_stats, dist_counter_stats, json_filename)
+	##
+	# Write stats to JSON file
+	##
+	json_filename = json_base_filename + "." + str(curr_time_limit) + ".json"
+	export_stats_json(coal_counter_stats, dist_counter_stats, json_filename)
 
 	print "Analysis complete."
 	print
@@ -184,10 +184,20 @@ def main():
 	global DEBUG_PRINTS
 	global VERBOSE
 	global WARNINGS
-	DEBUG        = True
+	global GENERATE_MALICIOUS_COAL_COUNTERS
+	global GENERATE_MALICIOUS_DIST_COUNTERS
+
+	# General Switches
+	VERBOSE  = False
+	WARNINGS = False
+
+	# DEBUG Switches
+	DEBUG        = False
 	DEBUG_PRINTS = False
-	VERBOSE      = False
-	WARNINGS     = False
+
+	# EXPERIMENT Switches
+	ADD_MALICIOUS_COAL_COUNTERS = False
+	ADD_MALICIOUS_DIST_COUNTERS = False
 
 	##
 	# Check argv
@@ -281,38 +291,38 @@ def main():
 	print
 
 	##
-	# Generate Distributed Counters
-	##
-	print "-------------------------------------------------"
-	print "Generating Distributed Counters..."
-	print
-	task_start_time = time.time()
-	dist_counters   = generate_distributed_counters(signals)
-	task_end_time   = time.time()
-	print "Found " + str(len(dist_counters)) + " possible distributed counters."
-	if DEBUG_PRINTS and dist_counters:
-		for dist_counter in dist_counters:
-			print "	Distributed Counter: %s (Size: %d)" % (dist_counter.name, dist_counter.width)
-			dist_counter.debug_print(signals)
-	dist_counter_sizes = get_counter_sizes(dist_counters)
-	print
-	calculate_and_print_time(task_start_time, task_end_time)
-
-	##
 	# Generate Coalesced Counters
 	##
 	print "-------------------------------------------------"
-	print "Generating Coalesced Counters..."
-	print
+	print "Identifying Coalesced Counters Candidates..."
 	task_start_time = time.time()
-	coal_counters   = generate_coalesced_counters(signals)
+	coal_counters   = generate_coalesced_counters(signals, ADD_MALICIOUS_COAL_COUNTERS)
 	task_end_time   = time.time()
+	print
 	print "Found " + str(len(coal_counters)) + " possible coalesced counters."
 	if DEBUG_PRINTS and coal_counters:
 		for counter in coal_counters:
 			print "	Coalesced Counter: %s (Size: %d)" % (counter.name, counter.width)
 			counter.debug_print(signals)
 	coal_counter_sizes = get_counter_sizes(coal_counters)
+	print
+	calculate_and_print_time(task_start_time, task_end_time)
+
+	##
+	# Generate Distributed Counters
+	##
+	print "-------------------------------------------------"
+	print "Identifying Distributed Counters Candidates..."
+	task_start_time = time.time()
+	dist_counters   = generate_distributed_counters(signals, ADD_MALICIOUS_DIST_COUNTERS)
+	task_end_time   = time.time()
+	print
+	print "Found " + str(len(dist_counters)) + " possible distributed counters."
+	if DEBUG_PRINTS and dist_counters:
+		for dist_counter in dist_counters:
+			print "	Distributed Counter: %s (Size: %d)" % (dist_counter.name, dist_counter.width)
+			dist_counter.debug_print(signals)
+	dist_counter_sizes = get_counter_sizes(dist_counters)
 	print
 	calculate_and_print_time(task_start_time, task_end_time)
 
@@ -332,7 +342,7 @@ def main():
 		(start_time, timescale_str, sim_end_time, timescale_str)
 
 		# Analyze counters in the design
-		analyze_counters(signals, coal_counters, dist_counters, sim_end_time)
+		analyze_counters(signals, coal_counters, dist_counters, sim_end_time, json_base_filename)
 
 	##
 	# NORMAL mode: iterate over simulation time intervals
@@ -347,7 +357,7 @@ def main():
 			(start_time, timescale_str, curr_time_limit, timescale_str)
 
 			# Analyze counters in the design
-			analyze_counters(signals, coal_counters, dist_counters, curr_time_limit)
+			analyze_counters(signals, coal_counters, dist_counters, curr_time_limit, json_base_filename)
 
 	##
 	# Stop Overall Timer

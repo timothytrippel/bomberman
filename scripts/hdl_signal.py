@@ -49,10 +49,42 @@ class HDL_Signal:
 			return all_signals[self.ref_fullname()].time_values
 
 	def get_time_value(self, all_signals, time):
-		if self.hierarchy == self.ref_hierarchy:
-			return self.time_values[time]
+
+		# Get all time values
+		tvs = self.get_time_values(all_signals)
+
+		# Indicator flag
+		time_value_found = False
+
+		# Check if value exists for a given time
+		if time in tvs:
+			return tvs[time]
+
+		# If not --> return value from previous update time
 		else:
-			return all_signals[self.ref_fullname()].time_values[time]
+
+			# Sort update times
+			sorted_times = self.get_sorted_update_times(all_signals)
+			
+			# Iterate backwards over sorted times
+			# until an earlier time is found
+			i = len(sorted_times) - 1
+			while i >= 0:
+
+				# Get (earlier) time
+				earlier_time = sorted_times[i]
+
+				# Check if earlier time is less than the time requested
+				if earlier_time < time:
+					return tvs[earlier_time]
+
+				# Decrement i
+				i -= 1
+
+			# If we reached here --> we have failed to find a time value
+			print "ERROR: unkown time value for signal (%s) at time (%d)" %\
+				(self.fullname(), time)
+			sys.exit(1) 
 
 	def set_time_value(self, time, value):
 		assert self.hierarchy == None and self.hierarchy == self.ref_hierarchy \

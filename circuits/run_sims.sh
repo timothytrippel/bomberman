@@ -12,7 +12,7 @@ CLK_BASENAME='clk'
 # Directories
 BASE_DIR='/home/gridsan/TI27457/ttb'
 LOGS_DIR_TAG='logs'
-# LOGS_DIR_TAG='logs-50ktests-5kres-100ps'
+# LOGS_DIR_TAG='logs-100ktests-100res-100ps'
 
 # Resources
 # PROCESSOR=opteron
@@ -29,7 +29,7 @@ TROJAN_TYPES='cdd'
 # AES    --> number of encryptions performed
 # UART   --> number of sets of 16 bytes transmitted/received
 # OR1200 --> number of (randomly selected) programs executed
-# NUM_TESTS=50000
+# NUM_TESTS=100000
 NUM_TESTS=50
 # NUM_TESTS=16
 

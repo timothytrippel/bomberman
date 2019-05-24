@@ -40,9 +40,9 @@ def add_time_value(signals, dist_counter, hdl_signal, msb, lsb, time, values):
 	else:
 		dist_counter.set_time_value(time, values[hdl_signal.width - msb - 1: hdl_signal.width - lsb])
 
-	# print "After:", dist_counter.get_time_value(signals, time)
+	# print "Width:", dist_counter.width, "; After:", dist_counter.get_time_value(signals, time)
 
-def generate_distributed_counters(signals):
+def generate_distributed_counters(signals, add_malicious_cntrs=False):
 	seen = {}
 	dist_counters = []
 
@@ -109,40 +109,9 @@ def generate_distributed_counters(signals):
 				break
 
 			# Update counter time values
-			for i in range(len(update_times)):
-
-				# Get time
-				time = update_times[i]
-
-				# Indicator flag
-				time_value_found = False
-
-				# Check if time value exists in VCD file:
-				if time in hdl_signal.get_time_values(signals):
-					add_time_value(signals, dist_counter, hdl_signal, msb, lsb, time, hdl_signal.get_time_value(signals, time))
-					time_value_found = True
-				else:
-
-					# Find last time a value was recorded
-					j = i
-					while j >= 0:
-
-						# Get earlier time
-						earlier_time = update_times[j]
-
-						# Check if value recorded for an earlier time
-						if earlier_time in hdl_signal.get_time_values(signals):
-							add_time_value(signals, dist_counter, hdl_signal, msb, lsb, time, hdl_signal.get_time_value(signals, earlier_time))
-							time_value_found = True
-							break
-
-						# Update (earlier) time index
-						j -= 1
-
-				# Check if time value found
-				if not time_value_found:
-					print "ERROR: unkown time value for signal (%s) at time (%d)" % (source_signal.fullname(), time)
-					sys.exit(1) 
+			for time in update_times:
+				tv = hdl_signal.get_time_value(signals, time)
+				add_time_value(signals, dist_counter, hdl_signal, msb, lsb, time, tv)
 
 		# Update tb_covered flag
 		dist_counter.tb_covered = dist_counter_simulated
