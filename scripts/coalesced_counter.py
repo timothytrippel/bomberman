@@ -1,10 +1,11 @@
 # Standard Modules
 
 # Custom Modules
-from hdl_signal        import HDL_Signal
-from malicious_counter import add_malicious_coal_counters
+import switches          as     sws
+from   hdl_signal        import HDL_Signal
+from   malicious_counter import add_malicious_coal_counters
 
-def generate_coalesced_counters(signals, add_malicious_cntrs=False):
+def generate_coalesced_counters(signals, num_mal_cntrs):
 	coal_counters = []
 
 	# Find existing coalesced counters in the design
@@ -15,8 +16,8 @@ def generate_coalesced_counters(signals, add_malicious_cntrs=False):
 			coal_counters.append(signals[signal_name])
 
 	# Generate artificial coalesced counters
-	if add_malicious_cntrs:
+	if num_mal_cntrs > 0:
 		print "Generating Malicious Coalesced Counters..."
-		coal_counters = add_malicious_coal_counters(signals, coal_counters)
+		coal_counters = add_malicious_coal_counters(signals, coal_counters, num_mal_cntrs)
 
 	return coal_counters

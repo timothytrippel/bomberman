@@ -2,7 +2,8 @@
 import sys
 
 # Custom Modules
-from hdl_signal import HDL_Signal
+import switches   as     sws
+from   hdl_signal import HDL_Signal
 
 class MaliciousCounter:
 	def __init__(self):
@@ -126,15 +127,17 @@ def generate_malicious_counter(signals, mal_counter):
 	# Generate malicious counter time values
 	mal_counter = generate_malicious_time_values(signals, mal_counter)
 	
-	# mal_counter.hdl_signal.debug_print(signals)
+	if sws.VERBOSE > 1:
+		mal_counter.hdl_signal.debug_print(signals)
 
 	return mal_counter.hdl_signal
 
 # Add Malicious Coalesced Counters
-def add_malicious_coal_counters(signals, coal_counters):
+def add_malicious_coal_counters(signals, coal_counters, num_cntrs):
 
 	# CDD
-	# print "Generating Malicious (CDD) Counter:"
+	if sws.VERBOSE:
+		print "Generating Malicious (CDD) Counter..."
 	cdd = MaliciousCounter()
 	cdd.fullname              = 'ttb_test_aes_128.dut.mal_cdd'
 	cdd.width                 = 8
@@ -147,7 +150,8 @@ def add_malicious_coal_counters(signals, coal_counters):
 	coal_counters.append(generate_malicious_counter(signals, cdd))
 
 	# CDN
-	# print "Generating Malicious (CDN) Counter:"
+	if sws.VERBOSE:
+		print "Generating Malicious (CDN) Counter..."
 	cdn = MaliciousCounter()
 	cdn.fullname              = 'ttb_test_aes_128.dut.mal_cdn'
 	cdn.width                 = 8
@@ -160,7 +164,8 @@ def add_malicious_coal_counters(signals, coal_counters):
 	coal_counters.append(generate_malicious_counter(signals, cdn))
 
 	# CND
-	# print "Generating Malicious (CND) Counter:"
+	if sws.VERBOSE:
+		print "Generating Malicious (CND) Counter..."
 	cnd = MaliciousCounter()
 	cnd.fullname              = 'ttb_test_aes_128.dut.mal_cnd'
 	cnd.width                 = 8
@@ -173,7 +178,8 @@ def add_malicious_coal_counters(signals, coal_counters):
 	coal_counters.append(generate_malicious_counter(signals, cnd))
 
 	# CNN
-	# print "Generating Malicious (CNN) Counter:"
+	if sws.VERBOSE:
+		print "Generating Malicious (CNN) Counter..."
 	cnn = MaliciousCounter()
 	cnn.fullname              = 'ttb_test_aes_128.dut.mal_cnn'
 	cnn.width                 = 8
@@ -186,3 +192,64 @@ def add_malicious_coal_counters(signals, coal_counters):
 	coal_counters.append(generate_malicious_counter(signals, cnn))
 
 	return coal_counters
+
+# Add Malicious Distributed Counters
+def add_malicious_dist_counters(signals, dist_counters, num_cntrs):
+	
+	# DDD
+	if sws.VERBOSE:
+		print "Generating Malicious (DDD) Counter..."
+	ddd = MaliciousCounter()
+	ddd.fullname              = 'ttb_test_aes_128.dut.mal_ddd'
+	ddd.width                 = 16
+	ddd.event_signal_fullname = 'ttb_test_aes_128.dut.clk'
+	ddd.event_signal_bit      = 0
+	ddd.initial_count         = 0
+	ddd.increment             = 1
+	ddd.increment_msb         = 0
+	ddd.increment_lsb         = 0
+	dist_counters.append(generate_malicious_counter(signals, ddd))
+
+	# DDN
+	if sws.VERBOSE:
+		print "Generating Malicious (DDN) Counter..."
+	ddn = MaliciousCounter()
+	ddn.fullname              = 'ttb_test_aes_128.dut.mal_ddn'
+	ddn.width                 = 16
+	ddn.event_signal_fullname = 'ttb_test_aes_128.dut.state'
+	ddn.event_signal_bit      = 5
+	ddn.initial_count         = 0
+	ddn.increment             = 1
+	ddn.increment_msb         = 0
+	ddn.increment_lsb         = 0
+	dist_counters.append(generate_malicious_counter(signals, ddn))
+
+	# DND
+	if sws.VERBOSE:
+		print "Generating Malicious (DND) Counter..."
+	dnd = MaliciousCounter()
+	dnd.fullname              = 'ttb_test_aes_128.dut.mal_dnd'
+	dnd.width                 = 16
+	dnd.event_signal_fullname = 'ttb_test_aes_128.dut.clk'
+	dnd.event_signal_bit      = 0
+	dnd.initial_count         = 0
+	dnd.increment             = 'ttb_test_aes_128.dut.state'
+	dnd.increment_msb         = 3
+	dnd.increment_lsb         = 0
+	dist_counters.append(generate_malicious_counter(signals, dnd))
+
+	# DNN
+	if sws.VERBOSE:
+		print "Generating Malicious (DNN) Counter..."
+	dnn = MaliciousCounter()
+	dnn.fullname              = 'ttb_test_aes_128.dut.mal_dnn'
+	dnn.width                 = 16
+	dnn.event_signal_fullname = 'ttb_test_aes_128.dut.state'
+	dnn.event_signal_bit      = 5
+	dnn.initial_count         = 0
+	dnn.increment             = 'ttb_test_aes_128.dut.state'
+	dnn.increment_msb         = 63
+	dnn.increment_lsb         = 60
+	dist_counters.append(generate_malicious_counter(signals, dnn))
+
+	return dist_counters

@@ -2,7 +2,8 @@
 import sys
 
 # Custom Modules
-from hdl_signal import HDL_Signal
+from hdl_signal        import HDL_Signal
+from malicious_counter import add_malicious_dist_counters
 
 # Builds out the dependencies for each signal passed in
 # @TODO: Currently inefficient, re-computing a lot of things
@@ -42,7 +43,7 @@ def add_time_value(signals, dist_counter, hdl_signal, msb, lsb, time, values):
 
 	# print "Width:", dist_counter.width, "; After:", dist_counter.get_time_value(signals, time)
 
-def generate_distributed_counters(signals, add_malicious_cntrs=False):
+def generate_distributed_counters(signals, num_mal_cntrs):
 	seen = {}
 	dist_counters = []
 
@@ -122,5 +123,10 @@ def generate_distributed_counters(signals, add_malicious_cntrs=False):
 			
 			# Append dist_counter to list
 			dist_counters.append(dist_counter)
+
+	# Generate artificial coalesced counters
+	if num_mal_cntrs > 0:
+		print "Generating Malicious Distributed Counters..."
+		dist_counters = add_malicious_dist_counters(signals, dist_counters, num_mal_cntrs)
 
 	return dist_counters

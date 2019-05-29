@@ -1,3 +1,8 @@
+# Standard Modules
+
+# Custom Modules
+import switches as sws
+
 ##
 # HDL_Signal
 ##
@@ -134,7 +139,7 @@ class HDL_Signal:
 
 	# Check that this signal has been exercised by the test bench
 	def check_signal_simulated(self):
-		if not self.tb_covered:
+		if not self.tb_covered and sws.WARNINGS:
 			print "WARNING: " + self.fullname() + " not found in VCD file."
 		return self.tb_covered
 

@@ -25,6 +25,7 @@ if [[ $LOGGING -eq 1 ]]; then
 		${START_TIME} \
 		${TIME_LIMIT} \
 		${TIME_RESOLUTION} \
+		${NUM_MALICIOUS_CNTRS} \
 		${DESIGN}.${TTYPE}.dot \
 		${DESIGN}.${TTYPE}.vcd \
 		${OUTPUT_DIR}/${DESIGN}.${TTYPE}) >> ${ANALYSIS_LOG_FILE} 2>&1
@@ -36,6 +37,7 @@ else
 		${START_TIME} \
 		${TIME_LIMIT} \
 		${TIME_RESOLUTION} \
+		${NUM_MALICIOUS_CNTRS} \
 		${DESIGN}.${TTYPE}.dot \
 		${DESIGN}.${TTYPE}.vcd \
 		${OUTPUT_DIR}/${DESIGN}.${TTYPE}

@@ -12,7 +12,7 @@ CLK_BASENAME='clk'
 # Directories
 BASE_DIR='/home/gridsan/TI27457/ttb'
 LOGS_DIR_TAG='logs'
-# LOGS_DIR_TAG='logs-100ktests-100res-100ps'
+# LOGS_DIR_TAG='logs-50ktests-100res-100ps'
 
 # Resources
 # PROCESSOR=opteron
@@ -30,6 +30,7 @@ TROJAN_TYPES='cdd'
 # UART   --> number of sets of 16 bytes transmitted/received
 # OR1200 --> number of (randomly selected) programs executed
 # NUM_TESTS=100000
+# NUM_TESTS=50000
 NUM_TESTS=50
 # NUM_TESTS=16
 
@@ -39,6 +40,9 @@ START_TIME=0
 TIME_RESOLUTION=100
 # TIME_RESOLUTION=5000
 TIME_LIMIT=-1
+
+# Num Malcious Counters to Add
+NUM_MALICIOUS_CNTRS=0
 
 # Flags
 OVERWRITE_RESULTS=0
@@ -140,7 +144,11 @@ analyze_counters() {
 			--job-name=${DESIGN}.${TTYPE}.${TIME_LIMIT}.ac \
 			--constraint=${PROCESSOR} \
 			--dependency=afterok:${DOT_JOB_ID##* },${VCD_JOB_ID##* } \
-			--export=LOGGING=${LOGGING},OUTPUT_DIR=${OUTPUT_DIR},DESIGN=${DESIGN},TTYPE=${TTYPE},START_TIME=${START_TIME},TIME_LIMIT=${TIME_LIMIT},TIME_RESOLUTION=${TIME_RESOLUTION} \
+			--export=LOGGING=${LOGGING},\
+			OUTPUT_DIR=${OUTPUT_DIR},\
+			DESIGN=${DESIGN},\
+			TTYPE=${TTYPE},\
+			START_TIME=${START_TIME},TIME_LIMIT=${TIME_LIMIT},TIME_RESOLUTION=${TIME_RESOLUTION},NUM_MALICIOUS_CNTRS=${NUM_MALICIOUS_CNTRS} \
 			--mem=${MEMORY} \
 			${SLURM_SCRIPTS_DIR}/analyze_counters.sbatch > /dev/null
 	fi

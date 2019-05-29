@@ -8,13 +8,14 @@ import pprint
 import json
 
 # Custom Modules
-from hdl_signal          import HDL_Signal
-from connection          import Connection
-from parse_dot           import parse_file
-from Verilog_VCD         import parse_vcd, get_timescale, get_endtime
-from distributed_counter import generate_distributed_counters
-from coalesced_counter   import generate_coalesced_counters
-from counter_stats       import CounterStats
+import switches            as     sws
+from   hdl_signal          import HDL_Signal
+from   connection          import Connection
+from   parse_dot           import parse_file
+from   Verilog_VCD         import parse_vcd, get_timescale, get_endtime
+from   distributed_counter import generate_distributed_counters
+from   coalesced_counter   import generate_coalesced_counters
+from   counter_stats       import CounterStats
 
 def calculate_and_print_time(start_time, end_time):
 	hours, rem       = divmod(end_time - start_time, 3600)
@@ -41,7 +42,7 @@ def export_sizes_json(coal_counter_sizes, dist_counter_sizes, filename):
 		"coal_sizes" : coal_counter_sizes,
 		"dist_sizes" : dist_counter_sizes
 	}
-	with open(filename, 'w') as jf:  
+	with open(filename, 'w') as jf:
 		json.dump(stats, jf)
 	jf.close()
 
@@ -79,7 +80,7 @@ def classify_counters(counter_type, signals, counters, constants, malicious, ski
 
 		# Check that counter has been simulated by TB
 		if not counter.tb_covered:
-			if WARNINGS:
+			if sws.WARNINGS:
 				print "WARNING: counter (%s) not exercised by test bench... skipping." % (counter.name)
 			skipped[counter.name] = True
 			continue
@@ -98,7 +99,7 @@ def classify_counters(counter_type, signals, counters, constants, malicious, ski
 					if counter.get_time_value(signals, sim_time) in counter_value_set:
 
 						# NOT Malicious -> Continue
-						if VERBOSE: 
+						if sws.VERBOSE > 2: 
 							print "Repeated Value (%s) --> Not Malicious" % (counter.get_time_value(signals, sim_time))
 						
 						# Set repeated value flag
@@ -117,20 +118,20 @@ def classify_counters(counter_type, signals, counters, constants, malicious, ski
 
 		# Compute number of possible unique counter values
 		max_possible_values = 2 ** counter.width
-		if VERBOSE:
+		if sws.VERBOSE > 2:
 			print "Values Seen/Possible: %d/%d" % (len(counter_value_set), max_possible_values)
 
-		# Classify counter as a counter as a constant
+		# Classify counter as a constant
 		if len(counter_value_set) == 1:
 			if counter.name not in constants:
-				if VERBOSE: 
+				if sws.VERBOSE > 2:
 					print "Constant: " + counter.name
 				constants[counter.name] = True
 
-		# Classify counter as a counter as malicious
-		if len(counter_value_set) < max_possible_values:
+		# Classify counter as malicious
+		elif len(counter_value_set) < max_possible_values:
 			if counter.name not in malicious:
-				if VERBOSE: 
+				if sws.VERBOSE > 2:
 					print "Possible Malicious Symbol: " + counter.name
 				malicious[counter.name] = True
 
@@ -180,33 +181,24 @@ def main():
 	##
 	# Set Global Program Switches
 	##
-	global DEBUG
-	global DEBUG_PRINTS
-	global VERBOSE
-	global WARNINGS
-	global GENERATE_MALICIOUS_COAL_COUNTERS
-	global GENERATE_MALICIOUS_DIST_COUNTERS
 
 	# General Switches
-	VERBOSE  = False
-	WARNINGS = False
+	sws.VERBOSE  = 0
+	sws.WARNINGS = False
 
 	# DEBUG Switches
-	DEBUG        = False
-	DEBUG_PRINTS = False
-
-	# EXPERIMENT Switches
-	ADD_MALICIOUS_COAL_COUNTERS = False
-	ADD_MALICIOUS_DIST_COUNTERS = False
+	sws.DEBUG        = False
+	sws.DEBUG_PRINTS = False
 
 	##
 	# Check argv
 	##
-	if (len(sys.argv) != 7):
+	if (len(sys.argv) != 8):
 		print "Usage: ./analyze.py \
-			<start_time> \
-			<time_limit> \
-			<time_resolution> \
+			<start time> \
+			<time limit> \
+			<time resolution> \
+			<num. malicious cntrs> \
 			<input dot file> \
 			<input vcd file> \
 			<output json file (basename)>"
@@ -220,28 +212,40 @@ def main():
 	##
 	# Input Files
 	##
+	print "--------------------------------------------------------------------------------"
+	print "Loading Configuration Inputs..."
 	start_time         = int(sys.argv[1])
 	time_limit         = int(sys.argv[2])
 	time_resolution    = int(sys.argv[3])
-	dot_file           = sys.argv[4]
-	vcd_file           = sys.argv[5]
-	json_base_filename = sys.argv[6]
+	num_mal_cntrs      = int(sys.argv[4])
+	dot_file           = sys.argv[5]
+	vcd_file           = sys.argv[6]
+	json_base_filename = sys.argv[7]
+	print
+	print "Start Time:                 ", start_time
+	print "Time Limit:                 ", time_limit
+	print "Time Resolution:            ", time_resolution
+	print "Num. Malicious Cntrs:       ", num_mal_cntrs
+	print "DOT File:                   ", dot_file
+	print "VCD File:                   ", vcd_file
+	print "(Output) JSON Base Filename:", json_base_filename
 
 	##
-	# Parse dot file
+	# Load DOT file
 	##
-	print "-------------------------------------------------"
-	print "Parsing Dot File..."
+	print "--------------------------------------------------------------------------------"
+	print "Loading Dot File..."
 	task_start_time = time.time()
 	signals         = parse_file(dot_file) 
 	task_end_time   = time.time()
 	calculate_and_print_time(task_start_time, task_end_time)
 
 	##
-	# Parse vcd file / Generate Coalesced Counters
+	# Load VCD file
 	##
-	print "-------------------------------------------------"
-	print "Parsing VCD File..."
+
+	print "--------------------------------------------------------------------------------"
+	print "Loading VCD File..."
 	print
 	task_start_time = time.time()
 
@@ -264,11 +268,10 @@ def main():
 	calculate_and_print_time(task_start_time, task_end_time)
 
 	##
-	# Check time limits
+	# Check inputs
 	##
-	print "-------------------------------------------------"
+	print "--------------------------------------------------------------------------------"
 	print "Checking time limits..."
-	print
 	if time_limit == -1:
 		time_limit = sim_end_time
 	elif time_limit < -1:  
@@ -277,30 +280,31 @@ def main():
 		sys.exit(1)
 
 	# Print Simulation Time Settings
+	print
 	print "Start Time:      %d" % (start_time)
 	print "Time Limit:      %d" % (time_limit)
 	print "Time Resolution: %d" % (time_resolution)
 
 	# Checked loaded Dot/VCD file data
 	##
-	if DEBUG_PRINTS:
-		print "-------------------------------------------------"
+	if sws.DEBUG_PRINTS:
+		print "--------------------------------------------------------------------------------"
 		print "All Signals:"
 		for signal_name in signals:
 			signals[signal_name].debug_print(signals)
 	print
 
 	##
-	# Generate Coalesced Counters
+	# Identify Coalesced Counters
 	##
-	print "-------------------------------------------------"
+	print "--------------------------------------------------------------------------------"
 	print "Identifying Coalesced Counters Candidates..."
 	task_start_time = time.time()
-	coal_counters   = generate_coalesced_counters(signals, ADD_MALICIOUS_COAL_COUNTERS)
+	coal_counters   = generate_coalesced_counters(signals, num_mal_cntrs)
 	task_end_time   = time.time()
 	print
 	print "Found " + str(len(coal_counters)) + " possible coalesced counters."
-	if DEBUG_PRINTS and coal_counters:
+	if sws.DEBUG_PRINTS and coal_counters:
 		for counter in coal_counters:
 			print "	Coalesced Counter: %s (Size: %d)" % (counter.name, counter.width)
 			counter.debug_print(signals)
@@ -309,16 +313,16 @@ def main():
 	calculate_and_print_time(task_start_time, task_end_time)
 
 	##
-	# Generate Distributed Counters
+	# Identify Distributed Counters
 	##
-	print "-------------------------------------------------"
+	print "--------------------------------------------------------------------------------"
 	print "Identifying Distributed Counters Candidates..."
 	task_start_time = time.time()
-	dist_counters   = generate_distributed_counters(signals, ADD_MALICIOUS_DIST_COUNTERS)
+	dist_counters   = generate_distributed_counters(signals, num_mal_cntrs)
 	task_end_time   = time.time()
 	print
 	print "Found " + str(len(dist_counters)) + " possible distributed counters."
-	if DEBUG_PRINTS and dist_counters:
+	if sws.DEBUG_PRINTS and dist_counters:
 		for dist_counter in dist_counters:
 			print "	Distributed Counter: %s (Size: %d)" % (dist_counter.name, dist_counter.width)
 			dist_counter.debug_print(signals)
@@ -334,9 +338,9 @@ def main():
 	##
 	# DEBUG mode: only one single time analysis
 	##
-	if DEBUG:
+	if sws.DEBUG:
 
-		print "-------------------------------------------------"
+		print "--------------------------------------------------------------------------------"
 		print "DEBUG MODE: analyzing entire simulation time interval:"
 		print "[%d (*%s), %d (*%s)]" % \
 		(start_time, timescale_str, sim_end_time, timescale_str)
@@ -351,7 +355,7 @@ def main():
 
 		for curr_time_limit in range(start_time, time_limit, time_resolution):
 
-			print "-------------------------------------------------"
+			print "--------------------------------------------------------------------------------"
 			print "Analyzing simulation at time interval:"
 			print "[%d (*%s), %d (*%s)]" % \
 			(start_time, timescale_str, curr_time_limit, timescale_str)
