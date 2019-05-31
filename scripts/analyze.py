@@ -69,8 +69,9 @@ def update_signals_with_vcd(signals, vcd):
 			net_fullname = net_dict['hier'] + '.' + net_dict['name'].split('[')[0]
 			
 			if net_fullname in signals:
-				signals[net_fullname].ref_hierarchy = signals[vcd_signal_name].hierarchy
-				signals[net_fullname].tb_covered    = True
+				signals[net_fullname].ref_hierarchy  = signals[vcd_signal_name].hierarchy
+				signals[net_fullname].ref_local_name = signals[vcd_signal_name].local_name
+				signals[net_fullname].tb_covered     = True
 			else:
 				print "ERROR: VCD signal not in dot graph."
 				sys.exit(1)
@@ -78,11 +79,15 @@ def update_signals_with_vcd(signals, vcd):
 def classify_counters(counter_type, signals, counters, constants, malicious, skipped, time_limit):
 	for counter in counters:
 
+		# print counter.fullname()
+		# counter.debug_print_wtvs(signals)
+		# print
+
 		# Check that counter has been simulated by TB
 		if not counter.tb_covered:
 			if sws.WARNINGS:
-				print "WARNING: counter (%s) not exercised by test bench... skipping." % (counter.name)
-			skipped[counter.name] = True
+				print "WARNING: counter (%s) not exercised by test bench... skipping." % (counter.fullname())
+			skipped[counter.fullname()] = True
 			continue
 
 		# Compute number of simulated unique counter values in time interval
@@ -123,17 +128,17 @@ def classify_counters(counter_type, signals, counters, constants, malicious, ski
 
 		# Classify counter as a constant
 		if len(counter_value_set) == 1:
-			if counter.name not in constants:
+			if counter.fullname() not in constants:
 				if sws.VERBOSE > 2:
-					print "Constant: " + counter.name
-				constants[counter.name] = True
+					print "Constant: " + counter.fullname()
+				constants[counter.fullname()] = True
 
 		# Classify counter as malicious
 		elif len(counter_value_set) < max_possible_values:
-			if counter.name not in malicious:
+			if counter.fullname() not in malicious:
 				if sws.VERBOSE > 2:
-					print "Possible Malicious Symbol: " + counter.name
-				malicious[counter.name] = True
+					print "Possible Malicious Symbol: " + counter.fullname()
+				malicious[counter.fullname()] = True
 
 	return CounterStats(counter_type, counters, skipped, constants, malicious)
 
@@ -174,6 +179,31 @@ def analyze_counters(signals, coal_counters, dist_counters, curr_time_limit, jso
 	export_stats_json(coal_counter_stats, dist_counter_stats, json_filename)
 
 	print "Analysis complete."
+	print
+
+def check_simulation_coverage(signals, dut_top_module):
+	print "--------------------------------------------------------------------------------"
+	print "Checking simulation coverage..."
+	print "Signals NOT exercised by testbench:"
+	num_signals_simd  = 0
+	num_total_signals = 0
+	for signal_name in signals:
+
+		# Check that signal is in the DUT top module (i.e. not a test bench signal)
+		if signal_name.startswith(dut_top_module):
+			if not signals[signal_name].tb_covered:
+				print "	", signal_name
+			else:
+				num_signals_simd += 1
+			num_total_signals += 1
+
+	# Compute coverage percentage
+	simulation_coverage_pct = (float(num_signals_simd) / float(num_total_signals)) * 100.00
+	print
+	print "Simulation Coverage: {:.2f}%	({:d}/{:d})".format(\
+		simulation_coverage_pct, \
+		num_signals_simd, \
+		num_total_signals)
 	print
 
 def main():
@@ -217,6 +247,7 @@ def main():
 	start_time         = int(sys.argv[1])
 	time_limit         = int(sys.argv[2])
 	time_resolution    = int(sys.argv[3])
+	dut_top_module     = 'uart_test.uart1'
 	num_mal_cntrs      = int(sys.argv[4])
 	dot_file           = sys.argv[5]
 	vcd_file           = sys.argv[6]
@@ -270,6 +301,11 @@ def main():
 	##
 	# Check inputs
 	##
+
+	# Check simulation coverage
+	check_simulation_coverage(signals, dut_top_module)
+
+	# Check time limits
 	print "--------------------------------------------------------------------------------"
 	print "Checking time limits..."
 	if time_limit == -1:
@@ -298,9 +334,9 @@ def main():
 	# Identify Coalesced Counters
 	##
 	print "--------------------------------------------------------------------------------"
-	print "Identifying Coalesced Counters Candidates..."
+	print "Identifying Coalesced Counter Candidates..."
 	task_start_time = time.time()
-	coal_counters   = generate_coalesced_counters(signals, num_mal_cntrs)
+	coal_counters   = generate_coalesced_counters(signals, num_mal_cntrs, dut_top_module)
 	task_end_time   = time.time()
 	print
 	print "Found " + str(len(coal_counters)) + " possible coalesced counters."
@@ -316,9 +352,9 @@ def main():
 	# Identify Distributed Counters
 	##
 	print "--------------------------------------------------------------------------------"
-	print "Identifying Distributed Counters Candidates..."
+	print "Identifying Distributed Counter Candidates..."
 	task_start_time = time.time()
-	dist_counters   = generate_distributed_counters(signals, num_mal_cntrs)
+	dist_counters   = generate_distributed_counters(signals, num_mal_cntrs, dut_top_module)
 	task_end_time   = time.time()
 	print
 	print "Found " + str(len(dist_counters)) + " possible distributed counters."

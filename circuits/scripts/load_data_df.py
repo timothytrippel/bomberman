@@ -11,7 +11,6 @@ import pandas as pd
 def load_data_df(data_dir):
 	counter_data = {
 	    'Design'       : [],
-	    'Counter Type' : [],
 	    'Time'         : [],
 	    
 	    'Total Coalesced Cntrs': [],
@@ -31,8 +30,7 @@ def load_data_df(data_dir):
 	        if '.json' in filename and 'sizes' not in filename:
 	            design_info = filename.split('.')
 	            counter_data['Design'].append(design_info[0])
-	            counter_data['Counter Type'].append(design_info[1])
-	            counter_data['Time'].append(int(design_info[2]))
+	            counter_data['Time'].append(int(design_info[1]))
 
 	            # Open JSON file
 	            with open(data_dir + '/' + filename, 'r') as f:
@@ -59,12 +57,6 @@ def load_data_df(data_dir):
 
 def load_counter_sizes(data_dir):
 	counter_sizes_data = {}
-	# counter_sizes_data = {
-	# 	'Design':            [],
-	# 	'Counter Type':      [],
-	#     'Coalesced Sizes':   [],
-	#     'Distributed Sizes': [],
-	# }
 
 	# r=root, d=directories, f = files
 	for r, d, f in os.walk(data_dir):
@@ -72,7 +64,6 @@ def load_counter_sizes(data_dir):
 	        if '.json' in filename and 'sizes' in filename:
 	            design_info = filename.split('.')
 	            counter_sizes_data['Design']       = design_info[0]
-	            counter_sizes_data['Counter Type'] = design_info[1]
 			
 				# Open JSON file
 	            with open(data_dir + '/' + filename, 'r') as f:

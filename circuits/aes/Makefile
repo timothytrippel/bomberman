@@ -4,4 +4,4 @@ TESTBENCH := ttb_test_aes_128.v lfsr.v
 TARGET    := aes
 TYPE      := tjfree
 
-include ../../common.mk
+include ../common.mk

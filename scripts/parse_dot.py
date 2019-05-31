@@ -13,6 +13,9 @@ FF_NODE_SHAPE           = "square"
 INPUT_NODE_SHAPE        = "rectangle"
 CONST_NODE_SHAPE        = "none"
 
+# Constant Prefix
+CONST_HIERARCHY = 'const.'
+
 def parse_file(file_name):
 	
 	# counters
@@ -36,45 +39,56 @@ def parse_file(file_name):
 	# Create signals dictionary
 	signals = {}
 
+	# Compile Regexes
+	signals_re = re.compile('\"[\w\.]+(\$[\d]+\$)?\" \[shape=([A-Za-z]+), label=\"([\w\.]+)(\$([\d]+)\$)?\[(\d+):(\d+)\]\"\]')
+	conns_re   = re.compile('\"([\w\.]+)(\$([\d]+)\$)?\" -> \"([\w\.]+)(\$([\d]+)\$)?\"\[label=\"\[(\d+):(\d+)\]->\[(\d+):(\d+)\]\"\]')
+
 	# Parse all signals first
-	print 
-	lineno  =  1
+	lineno = 1
 	print "Parsing signals..."
 	while "}" not in lines[lineno] and lineno < len(lines):
 
 		if "->" not in lines[lineno]:
 
 			# Parse signal information
-			m = re.search('"[\w\.]+" \[shape=([A-Za-z]+), label="([\w\.]+)\[(\d+):(\d+)\]"\]', lines[lineno])
+			m = signals_re.search(lines[lineno])
 			
 			# Check if signal information was found
 			if (None == m):
-				print "Error: Bad format at line " + str(lineno)
+				print "Error: Bad (node) format at line " + str(lineno + 1)
 				sys.exit(2)
 
 			# Get signal info
-			name = m.group(2)
-			msb  = int(m.group(3)),
-			lsb  = int(m.group(4))
+			fullname  = m.group(3)
+			msb       = int(m.group(6))
+			lsb       = int(m.group(7))
+			shape     = m.group(2)
+			if m.group(5): 
+				array_ind = int(m.group(5))
+			else:
+				array_ind = None
 			
-			# Create signal object
-			s = HDL_Signal(m.group(2), int(m.group(3)), int(m.group(4)))
+			# Check signal is NOT a const
+			if not fullname.startswith(CONST_HIERARCHY):
 
-			# Mark if signal is an INPUT or FLIPFLOP
-			if m.group(1) == INPUT_NODE_SHAPE:
-				s.isinput = True
-			elif m.group(1) == FF_NODE_SHAPE:
-				s.isff = True
+				# Create signal object
+				s = HDL_Signal(fullname, msb, lsb, array_ind)
 
-			# Add signal to dictionary
-			num_signals += 1
-			signals[s.fullname()] = s
+				# Mark if signal is an INPUT or FLIPFLOP
+				if shape == INPUT_NODE_SHAPE:
+					s.isinput = True
+				elif shape == FF_NODE_SHAPE:
+					s.isff = True
+
+				# Add signal to dictionary
+				num_signals += 1
+				signals[s.fullname()] = s
 
 		lineno += 1
 	print "%d signals found." % (num_signals)
 
 	# Parse all connections
-	lineno  =  1
+	lineno = 1
 	print
 	print "Parsing connections..."
 
@@ -83,27 +97,40 @@ def parse_file(file_name):
 		if "->" in lines[lineno]:
 
 			# Parse connection information
-			m = re.search('"([\w\.]+)" -> "([\w\.]+)"\[label="\[(\d+):(\d+)\]->\[(\d+):(\d+)\]"\]', lines[lineno])
+			m = conns_re.search(lines[lineno])
 
 			# Check if conection information was found
 			if None == m:
-				sys.stderr.write("Error: Invalid file format\n")
-				sys.exit(1)
+				print "Error: Bad (connection) format at line " + str(lineno + 1)
+				sys.exit(2)
 
-			# Get connection info (sink signal)
-			dep_sig = signals[m.group(2)]
-			d_msb   = int(m.group(5))
-			d_lsb   = int(m.group(6))
+			# Check source signal is NOT a const
+			if not m.group(1).startswith(CONST_HIERARCHY):
+				
+				# Get connection info (sink signal)
+				sink_msb = int(m.group(9))
+				sink_lsb = int(m.group(10))
+				if m.group(6):
+					sink_array_ind = int(m.group(6))
+					sink_sig       = signals[m.group(4) + '[' + str(sink_array_ind) + ']']
+				else:
+					sink_array_ind = None
+					sink_sig       = signals[m.group(4)]
 
-			# Get connection info (source signal)
-			sig     = signals[m.group(1)]
-			msb     = int(m.group(3))
-			lsb     = int(m.group(4))
+				# Get connection info (source signal)
+				source_msb = int(m.group(7))
+				source_lsb = int(m.group(8))
+				if m.group(3):
+					source_array_ind = int(m.group(3))
+					source_sig       = signals[m.group(1) + '[' + str(source_array_ind) + ']']
+				else:
+					source_array_ind = None
+					source_sig       = signals[m.group(1)]
 
-			# Add connection information
-			num_connections += 1
-			c = Connection(dep_sig, d_msb, d_lsb, sig, msb, lsb)
-			signals[dep_sig.fullname()].add_conn(c)
+				# Add connection information
+				num_connections += 1
+				c = Connection(sink_sig, sink_msb, sink_lsb, source_sig, source_msb, source_lsb)
+				signals[sink_sig.fullname()].add_conn(c)
 
 		lineno += 1
 

@@ -12,7 +12,7 @@ set -e
 if [[ $LOGGING -eq 1 ]]; then
 	
 	# Set VCD log file
-	VCD_LOG_FILE=${OUTPUT_DIR}/${DESIGN}.${TTYPE}.vcd.log
+	VCD_LOG_FILE=${OUTPUT_DIR}/${DESIGN}.vcd.log
 
 	# Print Job Info
 	pwd      >  ${VCD_LOG_FILE}
@@ -24,8 +24,8 @@ if [[ $LOGGING -eq 1 ]]; then
 
 	# Generate VCD file
 	(time vvp \
-		${DESIGN}.${TTYPE}.vvp \
-		-DVCD_FILENAME=\"${DESIGN}.${TTYPE}.vcd\" \
+		${OUTPUT_DIR}/${DESIGN}.vvp \
+		-DVCD_FILENAME=\"${OUTPUT_DIR}/${DESIGN}.vcd\" \
 		+num_tests=${NUM_TESTS}) >> ${VCD_LOG_FILE} 2>&1
 else
 
@@ -34,7 +34,7 @@ else
 
 	# Generate VCD file
 	time vvp \
-		${DESIGN}.${TTYPE}.vvp \
-		-DVCD_FILENAME=\"${DESIGN}.${TTYPE}.vcd\" \
+		${OUTPUT_DIR}/${DESIGN}.vvp \
+		-DVCD_FILENAME=\"${OUTPUT_DIR}/${DESIGN}.vcd\" \
 		+num_tests=${NUM_TESTS}
 fi

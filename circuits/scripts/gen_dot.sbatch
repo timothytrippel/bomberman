@@ -13,7 +13,7 @@ set -e
 if [[ $LOGGING -eq 1 ]]; then
 	
 	# Set dot log file
-	DOT_LOG_FILE="${OUTPUT_DIR}/${DESIGN}.${TTYPE}.dot.log"
+	DOT_LOG_FILE="${OUTPUT_DIR}/${DESIGN}.dot.log"
 
 	# Print Job Info
 	pwd      >  ${DOT_LOG_FILE}
@@ -27,9 +27,9 @@ if [[ $LOGGING -eq 1 ]]; then
 
 	# Generate DOT file (data flow graph)
 	(time iverilog \
-		-o ${DESIGN}.${TTYPE}.dot \
+		-o ${OUTPUT_DIR}/${DESIGN}.dot \
 		-pclk=${CLK_BASENAME} \
-		-DVCD_FILENAME=\"${DESIGN}.${TTYPE}.vcd\" \
+		-DVCD_FILENAME=\"${OUTPUT_DIR}/${DESIGN}.vcd\" \
 		-t ttb \
 		`find . -type f -name "*.v" -not -name test_aes_128.v`) >> ${DOT_LOG_FILE} 2>&1
 
@@ -42,9 +42,9 @@ else
 
 	# Generate DOT file (data flow graph)
 	time iverilog \
-		-o ${DESIGN}.${TTYPE}.dot \
+		-o ${OUTPUT_DIR}/${DESIGN}.dot \
 		-pclk=${CLK_BASENAME} \
-		-DVCD_FILENAME=\"${DESIGN}.${TTYPE}.vcd\" \
+		-DVCD_FILENAME=\"${OUTPUT_DIR}/${DESIGN}.vcd\" \
 		-t ttb \
 		`find . -type f -name "*.v" -not -name test_aes_128.v`
 fi

@@ -256,12 +256,19 @@ module uart_test ();
 
     //--------------------------------------------------------------------------------
     // VCD File Initializations
-    //--------------------------------------------------------------------------------
+    //-------------------------------------------------------------------------------- 
     
     initial begin
+
+        // Set VCD filename
         $dumpfile(`VCD_FILENAME);
-        // $dumpvars(0, uart1);
-        $dumpvars(0);
+
+        // Dump all variables
+        $dumpvars(0, uart1);
+
+        // // Dump all arrayed variables
+        // for(i = 0; i < ; i = i + 1)
+        //     $dumpvars(1, full.path.to.array.data[i]);
     end
 
     //--------------------------------------------------------------------------------
@@ -495,7 +502,7 @@ module uart_test ();
                 receivebyte1();
 
                 // Check that recieved bytes is correct
-                if (data1_o[7:0] !== comp_random_byte_o)
+                if ( data1_o[7:0] !== comp_random_byte_o)
                   begin $display("ERROR: send/receive of byte 0x%2h failed.", data1_o[7:0]); $finish; end
                 
                 // Update compare LFSR

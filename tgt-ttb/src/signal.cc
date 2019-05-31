@@ -365,11 +365,17 @@ string Signal::get_signal_basename() const {
 
 string Signal::get_signal_fullname() const {
 	if (this->is_arrayed()) {
+		// return (get_signal_scopename() + 
+		// 	string(".") + 
+		// 	get_signal_basename() +
+		// 	string(".") + 
+		// 	to_string((long long unsigned int) id_));	
 		return (get_signal_scopename() + 
 			string(".") + 
 			get_signal_basename() +
-			string(".") + 
-			to_string((long long unsigned int) id_));	
+			string("$") + 
+			to_string((long long unsigned int) id_)) + 
+			string("$");
 	} else {
 		return (get_signal_scopename() + string(".") + get_signal_basename());	
 	}

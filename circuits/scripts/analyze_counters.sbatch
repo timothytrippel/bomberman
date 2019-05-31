@@ -12,7 +12,7 @@ set -e
 if [[ $LOGGING -eq 1 ]]; then
 
 	# Set analysis log file
-	ANALYSIS_LOG_FILE=${OUTPUT_DIR}/${DESIGN}.${TTYPE}.${TIME_LIMIT}.ac.log
+	ANALYSIS_LOG_FILE=${OUTPUT_DIR}/${DESIGN}.${TIME_LIMIT}.ac.log
 
 	# Print Job Info
 	pwd      >  ${ANALYSIS_LOG_FILE}
@@ -26,9 +26,9 @@ if [[ $LOGGING -eq 1 ]]; then
 		${TIME_LIMIT} \
 		${TIME_RESOLUTION} \
 		${NUM_MALICIOUS_CNTRS} \
-		${DESIGN}.${TTYPE}.dot \
-		${DESIGN}.${TTYPE}.vcd \
-		${OUTPUT_DIR}/${DESIGN}.${TTYPE}) >> ${ANALYSIS_LOG_FILE} 2>&1
+		${OUTPUT_DIR}/${DESIGN}.dot \
+		${OUTPUT_DIR}/${DESIGN}.vcd \
+		${OUTPUT_DIR}/${DESIGN}) >> ${ANALYSIS_LOG_FILE} 2>&1
 else
 
 	# Analyze design for counters
@@ -38,7 +38,7 @@ else
 		${TIME_LIMIT} \
 		${TIME_RESOLUTION} \
 		${NUM_MALICIOUS_CNTRS} \
-		${DESIGN}.${TTYPE}.dot \
-		${DESIGN}.${TTYPE}.vcd \
-		${OUTPUT_DIR}/${DESIGN}.${TTYPE}
+		${OUTPUT_DIR}/${DESIGN}.dot \
+		${OUTPUT_DIR}/${DESIGN}.vcd \
+		${OUTPUT_DIR}/${DESIGN}
 fi

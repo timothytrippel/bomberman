@@ -13,7 +13,7 @@ set -e
 if [[ $LOGGING -eq 1 ]]; then
 
 	# Set VCD log file
-	VVP_LOG_FILE=${OUTPUT_DIR}/${DESIGN}.${TTYPE}.vvp.log
+	VVP_LOG_FILE=${OUTPUT_DIR}/${DESIGN}.vvp.log
 
 	# Print Job Info
 	pwd      >  ${VVP_LOG_FILE}
@@ -26,8 +26,8 @@ if [[ $LOGGING -eq 1 ]]; then
 	# Generate (VVP) simulation binary
 	(time iverilog \
 		-t vvp \
-		-o ${DESIGN}.${TTYPE}.vvp \
-		-DVCD_FILENAME=\"${DESIGN}.${TTYPE}.vcd\" \
+		-o ${OUTPUT_DIR}/${DESIGN}.vvp \
+		-DVCD_FILENAME=\"${OUTPUT_DIR}/${DESIGN}.vcd\" \
 		`find . -type f -name "*.v" -not -name test_aes_128.v`) >> ${VVP_LOG_FILE} 2>&1
 else
 
@@ -37,7 +37,7 @@ else
 	# Generate (VVP) simulation binary
 	time iverilog \
 		-t vvp \
-		-o ${DESIGN}.${TTYPE}.vvp \
-		-DVCD_FILENAME=\"${DESIGN}.${TTYPE}.vcd\" \
+		-o ${OUTPUT_DIR}/${DESIGN}.vvp \
+		-DVCD_FILENAME=\"${OUTPUT_DIR}/${DESIGN}.vcd\" \
 		`find . -type f -name "*.v" -not -name test_aes_128.v`
 fi
