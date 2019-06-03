@@ -9,6 +9,27 @@
 # Return non-zero exit code if any command (in this script) fails
 set -e
 
+# Set top module of DUT
+case $DESIGN in
+
+	aes)
+		DUT_TOP_MODULE="ttb_test_aes_128.dut"
+	;;
+
+	uart)
+		DUT_TOP_MODULE="uart_test.uart1"
+	;;
+
+	or1200)
+		DUT_TOP_MODULE="or1200"
+	;;
+
+	*)
+		echo "ERROR: invalid design name... abort."
+		exit
+	;;
+esac
+
 if [[ $LOGGING -eq 1 ]]; then
 
 	# Set analysis log file
@@ -25,6 +46,7 @@ if [[ $LOGGING -eq 1 ]]; then
 		${START_TIME} \
 		${TIME_LIMIT} \
 		${TIME_RESOLUTION} \
+		${DUT_TOP_MODULE} \
 		${NUM_MALICIOUS_CNTRS} \
 		${OUTPUT_DIR}/${DESIGN}.dot \
 		${OUTPUT_DIR}/${DESIGN}.vcd \
@@ -37,6 +59,7 @@ else
 		${START_TIME} \
 		${TIME_LIMIT} \
 		${TIME_RESOLUTION} \
+		${DUT_TOP_MODULE} \
 		${NUM_MALICIOUS_CNTRS} \
 		${OUTPUT_DIR}/${DESIGN}.dot \
 		${OUTPUT_DIR}/${DESIGN}.vcd \

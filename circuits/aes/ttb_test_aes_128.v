@@ -23,6 +23,9 @@
 `define AES_KEY_SIZE      128
 `define STATE_LFSR_SEED   128'hDEAD_BEEF_DEAD_BEEF_DEAD_BEEF_DEAD_BEEF
 `define KEY_LFSR_SEED     128'hCAFE_FEED_CAFE_FEED_CAFE_FEED_CAFE_FEED
+`define IMG_FILENAME      "mona_lisa.jpg"
+`define IMG_SIZE          100
+`define TEST_SET_REPEATS  2
 
 module ttb_test_aes_128;
     
@@ -32,12 +35,17 @@ module ttb_test_aes_128;
     // Command Line Args
     reg [31:0] num_tests;
 
+    // Test type (random = 0; file = 1)
+    reg test_type;
+
     // Clock
     reg lfsr_clk;
     reg aes_clk;
 
     // AES Inputs
     reg aes_enable;
+    wire [`AES_KEY_SIZE - 1:0] aes_state;
+    wire [`AES_KEY_SIZE - 1:0] aes_key; 
 
     // AES Outputs
     wire [`AES_KEY_SIZE - 1:0] out;
@@ -56,11 +64,22 @@ module ttb_test_aes_128;
     wire lfsr_state_done;
     wire lfsr_key_done;
 
+    // IMG encryption test variables
+    // reg [7:0] img_bytes [`IMG_SIZE - 1: 0];
+    reg [`AES_KEY_SIZE - 1:0] img_state;
+    integer file_id;
+    integer file_read_status;
+    integer i;
+
+    // Assign Key and State
+    assign aes_key   = test_type ? `KEY_LFSR_SEED : random_key;
+    assign aes_state = test_type ? img_state : random_state; 
+
     // Instantiate the Unit Under Test (DUT)
     aes_128 dut (
         .clk(aes_clk), 
-        .state(random_state), 
-        .key(random_key), 
+        .state(aes_state), 
+        .key(aes_key), 
         .out(out)
     );
 
@@ -96,45 +115,88 @@ module ttb_test_aes_128;
             $display("ERROR: please specify +num_tests=<value> to start.");
             $finish;
         end
-        $display("Starting %4d tests...", num_tests);
 
         // Open VCD file
         $dumpfile(`VCD_FILENAME);
         $dumpvars(0, dut);
 
-        // Initialize values
-        aes_clk           = 1'b0;
-        aes_enable        = 1'b0;
-        lfsr_clk          = 1'b1;
-        lfsr_state_enable = 1'b0;
-        lfsr_key_enable   = 1'b0;
-        load_state_seed   = 1'b1;
-        load_key_seed     = 1'b1;
+        for (i = 0; i < `TEST_SET_REPEATS; i++) begin
+            
+            // Initialize values
+            test_type         = 1'b0;
+            aes_clk           = 1'b0;
+            aes_enable        = 1'b0;
+            lfsr_clk          = 1'b1;
+            lfsr_state_enable = 1'b0;
+            lfsr_key_enable   = 1'b0;
+            load_state_seed   = 1'b1;
+            load_key_seed     = 1'b1;
 
-        // Wait 1.5 (LFSR) clock periods
-        #(`CLOCK_PERIOD);
-        #(`CLOCK_PERIOD / 2);
+            // Wait 1.5 (LFSR) clock periods
+            #(`CLOCK_PERIOD);
+            #(`CLOCK_PERIOD / 2);
 
-        // Enable LFSRs and Load Seeds
-        lfsr_state_enable = 1'b1;
-        lfsr_key_enable   = 1'b1;
-        
-        // Disable Seeding
-        #(`CLOCK_PERIOD);
-        load_state_seed = 1'b0;
-        load_key_seed   = 1'b0;
+            // Start random encryptions
+            $display("Starting %4d random encryptions (time: %t)...", num_tests, $time);
 
-        // Wait a clock period and start AES encryptions
-        #(`CLOCK_PERIOD);
-        aes_enable = 1'b1;
+            // Enable LFSRs and Load Seeds
+            lfsr_state_enable = 1'b1;
+            lfsr_key_enable   = 1'b1;
+            
+            // Disable Seeding
+            #(`CLOCK_PERIOD);
+            load_state_seed = 1'b0;
+            load_key_seed   = 1'b0;
 
-        // Wait for first encryption to be done
-        #(`CLOCK_PERIOD * `AES_CYCLE_LATENCY);
-        #(`CLOCK_PERIOD * (num_tests - 1));
-        aes_enable = 1'b0;
+            // Wait a clock period and start AES encryptions
+            #(`CLOCK_PERIOD);
+            aes_enable = 1'b1;
 
-        // // Test complete
-        $display("Completed %4d tests.", num_tests);
+            // Wait for first encryption to be done
+            #(`CLOCK_PERIOD * `AES_CYCLE_LATENCY);
+
+            // Wait for all encryptions to be done
+            #(`CLOCK_PERIOD * (num_tests - 1));
+            aes_enable = 1'b0;
+            #(`CLOCK_PERIOD / 2);
+            lfsr_state_enable = 1'b0;
+            lfsr_key_enable   = 1'b0;
+
+            // Random tests complete
+            $display("Completed %4d random encryptions.", num_tests);
+        end
+
+        // // Start image encryption test
+        // $display("Starting image encryption (time: %t)...", $time);
+
+        // // Open image file
+        // file_id = $fopen(`IMG_FILENAME, "rb");
+        // if (file_id == 0) $error ("Error Open File: %s", `IMG_FILENAME);
+
+        // #(`CLOCK_PERIOD / 2);
+        // test_type = 1'b1;
+
+        // // Load and encrypt image
+        // i = 0;
+        // @(posedge lfsr_clk);
+
+        // while (!$feof(file_id) && i < `IMG_SIZE) begin
+        //     file_read_status = $fread(img_state, file_id);
+        //     $display ("Encrypting img_byte (%d) = %h", i, img_state);
+        //     if (i == 0) aes_enable = 1'b1;
+        //     @(posedge aes_clk)
+        //     i++;
+        // end
+
+        // // Wait for all encryptions to be done
+        // #(`CLOCK_PERIOD * `AES_CYCLE_LATENCY);
+        // aes_enable = 1'b0;
+
+        // // Close image file
+        // $display("Completed image encryption.");
+        // $fclose(file_id);
+
+        // End testbench
         $finish;
-    end     
+    end
 endmodule

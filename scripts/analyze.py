@@ -56,6 +56,7 @@ def update_signals_with_vcd(signals, vcd):
 	for vcd_signal_name in vcd.keys():
 
 		# Check that VCD signal name in signals dict
+		# print vcd_signal_name
 		assert vcd_signal_name in signals and "ERROR: VCD signal not in dot graph."
 		
 		# Check signal simulation info not already loaded
@@ -223,7 +224,7 @@ def main():
 	##
 	# Check argv
 	##
-	if (len(sys.argv) != 8):
+	if (len(sys.argv) != 9):
 		print "Usage: ./analyze.py \
 			<start time> \
 			<time limit> \
@@ -247,15 +248,16 @@ def main():
 	start_time         = int(sys.argv[1])
 	time_limit         = int(sys.argv[2])
 	time_resolution    = int(sys.argv[3])
-	dut_top_module     = 'uart_test.uart1'
-	num_mal_cntrs      = int(sys.argv[4])
-	dot_file           = sys.argv[5]
-	vcd_file           = sys.argv[6]
-	json_base_filename = sys.argv[7]
+	dut_top_module     = sys.argv[4]
+	num_mal_cntrs      = int(sys.argv[5])
+	dot_file           = sys.argv[6]
+	vcd_file           = sys.argv[7]
+	json_base_filename = sys.argv[8]
 	print
 	print "Start Time:                 ", start_time
 	print "Time Limit:                 ", time_limit
 	print "Time Resolution:            ", time_resolution
+	print "DUT Top Module:             ", dut_top_module
 	print "Num. Malicious Cntrs:       ", num_mal_cntrs
 	print "DOT File:                   ", dot_file
 	print "VCD File:                   ", vcd_file

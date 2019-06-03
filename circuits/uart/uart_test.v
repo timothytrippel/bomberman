@@ -76,6 +76,7 @@ module uart_test ();
     reg                          comp_lfsr_load_seed_i;
 
     // Other
+    integer i;
     integer e;
     integer num_tests;
     reg uart2_initialized;
@@ -267,8 +268,8 @@ module uart_test ();
         $dumpvars(0, uart1);
 
         // // Dump all arrayed variables
-        // for(i = 0; i < ; i = i + 1)
-        //     $dumpvars(1, full.path.to.array.data[i]);
+        // for(i = 0; i < 16; i++)
+        //     $dumpvars(0, uart1.regs.receiver.fifo_rx.rfifo.ram[i]);
     end
 
     //--------------------------------------------------------------------------------

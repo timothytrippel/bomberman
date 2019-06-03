@@ -24,14 +24,15 @@ MEMORY=128gb
 # UART   --> number of sets of 16 bytes transmitted/received
 # OR1200 --> number of (randomly selected) programs executed
 # NUM_TESTS=50000
-# NUM_TESTS=50
+# NUM_TESTS=100
 NUM_TESTS=1
 
 # Counter Analysis Time Range 
 # (in simulation timescale units)
 START_TIME=0
+# TIME_RESOLUTION=100
 # START_TIME=5000
-TIME_RESOLUTION=100000
+TIME_RESOLUTION=10000
 # TIME_RESOLUTION=5000
 TIME_LIMIT=-1
 
@@ -39,7 +40,7 @@ TIME_LIMIT=-1
 NUM_MALICIOUS_CNTRS=0
 
 # Flags
-OVERWRITE_RESULTS=1
+OVERWRITE_RESULTS=0
 INTERACTIVE=1
 LOGGING=0
 
