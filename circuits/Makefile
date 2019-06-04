@@ -33,8 +33,8 @@ or1200:
 # 	fi; \
 # 	echo "Finished $@ analysis."
 
-%.vmem:
-	$(MAKE) -C $(OR1200_SIM)
+# %.vmem:
+# 	$(MAKE) -C $(OR1200_SIM)
 
 # Building the TTB IVL Target Module
 tgt-ttb: 

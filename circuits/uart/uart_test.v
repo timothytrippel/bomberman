@@ -267,9 +267,9 @@ module uart_test ();
         // Dump all variables
         $dumpvars(0, uart1);
 
-        // // Dump all arrayed variables
-        // for(i = 0; i < 16; i++)
-        //     $dumpvars(0, uart1.regs.receiver.fifo_rx.rfifo.ram[i]);
+        // Dump all arrayed variables
+        for(i = 0; i < 16; i++)
+            $dumpvars(0, uart1.regs.receiver.fifo_rx.rfifo.ram[i]);
     end
 
     //--------------------------------------------------------------------------------
