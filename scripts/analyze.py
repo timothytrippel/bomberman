@@ -67,8 +67,27 @@ def update_signals_with_vcd(signals, vcd):
 
 		# Load reference to all signal objects on same net
 		for net_dict in vcd[vcd_signal_name]['nets']:
-			net_fullname = net_dict['hier'] + '.' + net_dict['name'].split('[')[0]
+
+			# Get net bit offset string
+			msb_lsb_str  = "[%d:%d]" % (signals[vcd_signal_name].msb, signals[vcd_signal_name].lsb)
 			
+			# Get local name
+			local_name = net_dict['name']
+			
+			# Strip escape character
+			if local_name.startswith('\\'):
+				local_name = local_name[1:]
+
+			# Get net fullname
+			net_fullname = (net_dict['hier'] + '.' + local_name)
+
+			# Strip bit offset string
+			if ('[' in net_fullname and ']' in net_fullname):
+				net_fullname = net_fullname[0:-len(msb_lsb_str)]
+			
+			# print net_fullname
+
+			# Update references of other signals on same net
 			if net_fullname in signals:
 				signals[net_fullname].ref_hierarchy  = signals[vcd_signal_name].hierarchy
 				signals[net_fullname].ref_local_name = signals[vcd_signal_name].local_name
@@ -80,7 +99,7 @@ def update_signals_with_vcd(signals, vcd):
 def classify_counters(counter_type, signals, counters, constants, malicious, skipped, time_limit):
 	for counter in counters:
 
-		# print counter.fullname()
+		print counter.fullname()
 		# counter.debug_print_wtvs(signals)
 		# print
 
@@ -107,6 +126,7 @@ def classify_counters(counter_type, signals, counters, constants, malicious, ski
 						# NOT Malicious -> Continue
 						if sws.VERBOSE > 2: 
 							print "Repeated Value (%s) --> Not Malicious" % (counter.get_time_value(signals, sim_time))
+							print
 						
 						# Set repeated value flag
 						repeated_value = True
@@ -140,6 +160,8 @@ def classify_counters(counter_type, signals, counters, constants, malicious, ski
 				if sws.VERBOSE > 2:
 					print "Possible Malicious Symbol: " + counter.fullname()
 				malicious[counter.fullname()] = True
+
+		print
 
 	return CounterStats(counter_type, counters, skipped, constants, malicious)
 
@@ -214,12 +236,12 @@ def main():
 	##
 
 	# General Switches
-	sws.VERBOSE  = 0
+	sws.VERBOSE  = 3
 	sws.WARNINGS = False
 
 	# DEBUG Switches
-	sws.DEBUG        = False
-	sws.DEBUG_PRINTS = False
+	sws.DEBUG        = True
+	sws.DEBUG_PRINTS = True
 
 	##
 	# Check argv
@@ -269,7 +291,7 @@ def main():
 	print "--------------------------------------------------------------------------------"
 	print "Loading Dot File..."
 	task_start_time = time.time()
-	signals         = parse_file(dot_file) 
+	signals         = parse_file(dot_file)
 	task_end_time   = time.time()
 	calculate_and_print_time(task_start_time, task_end_time)
 
@@ -329,7 +351,7 @@ def main():
 		print "--------------------------------------------------------------------------------"
 		print "All Signals:"
 		for signal_name in signals:
-			signals[signal_name].debug_print(signals)
+			signals[signal_name].debug_print()
 	print
 
 	##

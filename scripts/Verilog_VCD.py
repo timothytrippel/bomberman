@@ -254,7 +254,7 @@ def is_signal_name_vectored(signal_base_name):
 
 def get_signal_lsb(signal_base_name):
 	if is_signal_name_vectored(signal_base_name):
-		return int(signal_base_name.split("[")[1].split(":")[1].split("]")[0])
+		return int(signal_base_name.split("[")[-1].split(":")[-1].split("]")[0])
 	return 0
 
 # This is added to format the VCD information. Signal names
@@ -270,10 +270,25 @@ def exchange_sym_for_name_vcd(vcd):
 		# is the longest (i.e. deepest in heirarchy).
 		signal_name = ''
 		for net in signal['nets']:
-			# Extract signal info
-			signal_lsb            = get_signal_lsb(net['name'])
-			signal_msb            = signal_lsb + int(net['size']) - 1
-			local_signal_name     = net['name'].split('[')[0] # remove MSB/LSB indices
+			
+			# Extract bit offset signal info
+			signal_lsb  = get_signal_lsb(net['name'])
+			signal_msb  = signal_lsb + int(net['size']) - 1
+			msb_lsb_str = "[%d:%d]" % (signal_msb, signal_lsb)
+			
+			# Get local signal name (i.e. w/o bit offsets)
+			if '[' in net['name'] and ']' in net['name']:
+				local_signal_name = net['name'][0:-len(msb_lsb_str)] # remove MSB/LSB indices
+			else:
+				local_signal_name = net['name']
+			# print net['name'], '-->', net['name'][0:-len(msb_lsb_str)], '-->', local_signal_name
+
+			# Check if net name was escaped (Icarus Verilog does 
+			# this for memories that are explicitly dumped)
+			if local_signal_name.startswith('\\'):
+				local_signal_name = local_signal_name[1:]
+
+			# Get signal hierachy name
 			hierarchy_signal_name = net['hier']
 
 			# Construct signal full name (without MSB/LSB info)
@@ -289,6 +304,7 @@ def exchange_sym_for_name_vcd(vcd):
 		assert signal_name != ''
 
 		formatted_vcd[signal_name] = signal
+	# sys.exit()
 
 	return formatted_vcd
 

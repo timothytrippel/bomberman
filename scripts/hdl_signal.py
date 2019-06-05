@@ -121,7 +121,7 @@ class HDL_Signal:
 		# Find matching VCD net
 		matching_vcd_net_found = False
 		for net_dict in vcd_data['nets']:
-			if (net_dict['hier'] + '.' + net_dict['name'].split('[')[0]) == self.fullname():
+			if (self.hierarchy == net_dict['hier']):
 				matching_vcd_net_found = True
 				break
 		assert matching_vcd_net_found
@@ -129,9 +129,6 @@ class HDL_Signal:
 		# Load VCD Signal Info
 		self.tb_covered = True
 		self.type       = net_dict['type']
-
-		# Check hierarchy matches
-		assert self.hierarchy == net_dict['hier']
 
 		# Load Simulation Time Values
 		for tv in vcd_data['tv']:
