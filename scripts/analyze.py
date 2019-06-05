@@ -221,6 +221,8 @@ def check_simulation_coverage(signals, dut_top_module):
 			num_total_signals += 1
 
 	# Compute coverage percentage
+	print "Num. Signals Simd: ", num_signals_simd
+	print "Num. Total Signals:", num_total_signals
 	simulation_coverage_pct = (float(num_signals_simd) / float(num_total_signals)) * 100.00
 	print
 	print "Simulation Coverage: {:.2f}%	({:d}/{:d})".format(\
@@ -247,14 +249,15 @@ def main():
 	# Check argv
 	##
 	if (len(sys.argv) != 9):
-		print "Usage: ./analyze.py \
-			<start time> \
-			<time limit> \
-			<time resolution> \
-			<num. malicious cntrs> \
-			<input dot file> \
-			<input vcd file> \
-			<output json file (basename)>"
+		print "Usage: ./analyze.py"
+		print "	<start time>"
+		print "	<time limit>"
+		print "	<time resolution>"
+		print "	<DUT top module>"
+		print "	<num. malicious cntrs>"
+		print "	<input dot file>"
+		print "	<input vcd file>"
+		print "	<output json file (basename)>"
 		sys.exit(-1)
 
 	##
