@@ -15,23 +15,18 @@ from   parse_dot           import parse_file
 from   Verilog_VCD         import parse_vcd, get_timescale, get_endtime
 from   distributed_counter import generate_distributed_counters
 from   coalesced_counter   import generate_coalesced_counters
-from   counter_stats       import CounterStats
 
 def calculate_and_print_time(start_time, end_time):
 	hours, rem       = divmod(end_time - start_time, 3600)
 	minutes, seconds = divmod(rem, 60)
 	print "Execution Time:", "{:0>2}:{:0>2}:{:05.2f}".format(int(hours), int(minutes), seconds)
 
-def export_stats_json(coal_counter_stats, dist_counter_stats, filename):
+def export_stats_json(num_total, num_skipped, num_constants, num_malicious, filename):
 	stats = {
-		"coal_total"     : coal_counter_stats.num_total,
-		"coal_not_simd"  : coal_counter_stats.num_not_simd,
-		"coal_constants" : coal_counter_stats.num_consts,
-		"coal_malicious" : coal_counter_stats.num_mal,
-		"dist_total"     : dist_counter_stats.num_total,
-		"dist_not_simd"  : dist_counter_stats.num_not_simd,
-		"dist_constants" : dist_counter_stats.num_consts,
-		"dist_malicious" : dist_counter_stats.num_mal
+		"total"     : num_total,
+		"not_simd"  : num_skipped,
+		"constants" : num_constants,
+		"malicious" : num_malicious,
 	}
 	with open(filename, 'w') as jf:  
 		json.dump(stats, jf)
@@ -48,7 +43,7 @@ def export_sizes_json(coal_counter_sizes, dist_counter_sizes, filename):
 
 def get_counter_sizes(counters):
 	counter_sizes = []
-	for counter in counters:
+	for counter_name, counter in counters.items():
 		counter_sizes.append(counter.width)
 	return counter_sizes
 
@@ -96,183 +91,166 @@ def update_signals_with_vcd(signals, vcd):
 				print "ERROR: VCD signal not in dot graph."
 				sys.exit(1)
 
-def classify_counters(counter_type, signals, counters, time_limit):
+def classify_counters(counter_type, signals, counters, start_time, time_limit, time_resolution, json_base_filename):
 
 	# Counter Types
-	constants = {}
-	malicious = {}
-	skipped   = {}
+	skipped             = {}
+	constants           = {}
+	malicious           = {}
+	malicious_time_inds = {}
 
-	# Iterate over all counters
-	for counter in counters:
+	# Mark all counters as malicious
+	for counter_name, counter in counters.items():
 
-		if sws.VERBOSE > 0:
-			print counter.fullname()
-		# counter.debug_print_wtvs(signals)
-		# print
+		malicious_time_inds[counter.fullname()] = 0
+		malicious[counter.fullname()]           = set()
 
 		# Check that counter has been simulated by TB
 		if not counter.tb_covered:
 			if sws.WARNINGS:
 				print "WARNING: counter (%s) not exercised by test bench... skipping." % (counter.fullname())
 			skipped[counter.fullname()] = True
-			continue
 
-		# Compute number of simulated unique counter values in time interval
-		counter_value_set = set()
-		counter_sim_times = counter.get_sorted_update_times(signals)
+	timescale_str = '100ps'
+
+	##
+	# DEBUG mode: only one single time analysis
+	##
+	if sws.DEBUG:
+		time_analysis_range = [time_limit]
+		print "DEBUG MODE: analyzing entire simulation time interval:"
+
+	##
+	# NORMAL mode: iterate over simulation time intervals
+	##
+	else:
+		time_analysis_range = range(start_time, time_limit, time_resolution)
 		
-		# Reset repested value flag
-		repeated_value = False
+	for curr_time_limit in time_analysis_range:
 
-		for sim_time in counter_sim_times:
-			if sim_time <= time_limit:
-				if 'x' not in counter.get_time_value(signals, sim_time):
-					
-					# Check if counter value already seen
-					if counter.get_time_value(signals, sim_time) in counter_value_set:
+		print "--------------------------------------------------------------------------------"
+		print "Analyzing simulation at time interval:"
+		print "[%d (*%s), %d (*%s)]" % \
+		(start_time, timescale_str, curr_time_limit, timescale_str)
 
-						# NOT Malicious -> Continue
-						if sws.VERBOSE > 2: 
-							print "Repeated Value (%s) --> Not Malicious" % (counter.get_time_value(signals, sim_time))
-							print
-						
-						# Set repeated value flag
-						repeated_value = True
-						break
+		# Iterate over (potentially) malicious counters
+		for mal_counter_name in malicious:
 
+			# Get HDL_Signal object representing counter
+			counter = counters[mal_counter_name]
+
+			# Get counter sim time index
+			time_ind = malicious_time_inds[mal_counter_name]
+
+			# Print counter's name
+			if sws.VERBOSE > 0:
+				print counter.fullname()
+
+			# Benign flag
+			benign = False
+
+			# Check counter has been simulated
+			if counter.tb_covered:
+
+				# Get time values for current time interval
+				counter_sim_times = counter.get_sorted_update_times(signals)
+				print "Sim Times:  ", counter_sim_times
+				print "Time Values:", counter.get_time_value(signals, counter_sim_times[time_ind])
+
+				# Iterate over time simulation time indices in range of interest
+				while (time_ind < len(counter_sim_times) and counter_sim_times[time_ind] < curr_time_limit):
+
+					# Get value at given time
+					current_tv = counter.get_time_value(signals, counter_sim_times[time_ind])
+
+					# Check if time value is valid
+					if 'x' not in current_tv:
+
+						# Check if counter value already seen
+						if current_tv in malicious[mal_counter_name]:
+
+							# NOT Malicious -> Continue
+							if sws.VERBOSE > 2: 
+								print "Repeated Value (%s) --> Not Malicious" % (current_tv)
+								print
+							
+							# Mark counter as benign
+							benign = True
+							break
+
+						else:
+
+							# Still possibly malicious: add value to set of simulated counter values
+							malicious[mal_counter_name].add(current_tv)
+
+					# Increment time index
+					time_ind += 1
+
+				# Save last time index
+				malicious_time_inds[mal_counter_name] = time_ind
+
+				# Check if malicious counter was not already re-classified (i.e. a repeated value was seen)
+				if not benign:
+
+					# Compute number of possible unique counter values
+					max_possible_values = 2 ** counter.width
+					if sws.VERBOSE > 2:
+						print "Values Seen/Possible: %d/%d" % (len(malicious[mal_counter_name]), max_possible_values)
+
+					# Classify counter as a constant
+					if len(malicious[mal_counter_name]) == 1:
+						if sws.VERBOSE > 2:
+							print "Constant: " + mal_counter_name
+
+						# Add to constants dict
+						constants[mal_counter_name] = True
+
+					# Classify counter as malicious
+					elif len(malicious[mal_counter_name]) < max_possible_values:
+						if sws.VERBOSE > 2:
+							print "Possible Malicious Symbol: " + mal_counter_name
+
+						# Remove from constants dict if it was previously a constant
+						if mal_counter_name in constants:
+							del constants[mal_counter_name]
+
+					# Classify counter as NOT malicious
 					else:
-						# print counter.get_time_value(signals, sim_time)
-						counter_value_set.add(counter.get_time_value(signals, sim_time))
-			else:
-				break
+						benign = True
 
-		# Check if repeated value
-		if repeated_value:
-			continue
+				if benign:
+				 	malicious_time_inds[mal_counter_name] = -1
 
-		# Compute number of possible unique counter values
-		max_possible_values = 2 ** counter.width
-		if sws.VERBOSE > 2:
-			print "Values Seen/Possible: %d/%d" % (len(counter_value_set), max_possible_values)
+		# Remove non-malicious counters
+		for mal_counter_name in malicious_time_inds:
+			if malicious_time_inds[mal_counter_name] == -1:
+				if mal_counter_name in malicious:
+					del malicious[mal_counter_name]
+				if mal_counter_name in constants:
+					del constants[mal_counter_name]
 
-		# Classify counter as a constant
-		if len(counter_value_set) == 1:
-			if counter.fullname() not in constants:
-				if sws.VERBOSE > 2:
-					print "Constant: " + counter.fullname()
-				constants[counter.fullname()] = True
+		# Create counter stats objects
+		print "# Possible:  %d" % (len(counters))
+		print "# Not Simd:  %d" % (len(skipped))
+		print "# Constants: %d" % (len(constants))
+		print "# Malicious: %d" % (len(malicious) - len(constants))
 
-		# Classify counter as malicious
-		elif len(counter_value_set) < max_possible_values:
-			if counter.fullname() not in malicious:
-				if sws.VERBOSE > 2:
-					print "Possible Malicious Symbol: " + counter.fullname()
-				malicious[counter.fullname()] = True
+		# Save counter stats to JSON file
+		json_filename = json_base_filename + "." + counter_type + "." + str(curr_time_limit) + ".json"
+		export_stats_json(len(counters), len(skipped), len(constants), len(malicious) - len(constants), json_filename)
 
-	return CounterStats(counter_type, counters, skipped, constants, malicious)
+def analyze_counters(signals, coal_counters, dist_counters, start_time, time_limit, time_resolution, json_base_filename):
 
-# def classify_counters_fast(counter_type, signals, counters, time_limit):
-
-# 	# Counter Types
-# 	constants = {}
-# 	malicious = {}
-# 	skipped   = {}
-
-# 	# Mark all counters as malicious
-# 	for counter in counters:
-# 		malicious[counter.fullname()] = counter
-
-	
-
-
-
-
-
-
-
-# 	# Iterate over all counters
-# 	for counter in counters:
-
-# 		if sws.VERBOSE > 0:
-# 			print counter.fullname()
-# 		# counter.debug_print_wtvs(signals)
-# 		# print
-
-# 		# Check that counter has been simulated by TB
-# 		if not counter.tb_covered:
-# 			if sws.WARNINGS:
-# 				print "WARNING: counter (%s) not exercised by test bench... skipping." % (counter.fullname())
-# 			skipped[counter.fullname()] = True
-# 			continue
-
-# 		# Compute number of simulated unique counter values in time interval
-# 		counter_value_set = set()
-# 		counter_sim_times = counter.get_sorted_update_times(signals)
-		
-# 		# Reset repested value flag
-# 		repeated_value = False
-
-# 		for sim_time in counter_sim_times:
-# 			if sim_time <= time_limit:
-# 				if 'x' not in counter.get_time_value(signals, sim_time):
-					
-# 					# Check if counter value already seen
-# 					if counter.get_time_value(signals, sim_time) in counter_value_set:
-
-# 						# NOT Malicious -> Continue
-# 						if sws.VERBOSE > 2: 
-# 							print "Repeated Value (%s) --> Not Malicious" % (counter.get_time_value(signals, sim_time))
-# 							print
-						
-# 						# Set repeated value flag
-# 						repeated_value = True
-# 						break
-
-# 					else:
-# 						# print counter.get_time_value(signals, sim_time)
-# 						counter_value_set.add(counter.get_time_value(signals, sim_time))
-# 			else:
-# 				break
-
-# 		# Check if repeated value
-# 		if repeated_value:
-# 			continue
-
-# 		# Compute number of possible unique counter values
-# 		max_possible_values = 2 ** counter.width
-# 		if sws.VERBOSE > 2:
-# 			print "Values Seen/Possible: %d/%d" % (len(counter_value_set), max_possible_values)
-
-# 		# Classify counter as a constant
-# 		if len(counter_value_set) == 1:
-# 			if counter.fullname() not in constants:
-# 				if sws.VERBOSE > 2:
-# 					print "Constant: " + counter.fullname()
-# 				constants[counter.fullname()] = True
-
-# 		# Classify counter as malicious
-# 		elif len(counter_value_set) < max_possible_values:
-# 			if counter.fullname() not in malicious:
-# 				if sws.VERBOSE > 2:
-# 					print "Possible Malicious Symbol: " + counter.fullname()
-# 				malicious[counter.fullname()] = True
-
-# 	return CounterStats(counter_type, counters, skipped, constants, malicious)
-
-def analyze_counters(signals, coal_counters, dist_counters, curr_time_limit, json_base_filename):
-	
-	##
-	# Analyze Coalesced Counters
-	##
-	print
-	print "Finding malicious coalesced signals..."
-	task_start_time    = time.time()
-	coal_counter_stats = classify_counters("Coalesced", signals, coal_counters, curr_time_limit)
-	# coal_counter_stats = classify_counters_fast("Coalesced", signals, coal_counters, curr_time_limit)
-	task_end_time      = time.time()
-	calculate_and_print_time(task_start_time, task_end_time)
-	print
+	# ##
+	# # Analyze Coalesced Counters
+	# ##
+	# print
+	# print "Finding malicious coalesced signals..."
+	# task_start_time    = time.time()
+	# classify_counters("coal", signals, coal_counters, start_time, time_limit, time_resolution, json_base_filename)
+	# task_end_time      = time.time()
+	# calculate_and_print_time(task_start_time, task_end_time)
+	# print
 
 	##
 	# Analyze Distributed Counters
@@ -280,23 +258,10 @@ def analyze_counters(signals, coal_counters, dist_counters, curr_time_limit, jso
 	print
 	print "Finding malicious distributed signals..."
 	task_start_time    = time.time()
-	dist_counter_stats = classify_counters("Distributed", signals, dist_counters, curr_time_limit)
-	# dist_counter_stats = classify_counters_fast("Distributed", signals, dist_counters, curr_time_limit)
+	classify_counters("dist", signals, dist_counters, start_time, time_limit, time_resolution, json_base_filename)
 	task_end_time      = time.time()
 	calculate_and_print_time(task_start_time, task_end_time)
 	print
-
-	##
-	# Report stats
-	##
-	coal_counter_stats.print_stats()
-	dist_counter_stats.print_stats()
-
-	##
-	# Write stats to JSON file
-	##
-	json_filename = json_base_filename + "." + str(curr_time_limit) + ".json"
-	export_stats_json(coal_counter_stats, dist_counter_stats, json_filename)
 
 	print "Analysis complete."
 	print
@@ -335,7 +300,7 @@ def main():
 	##
 
 	# General Switches
-	sws.VERBOSE  = 0
+	sws.VERBOSE  = 3
 	sws.WARNINGS = False
 
 	# DEBUG Switches
@@ -496,32 +461,9 @@ def main():
 	export_sizes_json(coal_counter_sizes, dist_counter_sizes, json_base_filename + ".sizes.json")
 
 	##
-	# DEBUG mode: only one single time analysis
+	# Classify counter behaviors
 	##
-	if sws.DEBUG:
-
-		print "--------------------------------------------------------------------------------"
-		print "DEBUG MODE: analyzing entire simulation time interval:"
-		print "[%d (*%s), %d (*%s)]" % \
-		(start_time, timescale_str, sim_end_time, timescale_str)
-
-		# Analyze counters in the design
-		analyze_counters(signals, coal_counters, dist_counters, sim_end_time, json_base_filename)
-
-	##
-	# NORMAL mode: iterate over simulation time intervals
-	##
-	else:
-
-		for curr_time_limit in range(start_time, time_limit, time_resolution):
-
-			print "--------------------------------------------------------------------------------"
-			print "Analyzing simulation at time interval:"
-			print "[%d (*%s), %d (*%s)]" % \
-			(start_time, timescale_str, curr_time_limit, timescale_str)
-
-			# Analyze counters in the design
-			analyze_counters(signals, coal_counters, dist_counters, curr_time_limit, json_base_filename)
+	analyze_counters(signals, coal_counters, dist_counters, start_time, time_limit, time_resolution, json_base_filename)
 
 	##
 	# Stop Overall Timer

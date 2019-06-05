@@ -53,8 +53,7 @@ def add_time_value(signals, dist_counter, source_signal, msb, lsb, time, values)
 
 def generate_distributed_counters(signals, num_mal_cntrs, dut_top_module):
 	not_simd      = {}
-	seen          = {}
-	dist_counters = []
+	dist_counters = {}
 
 	for sig_name, sig in signals.iteritems():
 		
@@ -116,11 +115,10 @@ def generate_distributed_counters(signals, num_mal_cntrs, dut_top_module):
 		dist_counter.tb_covered = dist_counter_simulated
 
 		# Check that dist_counter has not already been generated
-		if dist_counter_name not in seen:
-			seen[dist_counter_name] = True
+		if dist_counter_name not in dist_counters:
 			
 			# Append dist_counter to list
-			dist_counters.append(dist_counter)
+			dist_counters[dist_counter_name] = dist_counter
 
 		# Check if distributed signal was simd, if not, skip it
 		if not dist_counter_simulated:
