@@ -31,7 +31,7 @@ def load_data_df(data_dir):
 	            design_info = filename.split('.')
 	            counter_data['Design'].append(design_info[0])
 	            counter_data['Time'].append(int(design_info[1]))
-	            print filename
+	            
 	            # Open JSON file
 	            with open(data_dir + '/' + filename, 'r') as f:
 
