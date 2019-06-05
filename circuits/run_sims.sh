@@ -42,7 +42,7 @@ NUM_MALICIOUS_CNTRS=0
 # Flags
 OVERWRITE_RESULTS=0
 INTERACTIVE=1
-LOGGING=1
+LOGGING=0
 
 #-------------------------------------------------------------------------------
 # System Configurations (DO NOT EDIT)

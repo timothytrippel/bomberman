@@ -238,12 +238,12 @@ def main():
 	##
 
 	# General Switches
-	sws.VERBOSE  = 3
+	sws.VERBOSE  = 0
 	sws.WARNINGS = False
 
 	# DEBUG Switches
 	sws.DEBUG        = True
-	sws.DEBUG_PRINTS = True
+	sws.DEBUG_PRINTS = False
 
 	##
 	# Check argv
@@ -369,8 +369,8 @@ def main():
 	print "Found " + str(len(coal_counters)) + " possible coalesced counters."
 	if sws.DEBUG_PRINTS and coal_counters:
 		for counter in coal_counters:
-			print "	Coalesced Counter: %s (Size: %d)" % (counter.name, counter.width)
-			counter.debug_print(signals)
+			print "	Coalesced Counter: %s (Size: %d)" % (counter.fullname(), counter.width)
+			counter.debug_print()
 	coal_counter_sizes = get_counter_sizes(coal_counters)
 	print
 	calculate_and_print_time(task_start_time, task_end_time)
@@ -387,8 +387,8 @@ def main():
 	print "Found " + str(len(dist_counters)) + " possible distributed counters."
 	if sws.DEBUG_PRINTS and dist_counters:
 		for dist_counter in dist_counters:
-			print "	Distributed Counter: %s (Size: %d)" % (dist_counter.name, dist_counter.width)
-			dist_counter.debug_print(signals)
+			print "	Distributed Counter: %s (Size: %d)" % (dist_counter.fullname(), dist_counter.width)
+			dist_counter.debug_print()
 	dist_counter_sizes = get_counter_sizes(dist_counters)
 	print
 	calculate_and_print_time(task_start_time, task_end_time)
