@@ -39,7 +39,10 @@ class HDL_Signal:
 
 	def ref_fullname(self):
 		if self.ref_hierarchy and self.ref_local_name:
-			return (self.ref_hierarchy + '.' + self.ref_local_name)
+			if self.array_ind != None:
+				return (self.ref_hierarchy + '.' + self.ref_local_name + '[' + str(self.array_ind) + ']')
+			else:
+				return (self.ref_hierarchy + '.' + self.ref_local_name)
 		else:
 			return None
 

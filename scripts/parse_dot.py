@@ -59,8 +59,6 @@ def parse_file(file_name):
 				sys.exit(2)
 
 			# Get signal info
-			if 'ram' in lines[lineno]:
-				print lines[lineno]
 			fullname  = m.group(3)
 			msb       = int(m.group(6))
 			lsb       = int(m.group(7))

@@ -99,7 +99,7 @@ def update_signals_with_vcd(signals, vcd):
 def classify_counters(counter_type, signals, counters, constants, malicious, skipped, time_limit):
 	for counter in counters:
 
-		print counter.fullname()
+		# print counter.fullname()
 		# counter.debug_print_wtvs(signals)
 		# print
 
@@ -160,8 +160,6 @@ def classify_counters(counter_type, signals, counters, constants, malicious, ski
 				if sws.VERBOSE > 2:
 					print "Possible Malicious Symbol: " + counter.fullname()
 				malicious[counter.fullname()] = True
-
-		print
 
 	return CounterStats(counter_type, counters, skipped, constants, malicious)
 
@@ -242,7 +240,7 @@ def main():
 	sws.WARNINGS = False
 
 	# DEBUG Switches
-	sws.DEBUG        = True
+	sws.DEBUG        = False
 	sws.DEBUG_PRINTS = False
 
 	##
