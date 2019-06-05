@@ -96,10 +96,18 @@ def update_signals_with_vcd(signals, vcd):
 				print "ERROR: VCD signal not in dot graph."
 				sys.exit(1)
 
-def classify_counters(counter_type, signals, counters, constants, malicious, skipped, time_limit):
+def classify_counters(counter_type, signals, counters, time_limit):
+
+	# Counter Types
+	constants = {}
+	malicious = {}
+	skipped   = {}
+
+	# Iterate over all counters
 	for counter in counters:
 
-		# print counter.fullname()
+		if sws.VERBOSE > 0:
+			print counter.fullname()
 		# counter.debug_print_wtvs(signals)
 		# print
 
@@ -120,6 +128,7 @@ def classify_counters(counter_type, signals, counters, constants, malicious, ski
 		for sim_time in counter_sim_times:
 			if sim_time <= time_limit:
 				if 'x' not in counter.get_time_value(signals, sim_time):
+					
 					# Check if counter value already seen
 					if counter.get_time_value(signals, sim_time) in counter_value_set:
 
@@ -163,6 +172,94 @@ def classify_counters(counter_type, signals, counters, constants, malicious, ski
 
 	return CounterStats(counter_type, counters, skipped, constants, malicious)
 
+# def classify_counters_fast(counter_type, signals, counters, time_limit):
+
+# 	# Counter Types
+# 	constants = {}
+# 	malicious = {}
+# 	skipped   = {}
+
+# 	# Mark all counters as malicious
+# 	for counter in counters:
+# 		malicious[counter.fullname()] = counter
+
+	
+
+
+
+
+
+
+
+# 	# Iterate over all counters
+# 	for counter in counters:
+
+# 		if sws.VERBOSE > 0:
+# 			print counter.fullname()
+# 		# counter.debug_print_wtvs(signals)
+# 		# print
+
+# 		# Check that counter has been simulated by TB
+# 		if not counter.tb_covered:
+# 			if sws.WARNINGS:
+# 				print "WARNING: counter (%s) not exercised by test bench... skipping." % (counter.fullname())
+# 			skipped[counter.fullname()] = True
+# 			continue
+
+# 		# Compute number of simulated unique counter values in time interval
+# 		counter_value_set = set()
+# 		counter_sim_times = counter.get_sorted_update_times(signals)
+		
+# 		# Reset repested value flag
+# 		repeated_value = False
+
+# 		for sim_time in counter_sim_times:
+# 			if sim_time <= time_limit:
+# 				if 'x' not in counter.get_time_value(signals, sim_time):
+					
+# 					# Check if counter value already seen
+# 					if counter.get_time_value(signals, sim_time) in counter_value_set:
+
+# 						# NOT Malicious -> Continue
+# 						if sws.VERBOSE > 2: 
+# 							print "Repeated Value (%s) --> Not Malicious" % (counter.get_time_value(signals, sim_time))
+# 							print
+						
+# 						# Set repeated value flag
+# 						repeated_value = True
+# 						break
+
+# 					else:
+# 						# print counter.get_time_value(signals, sim_time)
+# 						counter_value_set.add(counter.get_time_value(signals, sim_time))
+# 			else:
+# 				break
+
+# 		# Check if repeated value
+# 		if repeated_value:
+# 			continue
+
+# 		# Compute number of possible unique counter values
+# 		max_possible_values = 2 ** counter.width
+# 		if sws.VERBOSE > 2:
+# 			print "Values Seen/Possible: %d/%d" % (len(counter_value_set), max_possible_values)
+
+# 		# Classify counter as a constant
+# 		if len(counter_value_set) == 1:
+# 			if counter.fullname() not in constants:
+# 				if sws.VERBOSE > 2:
+# 					print "Constant: " + counter.fullname()
+# 				constants[counter.fullname()] = True
+
+# 		# Classify counter as malicious
+# 		elif len(counter_value_set) < max_possible_values:
+# 			if counter.fullname() not in malicious:
+# 				if sws.VERBOSE > 2:
+# 					print "Possible Malicious Symbol: " + counter.fullname()
+# 				malicious[counter.fullname()] = True
+
+# 	return CounterStats(counter_type, counters, skipped, constants, malicious)
+
 def analyze_counters(signals, coal_counters, dist_counters, curr_time_limit, json_base_filename):
 	
 	##
@@ -171,7 +268,8 @@ def analyze_counters(signals, coal_counters, dist_counters, curr_time_limit, jso
 	print
 	print "Finding malicious coalesced signals..."
 	task_start_time    = time.time()
-	coal_counter_stats = classify_counters("Coalesced", signals, coal_counters, {}, {}, {}, curr_time_limit)
+	coal_counter_stats = classify_counters("Coalesced", signals, coal_counters, curr_time_limit)
+	# coal_counter_stats = classify_counters_fast("Coalesced", signals, coal_counters, curr_time_limit)
 	task_end_time      = time.time()
 	calculate_and_print_time(task_start_time, task_end_time)
 	print
@@ -182,7 +280,8 @@ def analyze_counters(signals, coal_counters, dist_counters, curr_time_limit, jso
 	print
 	print "Finding malicious distributed signals..."
 	task_start_time    = time.time()
-	dist_counter_stats = classify_counters("Distributed", signals, dist_counters, {}, {}, {}, curr_time_limit)
+	dist_counter_stats = classify_counters("Distributed", signals, dist_counters, curr_time_limit)
+	# dist_counter_stats = classify_counters_fast("Distributed", signals, dist_counters, curr_time_limit)
 	task_end_time      = time.time()
 	calculate_and_print_time(task_start_time, task_end_time)
 	print
@@ -205,28 +304,28 @@ def analyze_counters(signals, coal_counters, dist_counters, curr_time_limit, jso
 def check_simulation_coverage(signals, dut_top_module):
 	print "--------------------------------------------------------------------------------"
 	print "Checking simulation coverage..."
-	print "Signals NOT exercised by testbench:"
-	num_signals_simd  = 0
-	num_total_signals = 0
+	print "Flip-Flops/Inputs NOT exercised by testbench:"
+	num_ff_simd  = 0
+	num_total_ffs = 0
 	for signal_name in signals:
 
 		# Check that signal is in the DUT top module (i.e. not a test bench signal)
 		if signal_name.startswith(dut_top_module):
-			if not signals[signal_name].tb_covered:
+			if not signals[signal_name].tb_covered and (signals[signal_name].isff or signals[signal_name].isinput):
 				print "	", signal_name
 			else:
-				num_signals_simd += 1
-			num_total_signals += 1
+				num_ff_simd += 1
+			num_total_ffs += 1
 
 	# Compute coverage percentage
-	print "Num. Signals Simd: ", num_signals_simd
-	print "Num. Total Signals:", num_total_signals
-	simulation_coverage_pct = (float(num_signals_simd) / float(num_total_signals)) * 100.00
+	print "Num. FFs/Inputs Simd: ", num_ff_simd
+	print "Num. Total FFs/Inputs:", num_total_ffs
+	simulation_coverage_pct = (float(num_ff_simd) / float(num_total_ffs)) * 100.00
 	print
-	print "Simulation Coverage: {:.2f}%	({:d}/{:d})".format(\
+	print "FF/Input Simulation Coverage: {:.2f}%	({:d}/{:d})".format(\
 		simulation_coverage_pct, \
-		num_signals_simd, \
-		num_total_signals)
+		num_ff_simd, \
+		num_total_ffs)
 	print
 
 def main():

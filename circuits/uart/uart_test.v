@@ -7,6 +7,7 @@
 `define RECEIVE_FIFO_SIZE  16 // in bytes
 `define TRANSMIT_FIFO_SIZE 16 // in bytes
 `define LFSR_SEED          0
+`define REPEAT
 //`define DATA_BUS_WIDTH_8
 
 // Define data bus width
@@ -37,8 +38,9 @@ module uart_test ();
     //--------------------------------------------------------------------------------
 
     // Test bench driving signals
-    reg clk; // Clock (drives each UART block and Wishbone interfaces)
-    reg rst; // Reset (ties into Wishbone interface)
+    reg clk;      // Clock (drives each UART block and Wishbone interfaces)
+    reg rst;      // Reset (ties into Wishbone interface)
+    reg lfsr_rst; // LFSR Reset
 
     // Wishbone/UART 1 Signals (receiver fifo)
     wire [`UART_ADDR_WIDTH-1:0] wb1_adr_i;
@@ -271,6 +273,7 @@ module uart_test ();
         for(i = 0; i < 16; i++) begin
             $dumpvars(0, uart_test.uart1.regs.receiver.fifo_rx.rfifo.ram[i]);
             $dumpvars(0, uart_test.uart1.regs.transmitter.fifo_tx.tfifo.ram[i]);
+            $dumpvars(0, uart_test.uart1.regs.receiver.fifo_rx.fifo[i]);
         end
     end
 
@@ -288,12 +291,16 @@ module uart_test ();
 
     // initialize reset
     initial begin
-        #1               rst = 1'b1;
-        #(`CLOCK_PERIOD) rst = 1'b0;
+        #1;
+        rst      <= 1'b1;
+        lfsr_rst <= 1'b1;
+        #(`CLOCK_PERIOD);
+        rst      <= 1'b0;
+        lfsr_rst <= 1'b0;
     end
 
     // define LFSR reset
-    always @(posedge rst) begin
+    always @(posedge lfsr_rst) begin
         #1
         lfsr_enable_i         <= 1'b1;
         comp_lfsr_enable_i    <= 1'b1;
@@ -458,6 +465,14 @@ module uart_test ();
         // Run <num_tests> tests
         //----------------------------------------------------------------------------
 
+`ifdef REPEAT
+        repeat(2) begin
+`endif
+        
+        lfsr_rst = 1'b1;
+        wait2clocks();
+        lfsr_rst = 1'b0;
+        
         repeat(num_tests) begin
 
             //------------------------------------------------------------------------
@@ -517,6 +532,10 @@ module uart_test ();
         
             $display("%m : UART-1 receive finished.");
         end
+
+`ifdef REPEAT
+        end
+`endif
 
         $finish;
     end
