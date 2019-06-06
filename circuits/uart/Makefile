@@ -6,7 +6,7 @@ DUT_TOP_MODULE      := uart_test.uart1
 NUM_TESTS           := 1
 START_TIME          := 0
 TIME_LIMIT          := -1
-TIME_RESOLUTION     := 10000
+TIME_RESOLUTION     := 100
 NUM_MALICIOUS_CNTRS := 0
 
 include ../common.mk

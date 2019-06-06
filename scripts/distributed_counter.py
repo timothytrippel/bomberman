@@ -48,7 +48,6 @@ def add_time_value(signals, dist_counter, source_signal, msb, lsb, time, values)
 		dist_counter.append_time_value(time, values[source_signal.width - msb - 1: source_signal.width - lsb])
 	else:
 		dist_counter.set_time_value(time, values[source_signal.width - msb - 1: source_signal.width - lsb])
-
 	# print "Width:", dist_counter.width, "; After:", dist_counter.get_time_value(signals, time)
 
 def generate_distributed_counters(signals, num_mal_cntrs, dut_top_module):

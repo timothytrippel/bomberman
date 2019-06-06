@@ -10,7 +10,7 @@ import json
 import pandas as pd
 
 def load_data_df(data_dir):
-	counter_data = {
+	coal_counter_data = {
 	    'Design'       : [],
 	    'Time'         : [],
 	    
@@ -18,6 +18,11 @@ def load_data_df(data_dir):
 	    'Coalesced Not Simd'   : [],
 	    'Coalesced Constants'  : [],
 	    'Coalesced Malicious'  : [],
+	}
+
+	dist_counter_data = {
+	    'Design'       : [],
+	    'Time'         : [],
 
 	    'Total Distributed Cntrs': [],
 	    'Distributed Not Simd'   : [],
@@ -33,28 +38,33 @@ def load_data_df(data_dir):
 	            design_name  = design_info[0]
 	            time_limit   = int(design_info[2])
 	            counter_type = design_info[1]
-	            
+	            # print "Design:      ", design_name
+	            # print "Time Limit:  ", time_limit
+	            # print "Counter Type:", counter_type
+
 	            # Open JSON file
 	            with open(data_dir + '/' + filename, 'r') as f:
 
 	                # Read JSON file
 	                json_dict = json.load(f)
-	                
+
 	                # Get Coalesced Counter Data	
 	                if counter_type == 'coal':
-	                	counter_data['Design'].append(design_name)
-	            		counter_data['Time'].append(time_limit)
-	                	counter_data['Total Coalesced Cntrs'].append(json_dict['total'])
-	                	counter_data['Coalesced Not Simd'].append(json_dict['not_simd'])
-	                	counter_data['Coalesced Constants'].append(json_dict['constants'])
-	                	counter_data['Coalesced Malicious'].append(json_dict['malicious'])
+	                	coal_counter_data['Design'].append(design_name)
+	            		coal_counter_data['Time'].append(time_limit)
+	                	coal_counter_data['Total Coalesced Cntrs'].append(int(json_dict['total']))
+	                	coal_counter_data['Coalesced Not Simd'].append(int(json_dict['not_simd']))
+	                	coal_counter_data['Coalesced Constants'].append(int(json_dict['constants']))
+	                	coal_counter_data['Coalesced Malicious'].append(int(json_dict['malicious']))
 
 	                # Get Distributed Counter Data
 	            	elif counter_type == 'dist':
-	                	counter_data['Total Distributed Cntrs'].append(json_dict['total'])
-	                	counter_data['Distributed Not Simd'].append(json_dict['not_simd'])
-	                	counter_data['Distributed Constants'].append(json_dict['constants'])
-	                	counter_data['Distributed Malicious'].append(json_dict['malicious'])
+	            		dist_counter_data['Design'].append(design_name)
+	            		dist_counter_data['Time'].append(time_limit)
+	                	dist_counter_data['Total Distributed Cntrs'].append(int(json_dict['total']))
+	                	dist_counter_data['Distributed Not Simd'].append(int(json_dict['not_simd']))
+	                	dist_counter_data['Distributed Constants'].append(int(json_dict['constants']))
+	                	dist_counter_data['Distributed Malicious'].append(int(json_dict['malicious']))
 
 	                else:
 	                	print "ERROR: unknown counter type for file:", filename
@@ -62,15 +72,21 @@ def load_data_df(data_dir):
 
 	            f.close()
 
-	# print len(counter_data['Design'])
-	# print len(counter_data['Time'])
-	# print len(counter_data['Design'])
-	# print len(counter_data['Design'])
-	# print len(counter_data['Design'])
+	# print "Design:       ", len(counter_data['Design'])
+	# print "Time:         ", len(counter_data['Time'])
+	# print "Total Coal:   ", len(counter_data['Total Coalesced Cntrs'])
+	# print "Coal Not Simd:", len(counter_data['Coalesced Not Simd'])
+	# print "Coal Consts:  ", len(counter_data['Coalesced Constants'])
+	# print "Coal Mal:     ", len(counter_data['Coalesced Malicious'])
+	# print "Total Dist:   ", len(counter_data['Total Distributed Cntrs'])
+	# print "Dist Not Simd:", len(counter_data['Distributed Not Simd'])
+	# print "Dist Consts:  ", len(counter_data['Distributed Constants'])
+	# print "Dist Mal:     ", len(counter_data['Distributed Malicious'])
 
-
-	# Conver data to a data frame            
-	counter_df = pd.DataFrame(counter_data)
+	# Convert data to a data frames and merge them           
+	coal_counter_df = pd.DataFrame(coal_counter_data)
+	dist_counter_df = pd.DataFrame(dist_counter_data)
+	counter_df      = pd.merge(coal_counter_df, dist_counter_df, how='left', on='Time')
 	return counter_df
 
 def load_counter_sizes(data_dir):

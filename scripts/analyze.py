@@ -101,7 +101,6 @@ def classify_counters(counter_type, signals, counters, start_time, time_limit, t
 
 	# Mark all counters as malicious
 	for counter_name, counter in counters.items():
-
 		malicious_time_inds[counter.fullname()] = 0
 		malicious[counter.fullname()]           = set()
 
@@ -154,14 +153,14 @@ def classify_counters(counter_type, signals, counters, start_time, time_limit, t
 
 				# Get time values for current time interval
 				counter_sim_times = counter.get_sorted_update_times(signals)
-				print "Sim Times:  ", counter_sim_times
-				print "Time Values:", counter.get_time_value(signals, counter_sim_times[time_ind])
+				# print "Sim Times:  ", counter_sim_times
 
 				# Iterate over time simulation time indices in range of interest
 				while (time_ind < len(counter_sim_times) and counter_sim_times[time_ind] < curr_time_limit):
 
 					# Get value at given time
 					current_tv = counter.get_time_value(signals, counter_sim_times[time_ind])
+					# print "Sim Time:", counter_sim_times[time_ind], "; Time Value:", current_tv
 
 					# Check if time value is valid
 					if 'x' not in current_tv:
@@ -185,9 +184,6 @@ def classify_counters(counter_type, signals, counters, start_time, time_limit, t
 
 					# Increment time index
 					time_ind += 1
-
-				# Save last time index
-				malicious_time_inds[mal_counter_name] = time_ind
 
 				# Check if malicious counter was not already re-classified (i.e. a repeated value was seen)
 				if not benign:
@@ -216,10 +212,17 @@ def classify_counters(counter_type, signals, counters, start_time, time_limit, t
 
 					# Classify counter as NOT malicious
 					else:
+						if sws.VERBOSE > 2:
+							print "Enumerated All Values"
 						benign = True
 
+				# Check if counter was marked as benign
 				if benign:
+					# Set time index to -1 to indicate benign
 				 	malicious_time_inds[mal_counter_name] = -1
+				else:
+				 	# Save last time index
+					malicious_time_inds[mal_counter_name] = time_ind
 
 		# Remove non-malicious counters
 		for mal_counter_name in malicious_time_inds:
@@ -241,16 +244,16 @@ def classify_counters(counter_type, signals, counters, start_time, time_limit, t
 
 def analyze_counters(signals, coal_counters, dist_counters, start_time, time_limit, time_resolution, json_base_filename):
 
-	# ##
-	# # Analyze Coalesced Counters
-	# ##
-	# print
-	# print "Finding malicious coalesced signals..."
-	# task_start_time    = time.time()
-	# classify_counters("coal", signals, coal_counters, start_time, time_limit, time_resolution, json_base_filename)
-	# task_end_time      = time.time()
-	# calculate_and_print_time(task_start_time, task_end_time)
-	# print
+	##
+	# Analyze Coalesced Counters
+	##
+	print
+	print "Finding malicious coalesced signals..."
+	task_start_time    = time.time()
+	classify_counters("coal", signals, coal_counters, start_time, time_limit, time_resolution, json_base_filename)
+	task_end_time      = time.time()
+	calculate_and_print_time(task_start_time, task_end_time)
+	print
 
 	##
 	# Analyze Distributed Counters
@@ -300,7 +303,7 @@ def main():
 	##
 
 	# General Switches
-	sws.VERBOSE  = 3
+	sws.VERBOSE  = 0
 	sws.WARNINGS = False
 
 	# DEBUG Switches
