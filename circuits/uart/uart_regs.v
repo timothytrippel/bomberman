@@ -300,17 +300,17 @@ wire [`UART_ADDR_WIDTH-1:0] 		wb_addr_i;
 wire [7:0] 								wb_dat_i;
 
 
-reg [3:0] 								ier;
-reg [3:0] 								iir;
-reg [1:0] 								fcr;  /// bits 7 and 6 of fcr. Other bits are ignored
-reg [4:0] 								mcr;
-reg [7:0] 								lcr;
-reg [7:0] 								msr;
-reg [15:0] 								dl;  // 32-bit divisor latch
-reg [7:0] 								scratch; // UART scratch register
-reg 										start_dlc; // activate dlc on writing to UART_DL1
-reg 										lsr_mask_d; // delay for lsr_mask condition
-reg 										msi_reset; // reset MSR 4 lower bits indicator
+reg [3:0]  ier;
+reg [3:0]  iir;
+reg [1:0]  fcr; // bits 7 and 6 of fcr. Other bits are ignored
+reg [4:0]  mcr;
+reg [7:0]  lcr;
+reg [7:0]  msr;
+reg [15:0] dl;      // 32-bit divisor latch
+reg [7:0]  scratch; // UART scratch register
+reg start_dlc; // activate dlc on writing to UART_DL1
+reg lsr_mask_d; // delay for lsr_mask condition
+reg msi_reset; // reset MSR 4 lower bits indicator
 //reg 										threi_clear; // THRE interrupt clear flag
 reg [15:0] 								dlc;  // 32-bit divisor latch counter
 reg 										int_o;

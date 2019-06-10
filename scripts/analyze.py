@@ -142,7 +142,7 @@ def classify_counters(counter_type, signals, counters, start_time, time_limit, t
 			time_ind = malicious_time_inds[mal_counter_name]
 
 			# Print counter's name
-			if sws.VERBOSE > 0:
+			if sws.VERBOSE > 2:
 				print counter.fullname()
 
 			# Benign flag
@@ -195,7 +195,7 @@ def classify_counters(counter_type, signals, counters, start_time, time_limit, t
 
 					# Classify counter as a constant
 					if len(malicious[mal_counter_name]) == 1:
-						if sws.VERBOSE > 2:
+						if sws.VERBOSE > 1:
 							print "Constant: " + mal_counter_name
 
 						# Add to constants dict
@@ -203,7 +203,7 @@ def classify_counters(counter_type, signals, counters, start_time, time_limit, t
 
 					# Classify counter as malicious
 					elif len(malicious[mal_counter_name]) < max_possible_values:
-						if sws.VERBOSE > 2:
+						if sws.VERBOSE > 1:
 							print "Possible Malicious Symbol: " + mal_counter_name
 
 						# Remove from constants dict if it was previously a constant
@@ -255,16 +255,16 @@ def analyze_counters(signals, coal_counters, dist_counters, start_time, time_lim
 	calculate_and_print_time(task_start_time, task_end_time)
 	print
 
-	##
-	# Analyze Distributed Counters
-	##
-	print
-	print "Finding malicious distributed signals..."
-	task_start_time    = time.time()
-	classify_counters("dist", signals, dist_counters, start_time, time_limit, time_resolution, json_base_filename)
-	task_end_time      = time.time()
-	calculate_and_print_time(task_start_time, task_end_time)
-	print
+	# ##
+	# # Analyze Distributed Counters
+	# ##
+	# print
+	# print "Finding malicious distributed signals..."
+	# task_start_time    = time.time()
+	# classify_counters("dist", signals, dist_counters, start_time, time_limit, time_resolution, json_base_filename)
+	# task_end_time      = time.time()
+	# calculate_and_print_time(task_start_time, task_end_time)
+	# print
 
 	print "Analysis complete."
 	print
@@ -303,7 +303,7 @@ def main():
 	##
 
 	# General Switches
-	sws.VERBOSE  = 0
+	sws.VERBOSE  = 2
 	sws.WARNINGS = False
 
 	# DEBUG Switches

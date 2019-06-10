@@ -39,7 +39,8 @@ module uart_test ();
 
     // Test bench driving signals
     reg clk;      // Clock (drives each UART block and Wishbone interfaces)
-    reg rst;      // Reset (ties into Wishbone interface)
+    reg rst_1;    // Reset (ties into Wishbone-1 interface)
+    reg rst_2;    // Reset (ties into Wishbone-2 interface)
     reg lfsr_rst; // LFSR Reset
 
     // Wishbone/UART 1 Signals (receiver fifo)
@@ -81,7 +82,9 @@ module uart_test ();
     integer i;
     integer e;
     integer num_tests;
-    reg uart2_initialized;
+    reg     begin_rxtx_testing;
+    reg     error_testing_done;
+    reg     uart2_initialized;
 
     //--------------------------------------------------------------------------------
     // DUT Module Instantiations
@@ -95,7 +98,7 @@ module uart_test ();
         .wb_clk_i (clk), 
         
         // Wishbone signals
-        .wb_rst_i (rst), 
+        .wb_rst_i (rst_1), 
         .wb_adr_i (wb1_adr_i), 
         .wb_dat_i (wb1_dat_i), 
         .wb_dat_o (wb1_dat_o), 
@@ -129,7 +132,7 @@ module uart_test ();
         .wb_clk_i (clk), 
         
         // Wishbone signals
-        .wb_rst_i (rst), 
+        .wb_rst_i (rst_2), 
         .wb_adr_i (wb2_adr_i), 
         .wb_dat_i (wb2_dat_i), 
         .wb_dat_o (wb2_dat_o), 
@@ -169,7 +172,7 @@ module uart_test ();
         
         // Inputs
         .clk (clk),
-        .rst (rst),
+        .rst (rst_1),
         .din (wb1_dat_o),
         .ack (wb1_ack_o),
         .err (1'b0),
@@ -188,7 +191,7 @@ module uart_test ();
 
         // Inputs
         .clk (clk),
-        .rst (rst),
+        .rst (rst_2),
         .din (wb2_dat_o),
         .ack (wb2_ack_o),
         .err (1'b0),
@@ -224,7 +227,7 @@ module uart_test ();
     //--------------------------------------------------------------------------------
     // Connect the UARTS (latching the TX/RX bits)
     always @(stx2_o) begin
-        srx1_ir = stx2_o;  
+        srx1_ir = stx2_o;
     end
     always @(stx1_o) begin
         srx2_ir = stx1_o;
@@ -268,6 +271,7 @@ module uart_test ();
 
         // Dump all variables
         $dumpvars(0, uart1);
+        // $dumpvars(0);
 
         // Dump all arrayed variables
         for(i = 0; i < 16; i++) begin
@@ -292,10 +296,12 @@ module uart_test ();
     // initialize reset
     initial begin
         #1;
-        rst      <= 1'b1;
+        rst_1    <= 1'b1;
+        rst_2    <= 1'b1;
         lfsr_rst <= 1'b1;
         #(`CLOCK_PERIOD);
-        rst      <= 1'b0;
+        rst_1    <= 1'b0;
+        rst_2    <= 1'b0;
         lfsr_rst <= 1'b0;
     end
 
@@ -315,7 +321,9 @@ module uart_test ();
 
     // initialize status flags
     initial begin
-        #1 uart2_initialized = 1'b0;
+        #1 begin_rxtx_testing <= 1'b0;
+        #1 error_testing_done <= 1'b0;
+        #1 uart2_initialized  <= 1'b0;
     end
 
     //--------------------------------------------------------------------------------
@@ -372,10 +380,84 @@ module uart_test ();
         end
     endtask
 
+    // Wait 2 clock cycles
     task wait2clocks;
         begin
             @(posedge clk);
             @(posedge clk);
+        end
+    endtask
+
+    // Read UART-1 LSR
+    task read_uart1_lsr;
+        begin
+            wbm1.wb_rd1(`UART_REG_LS, 4'b0010, data1_o);
+            @(posedge clk);
+            $display("Read UART-1 LSR (time: %7t): %8b", $time, data1_o[15:8]);
+        end
+    endtask
+
+    // Read UART-1 IIR
+    task read_uart1_iir;
+        begin
+            wbm1.wb_rd1(`UART_REG_II, 4'b0100, data1_o);
+            @(posedge clk);
+            $display("Read UART-1 IIR (time: %7t): %8b", $time, data1_o[23:16]);
+        end
+    endtask
+
+    // Read UART-2 LSR
+    task read_uart2_lsr;
+        begin
+            wbm2.wb_rd1(`UART_REG_LS, 4'b0010, data2_o);
+            @(posedge clk);
+            $display("Read UART-2 LSR (time: %7t): %8b", $time, data2_o[15:8]);
+        end
+    endtask
+
+    // Read UART-2 IIR
+    task read_uart2_iir;
+        begin
+            wbm2.wb_rd1(`UART_REG_II, 4'b0100, data2_o);
+            @(posedge clk);
+            $display("Read UART-2 IIR (time: %7t): %8b", $time, data2_o[23:16]);
+        end
+    endtask
+
+    // Clear UART-1 Rx and Tx FIFOs
+    task clear_uart1_rxtx_fifos;
+        begin
+
+            $display("\nClearing UART-1 RX/TX FIFOs...");
+            wbm1.wb_wr1(`UART_REG_FC, 4'b0100, {8'b0, 8'h06, 16'h0000});
+            wait2clocks();
+            wbm1.wb_wr1(`UART_REG_FC, 4'b0100, {8'b0, 8'h00, 16'h0000});
+            wait2clocks();
+
+            // Wait for TX/RX FIFOs to clear 
+            wait (uart1.regs.tstate==0 && uart1.regs.transmitter.tf_count==0);
+            wait (uart1.regs.rstate==0 && uart1.regs.receiver.rf_count==0);
+            $display("Cleared UART-1 RX/TX FIFOs.");
+            read_uart1_lsr();
+            read_uart1_iir();
+        end
+    endtask
+
+    // Clear UART-2 Rx and Tx FIFOs
+    task clear_uart2_rxtx_fifos;
+        begin
+
+            $display("\nClearing UART-2 RX/TX FIFOs...");
+            wbm2.wb_wr1(`UART_REG_FC, 4'b0100, {8'b0, 8'h06, 16'h0000});
+            wait2clocks();
+            wbm2.wb_wr1(`UART_REG_FC, 4'b0100, {8'b0, 8'h00, 16'h0000});
+            wait2clocks();
+
+            // Wait for TX/RX FIFOs to clear 
+            wait (uart2.regs.tstate==0 && uart2.regs.transmitter.tf_count==0);
+            wait (uart2.regs.rstate==0 && uart2.regs.receiver.rf_count==0);
+            $display("Cleared UART-2 RX/TX FIFOs.");
+
         end
     endtask
 
@@ -385,18 +467,37 @@ module uart_test ();
 
     initial begin
         
+        $display("\nStarting Config Register Toggling (time: %7t)...", $time);
+
+        @(negedge rst_1);
         #(`CLOCK_PERIOD + 1);
 
         //----------------------------------------------------------------------------
         // Initialize UART-1 (Main DUT)
         //----------------------------------------------------------------------------
 
-        // Initalize lcr 
+        // ------------------------------------------------------------
+        // Toggle Line Control Register (LCR)
+        // ------------------------------------------------------------
+        $display("Toggling LCR (time: %7t)...", $time);
+
+        // Change word size to 8-bits
         wbm1.wb_wr1(`UART_REG_LC, 4'b1000, {8'b00011011, 24'b0});
         wait2clocks();
+        
+        // Change word size to 7-bits
+        wbm1.wb_wr1(`UART_REG_LC, 4'b1000, {8'b00011010, 24'b0});
+        wait2clocks();
 
-        //write to lcr. set bit 7 to 1 (DLL and DLM accessible)
+        // Change word size to 8-bits
+        wbm1.wb_wr1(`UART_REG_LC, 4'b1000, {8'b00011011, 24'b0});
+
+        // ------------------------------------------------------------
+        // Toggle bits of Clock Divisor Latch (DL)
+        // ------------------------------------------------------------
+        // write to lcr. set bit 7 to 1 (DLL and DLM accessible)
         wbm1.wb_wr1(`UART_REG_LC, 4'b1000, {8'b10011011, 24'b0});
+
         // set dl to divide by 2
         wbm1.wb_wr1(`UART_REG_DL1,4'b0001, 32'd2);
         wait2clocks();
@@ -409,75 +510,175 @@ module uart_test ();
         wbm1.wb_wr1(`UART_REG_DL1,4'b0001, 32'd2);
         wait2clocks();
 
-        // restore normal regiters by resetting bit 7 in lcr
+        // restore normal registers by resetting bit 7 in lcr
         wbm1.wb_wr1(`UART_REG_LC, 4'b1000, {8'b00011011, 24'b0}); //00011011
         wait2clocks();
+
+        // ------------------------------------------------------------
+        // Toggle bits of Modem Control Register (MCR)
+        // ------------------------------------------------------------
+        $display("Toggling MCR (time: %7t)...", $time);
 
         // Set bits 0-3 of the modem control resigster
         wbm1.wb_wr1(`UART_REG_MC, 4'b0001, {24'b0, 8'hFF});
         wait2clocks();
+
         // Reset bits 0-3 of the modem control resigster
         wbm1.wb_wr1(`UART_REG_MC, 4'b0001, {24'b0, 8'h00});
         wait2clocks();
 
-        // Clear Rx and Tx FIFO
+        // ------------------------------------------------------------
+        // Toggle bits of FIFO Control Register (FCR)
+        // ------------------------------------------------------------
+        $display("Toggling FCR (time: %7t)...", $time);
+
+        // Clear Rx and Tx FIFOs
         wbm1.wb_wr1(`UART_REG_FC, 4'b0100, {8'b0, 8'h06, 16'h0000});
         wait2clocks();
+
         // Change interrupt level
         wbm1.wb_wr1(`UART_REG_FC, 4'b0100, {8'b0, 8'h80, 16'h0000});
         wait2clocks();
+
         // Change interrupt level back
         wbm1.wb_wr1(`UART_REG_FC, 4'b0100, {8'b0, 8'h00, 16'h0000});
         wait2clocks();
 
-        // Enable all interrupts
-        wbm1.wb_wr1(`UART_REG_IE, 4'b0010, {16'd0, 8'hFF, 8'd0}); 
-        wait2clocks();
+        // ------------------------------------------------------------
+        // Toggle bits of Interrupt Enable Register (IER)
+        // ------------------------------------------------------------
+        $display("Toggling IER (time: %7t)...", $time);
+
         // Disable all interrupts
-        wbm1.wb_wr1(`UART_REG_IE, 4'b0010, {16'd0, 8'h00, 8'd0}); 
+        wbm1.wb_wr1(`UART_REG_IE, 4'b0010, {16'd0, 8'b00000000, 8'd0}); 
         wait2clocks();
+
+        // Enable all interrupts
+        wbm1.wb_wr1(`UART_REG_IE, 4'b0010, {16'd0, 8'b00001111, 8'd0});
+        wait2clocks();
+
+        // Disable all interrupts
+        wbm1.wb_wr1(`UART_REG_IE, 4'b0010, {16'd0, 8'b00000000, 8'd0}); 
+        wait2clocks();
+
+        // ------------------------------------------------------------
+        // Toggle bits of Scratch Register (SR)
+        // ------------------------------------------------------------
+        $display("Toggling SR  (time: %7t)...\n", $time);
 
         // Set scratch register
         wbm1.wb_wr1(`UART_REG_SR, 4'b1000, {8'hFF, 24'd0}); 
         wait2clocks();
+
         // Reset scratch register
         wbm1.wb_wr1(`UART_REG_SR, 4'b1000, {8'h00, 24'd0}); 
         wait2clocks();
 
-        // Read the LSR
-        wbm1.wb_rd1(`UART_REG_LS, 4'b0010, data1_o);
-        @(posedge clk);
-        // Read the IIR
-        wbm1.wb_rd1(`UART_REG_II, 4'b0100, data1_o);
-        @(posedge clk);
-        // Read the LSR
-        wbm1.wb_rd1(`UART_REG_LS, 4'b0010, data1_o);
-        @(posedge clk);
+        // ------------------------------------------------------------
+        // Read bits of Line Status Register (LSR)
+        // ------------------------------------------------------------
+        read_uart1_lsr();
 
-        // Change word size to 7-bits
-        wbm1.wb_wr1(`UART_REG_LC, 4'b1000, {8'b00011010, 24'b0});
+        // ------------------------------------------------------------
+        // Read bits of Interrupt Identification Register (IIR)
+        // ------------------------------------------------------------
+        read_uart1_iir();
+
+        // ------------------------------------------------------------
+        // Read bits of Line Status Register (LSR)
+        // ------------------------------------------------------------
+        read_uart1_lsr();
+        
+        $display("\nCompleted Register Toggling.\n");
+
+        //----------------------------------------------------------------------------
+        // Run error generation tests
+        //----------------------------------------------------------------------------
+        $display("Starting Error Generation Tests (time: %7t)...\n", $time);
+        read_uart1_lsr();
+        read_uart1_iir();
+
+        // ------------------------------------------------------------
+        // Generate TX Overrun Error - internal register
+        // ------------------------------------------------------------
+        $display("\nGenerating TX Overrun Error...");
+        repeat(`TRANSMIT_FIFO_SIZE + 4) begin
+            sendbyte1(8'hAB);
+        end
+
+        // Clear Rx and Tx FIFOs
+        clear_uart1_rxtx_fifos();
+
+        // ------------------------------------------------------------
+        // Generate RX Overrun Error - Bit 1 of LSR
+        // ------------------------------------------------------------
+        $display("\nGenerating RX Overrun Error...");
+        read_uart1_lsr();
+        read_uart1_iir();
+        $display();
+        repeat(`TRANSMIT_FIFO_SIZE + 4) begin
+            sendbyte2(8'hBA);
+        end
+        wait (uart2.regs.tstate==0 && uart2.regs.transmitter.tf_count==0);
+        read_uart1_lsr();
+        read_uart1_iir();
+
+        // Clear Rx and Tx FIFOs
+        clear_uart2_rxtx_fifos();
+
+        // Clear Rx and Tx FIFOs
+        clear_uart1_rxtx_fifos();
+
+        // ------------------------------------------------------------
+        // Generate Parity Error - Bit 2 of LSR
+        // ------------------------------------------------------------
+
+        $display("\nGenerating Parity Error...");
+
+        // Change UART-2 parity bit to odd
+        wbm2.wb_wr1(`UART_REG_LC, 4'b1000, {8'b00001011, 24'b0});
         wait2clocks();
 
-        // Change word size to 8-bits
-        wbm1.wb_wr1(`UART_REG_LC, 4'b1000, {8'b00011011, 24'b0});
+        read_uart1_lsr();
+        read_uart1_iir();
+        $display();
+        sendbyte2(8'hDA);
+        wait (uart2.regs.tstate==0 && uart2.regs.transmitter.tf_count==0);
+        read_uart1_lsr();
+        read_uart1_iir();
+        $display("Parity Error Byte Received: %8b", data1_o[7:0]);
+        read_uart1_lsr();
+        read_uart1_iir();
+
+        // Change UART-2 parity bit back to even
+        wbm2.wb_wr1(`UART_REG_LC, 4'b1000, {8'b00011011, 24'b0});
+        wait2clocks();
+
+        // Set error testing done flag
+        error_testing_done = 1'b1;
+
+        $display("\nError Generation Tests Completed.");
 
         //----------------------------------------------------------------------------
-        // Run <num_tests> tests
+        // Run <num_tests> TX/RX tests
         //----------------------------------------------------------------------------
+
+        @(posedge begin_rxtx_testing);
 
 `ifdef REPEAT
         repeat(2) begin
 `endif
-        
+
         lfsr_rst = 1'b1;
         wait2clocks();
         lfsr_rst = 1'b0;
-        
+
         repeat(num_tests) begin
 
             //------------------------------------------------------------------------
             // Transmit Bytes from UART-1 (Main DUT) to UART-2 (Helper DUT)
             //------------------------------------------------------------------------
+            $display("Starting Transmit (time: %t)...", $time);
 
             // Enable LFSR
             lfsr_enable_i = 1'b1;
@@ -487,22 +688,18 @@ module uart_test ();
             lfsr_enable_i = 1'b0;
 
             // Wait for all bytes to be transmitted out of UART-1
-            wait (uart1.regs.tstate==0 && uart1.regs.transmitter.tf_count==0);
+            wait(uart1.regs.tstate==0 && uart1.regs.transmitter.tf_count==0);
+
+            $display("Transmit Completed.");
 
             //------------------------------------------------------------------------
             // Receive Bytes from UART-2 (Helper DUT)
             //------------------------------------------------------------------------
+            
+            $display("Starting Receive (time: %t)...", $time);
 
             // Now receiving
-            // enable interrupts
-            wbm1.wb_wr1(`UART_REG_IE, 4'b0010, {16'b0, 8'b00001111, 8'b0});
-            @(posedge clk);
-
-            // disable interupts
-            wbm1.wb_wr1(`UART_REG_IE, 4'b0010, {16'b0, 8'b00000000, 8'b0});
-            @(posedge clk);
-
-            // enable interrupts
+            // enable all interrupts
             wbm1.wb_wr1(`UART_REG_IE, 4'b0010, {16'b0, 8'b00001111, 8'b0});
 
             // wait until the reciever FIFO is full
@@ -529,8 +726,12 @@ module uart_test ();
                 #(`CLOCK_PERIOD);
                 comp_lfsr_enable_i = 1'b0;
             end
+
+            // disable all interrupts
+            wbm1.wb_wr1(`UART_REG_IE, 4'b0010, {16'b0, 8'b00000000, 8'b0});
         
             $display("%m : UART-1 receive finished.");
+            $display("Receive Completed.");
         end
 
 `ifdef REPEAT
@@ -546,21 +747,23 @@ module uart_test ();
 
     initial begin
         
+        @(negedge rst_2);
         #(`CLOCK_PERIOD + 1);
 
-        //Init LCR
+        $display("Initializing UART-2 (time: %7t)...", $time);
+
+        // ------------------------------------------------------------
+        // Initialize Line Control Register (LCR)
+        // ------------------------------------------------------------
+        // Change word size to 8-bits and enable even parity bit
         wbm2.wb_wr1(`UART_REG_LC, 4'b1000, {8'b00011011, 24'b0});
         wait2clocks();
 
-        //write to lcr. set bit 7
+        // ------------------------------------------------------------
+        // Set Clock Divisor Latch (DL)
+        // ------------------------------------------------------------
+        // write to lcr. set bit 7
         wbm2.wb_wr1(`UART_REG_LC, 4'b1000, {8'b10011011, 24'b0});
-        // set dl to divide by 2
-        wbm2.wb_wr1(`UART_REG_DL1, 4'b1, 32'd2);
-        wait2clocks();
-
-        // set dl to divide by 3
-        wbm2.wb_wr1(`UART_REG_DL1,4'b0001, 32'd3);
-        wait2clocks();
 
         // set dl to divide by 2
         wbm2.wb_wr1(`UART_REG_DL1,4'b0001, 32'd2);
@@ -570,67 +773,67 @@ module uart_test ();
         wbm2.wb_wr1(`UART_REG_LC, 4'b1000, {8'b00011011, 24'b0});
         wait2clocks();
 
-        // Set bits 0-3 of the modem control resigster
-        wbm2.wb_wr1(`UART_REG_MC, 4'b0001, {24'b0, 8'hFF});
-        wait2clocks();
+        // ------------------------------------------------------------
+        // Initialize Modem Control Register (MCR)
+        // ------------------------------------------------------------
         // Reset bits 0-3 of the modem control resigster
         wbm2.wb_wr1(`UART_REG_MC, 4'b0001, {24'b0, 8'h00});
         wait2clocks();
 
-        // Clear Rx and Tx FIFO
+        // ------------------------------------------------------------
+        // Initialize FIFO Control Register (FCR)
+        // ------------------------------------------------------------
+        // Clear Rx and Tx FIFOs
         wbm2.wb_wr1(`UART_REG_FC, 4'b0100, {8'b0, 8'h06, 16'h0000});
         wait2clocks();
-        // Change interrupt level
-        wbm2.wb_wr1(`UART_REG_FC, 4'b0100, {8'b0, 8'h80, 16'h0000});
-        wait2clocks();
-        // Change interrupt level back
+
+        // Set interrupt level
         wbm2.wb_wr1(`UART_REG_FC, 4'b0100, {8'b0, 8'h00, 16'h0000});
         wait2clocks();
 
+        // ------------------------------------------------------------
+        // Initialize Interrupt Enable Register (IER)
+        // ------------------------------------------------------------
         // Enable all interrupts
-        wbm2.wb_wr1(`UART_REG_IE, 4'b0010, {16'd0, 8'hFF, 8'd0}); 
-        wait2clocks();
-        // Disable all interrupts
-        wbm2.wb_wr1(`UART_REG_IE, 4'b0010, {16'd0, 8'h00, 8'd0}); 
-        wait2clocks();
+        wbm2.wb_wr1(`UART_REG_IE, 4'b0010, {16'b0, 8'b00001111, 8'b0});
 
-        // Set scratch register
-        wbm2.wb_wr1(`UART_REG_SR, 4'b1000, {8'hFF, 24'd0}); 
-        wait2clocks();
+        // ------------------------------------------------------------
+        // Initialize Scratch Register (SR)
+        // ------------------------------------------------------------
         // Reset scratch register
         wbm2.wb_wr1(`UART_REG_SR, 4'b1000, {8'h00, 24'd0}); 
         wait2clocks();
 
-        // Read the LSR
-        wbm2.wb_rd1(`UART_REG_LS, 4'b0010, data2_o);
-        @(posedge clk);
-        // Read the IIR
-        wbm2.wb_rd1(`UART_REG_II, 4'b0100, data2_o);
-        @(posedge clk);
-        // Read the LSR
-        wbm2.wb_rd1(`UART_REG_LS, 4'b0010, data2_o);
-        @(posedge clk);
+        // ------------------------------------------------------------
+        // Read bits of Line Status Register (LSR)
+        // ------------------------------------------------------------
+        read_uart2_lsr();
 
-        // Change word size to 7-bits
-        wbm2.wb_wr1(`UART_REG_LC, 4'b1000, {8'b00011010, 24'b0});
-        wait2clocks();
+        // ------------------------------------------------------------
+        // Read bits of Interrupt Identification Register (IIR)
+        // ------------------------------------------------------------
+        read_uart2_iir();
 
-        // Change word size to 8-bits
-        wbm2.wb_wr1(`UART_REG_LC, 4'b1000, {8'b00011011, 24'b0});
-
-        // enable interrupts
-        wbm2.wb_wr1(`UART_REG_IE, 4'b0010, {16'b0, 8'b00001111, 8'b0});
-        @(posedge clk);
-
-        // disable interrupts
-        wbm2.wb_wr1(`UART_REG_IE, 4'b0010, {16'b0, 8'b00000000, 8'b0});
-        @(posedge clk);
-
-        // enable interrupts
-        wbm2.wb_wr1(`UART_REG_IE, 4'b0010, {16'b0, 8'b00001111, 8'b0});
+        // ------------------------------------------------------------
+        // Read bits of Line Status Register (LSR)
+        // ------------------------------------------------------------
+        read_uart2_lsr();
 
         // Set initialized flag
         uart2_initialized = 1'b1;
+        $display("UART-2 Initialized (time: %7t).\n", $time);
+    end
+
+    //----------------------------------------------------------------------------
+    // Reset TX/RX FIFOs on when error testing is complete
+    //----------------------------------------------------------------------------
+    always @(posedge error_testing_done) begin
+
+        // Clear Rx and Tx FIFOs
+        clear_uart2_rxtx_fifos();
+
+        // Set begin RX/TX Testing flag
+        begin_rxtx_testing = 1'b1;
     end
 
     //----------------------------------------------------------------------------
@@ -639,8 +842,9 @@ module uart_test ();
 
     always @(uart2.regs.receiver.rf_count == `RECEIVE_FIFO_SIZE) begin
         
-        // Check that UART-2 (Helper DUT) has been initialized
-        if (uart2_initialized == 1'b1) begin
+        // Check that UART-2 (Helper DUT) has been initialized 
+        // and UART-1 error testing is completed
+        if (uart2_initialized && error_testing_done) begin
             
             // Wait
             e = 6400;
