@@ -707,6 +707,10 @@ module uart_test ();
         $display("------------------------------------------------------------");
         $display("Generating Parity Error...\n");
 
+        // Enable receiver line status interrupts
+        wbm1.wb_wr1(`UART_REG_IE, 4'b0010, {16'd0, 8'b00000100, 8'd0});
+        wait2clocks();
+
         // Change UART-2 parity bit to odd (opposite of UART-1)
         $display("Changing parity of UART-2 to odd...");
         wbm2.wb_wr1(`UART_REG_LC, 4'b1000, {8'b00001011, 24'b0});
@@ -731,6 +735,10 @@ module uart_test ();
 
         // Change UART-2 parity bit back to even
         wbm2.wb_wr1(`UART_REG_LC, 4'b1000, {8'b00011011, 24'b0});
+        wait2clocks();
+
+        // Disable receiver line status interrupts
+        wbm1.wb_wr1(`UART_REG_IE, 4'b0010, {16'd0, 8'b00000100, 8'd0});
         wait2clocks();
 
         // ------------------------------------------------------------
