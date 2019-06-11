@@ -582,7 +582,7 @@ unsigned int Tracker::process_expression(
         case IVL_EX_SIGNAL:
             return process_expression_signal(expression, statement, ws);
         case IVL_EX_STRING:
-            Error::not_supported("expression type (IVL_EX_STRING).");
+            Error::string_expression_type_warning(statement);
             break;
         case IVL_EX_TERNARY:
             return process_expression_ternary(expression, statement, ws);

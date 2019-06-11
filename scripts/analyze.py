@@ -303,7 +303,7 @@ def main():
 	##
 
 	# General Switches
-	sws.VERBOSE  = 2
+	sws.VERBOSE  = 3
 	sws.WARNINGS = False
 
 	# DEBUG Switches

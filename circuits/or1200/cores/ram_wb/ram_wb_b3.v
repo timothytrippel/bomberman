@@ -127,26 +127,26 @@ module ram_wb_b3(
 
    // Memory initialisation.
 
-   // parameter memory_file = "sram.vmem";
-   reg [127:0] memory_file = "sram.vmem";
-// Must add -use_new_parser yes to XST command line for this to work
-//otherwise XST requires an odd format
-   integer k;
-   // initial begin
-   always @(negedge wb_rst_i) begin
+//    // parameter memory_file = "sram.vmem";
+   // reg [255:0] memory_file = "sram.vmem";
+// // Must add -use_new_parser yes to XST command line for this to work
+// //otherwise XST requires an odd format
+//    integer k;
+//    // initial begin
+//    always @(negedge wb_rst_i) begin
      
-// synthesis translate_off
- 	for(k = 0; k <  mem_words; k = k + 1)
-	  begin
-      mem[k] = 1'b0;
-	  end
-// synthesis translate_on
-	$readmemh(memory_file, mem);
-  $display("Intializing Memory from:       %s", memory_file);
-  $display("Memory Address Width (Bits): %12d", mem_adr_width);
-  $display("Memory Size (Num Words):     %12d", mem_words);
-  $display("Memory Size (Num Bytes):     %12d", mem_size_bytes);
-   end
+// // synthesis translate_off
+//  	for(k = 0; k <  mem_words; k = k + 1)
+// 	  begin
+//       mem[k] = 1'b0;
+// 	  end
+// // synthesis translate_on
+// 	$readmemh(memory_file, mem);
+//   $display("Intializing Memory from:       %s", memory_file);
+//   $display("Memory Address Width (Bits): %12d", mem_adr_width);
+//   $display("Memory Size (Num Words):     %12d", mem_words);
+//   $display("Memory Size (Num Bytes):     %12d", mem_size_bytes);
+//    end
    
    assign wb_rty_o = 0;
 

@@ -74,6 +74,7 @@ class Error {
         static void utask_statement_type_warning(ivl_statement_t stmt);
         static void while_statement_type_warning(ivl_statement_t stmt);
         static void repeat_statement_type_warning(ivl_statement_t stmt);
+        static void string_expression_type_warning(ivl_statement_t stmt);
         static void unkown_event_source_signal_warning(ivl_statement_t stmt);
         // Other
         static void not_supported(const char* message);

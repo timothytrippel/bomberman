@@ -43,6 +43,10 @@ module orpsoc_testbench;
 	// Clock and Reset signal registers
 	reg clk   = 0;
 	reg rst_n = 1; // Active LOW
+
+	// Program Filename to Load
+	integer     k;
+	reg [255:0] memory_file;
 	 
 	// Define Clock
 	always
@@ -56,15 +60,15 @@ module orpsoc_testbench;
 	// 
 	// Reset Processor, (ACTIVE LOW)
 	// 
-	initial begin
-	#1;
-	repeat (32) @(negedge clk)
-		rst_n <= 1;
-	repeat (32) @(negedge clk)
-		rst_n <= 0;
-	repeat (32) @(negedge clk)
-		rst_n <= 1;
-	end
+	// initial begin
+	// #1;
+	// repeat (32) @(negedge clk)
+	// 	rst_n <= 1;
+	// repeat (32) @(negedge clk)
+	// 	rst_n <= 0;
+	// repeat (32) @(negedge clk)
+	// 	rst_n <= 1;
+	// end
 
 	 // Include design parameters file
 	`include "orpsoc-params.v"
@@ -552,21 +556,118 @@ module orpsoc_testbench;
 	integer i;
 	initial begin
 		i = 0;
+		#1;
+		monitor.program_exit = 1;
 	end
 	always @(posedge monitor.program_exit) begin
-		if (i == 1) begin
+
+		// Reset DUT
+		$display("Resetting the DUT (time: %t)...", $time);
+		#1;
+		repeat (32) @(negedge clk)
+			rst_n <= 1;
+		repeat (32) @(negedge clk)
+			rst_n <= 0;
+		$display();
+		$display("--------------------------------------------------------------------------------");
+
+		// Clear Program Exit Flag
+		monitor.program_exit = 0;
+
+		// Set simulation program filename
+		if (i == 0) begin
+			$display("Setting simulation program as: helloworld.vmem");
+			memory_file = "simulation/vmem/helloworld.vmem";
+		end
+		else if (i == 1) begin
 			$finish;
+			$display("Setting simulation program as: aes.vmem");
+			memory_file = "simulation/vmem/aes.vmem";
+		end
+		else if (i == 2) begin
+			$display("Setting simulation program as: basicmath.vmem");
+			memory_file = "simulation/vmem/basicmath.vmem";
+		end
+		else if (i == 3) begin
+			$display("Setting simulation program as: blowfish.vmem");
+			memory_file = "simulation/vmem/blowfish.vmem";
+		end
+		else if (i == 4) begin
+			$display("Setting simulation program as: crc.vmem");
+			memory_file = "simulation/vmem/crc.vmem";
+		end
+		else if (i == 5) begin
+			$display("Setting simulation program as: dijkstra.vmem");
+			memory_file = "simulation/vmem/dijkstra.vmem";
+		end
+		else if (i == 6) begin
+			$display("Setting simulation program as: fft.vmem");
+			memory_file = "simulation/vmem/fft.vmem";
+		end
+		else if (i == 7) begin
+			$display("Setting simulation program as: limits.vmem");
+			memory_file = "simulation/vmem/limits.vmem";
+		end
+		else if (i == 8) begin
+			$display("Setting simulation program as: lzfx.vmem");
+			memory_file = "simulation/vmem/lzfx.vmem";
+		end
+		else if (i == 9) begin
+			$display("Setting simulation program as: qsort.vmem");
+			memory_file = "simulation/vmem/qsort.vmem";
+		end
+		else if (i == 10) begin
+			$display("Setting simulation program as: randmath.vmem");
+			memory_file = "simulation/vmem/randmath.vmem";
+		end
+		else if (i == 11) begin
+			$display("Setting simulation program as: rc4.vmem");
+			memory_file = "simulation/vmem/rc4.vmem";
+		end
+		else if (i == 12) begin
+			$display("Setting simulation program as: rsa.vmem");
+			memory_file = "simulation/vmem/rsa.vmem";
+		end
+		else if (i == 13) begin
+			$display("Setting simulation program as: sha.vmem");
+			memory_file = "simulation/vmem/sha.vmem";
+		end
+		else if (i == 14) begin
+			$display("Setting simulation program as: stringsearch.vmem");
+			memory_file = "simulation/vmem/stringsearch.vmem";
+		end
+		else if (i == 14) begin
+			$display("Setting simulation program as: susan.vmem");
+			memory_file = "simulation/vmem/susan.vmem";
 		end
 		else begin
-			i++;
-			monitor.program_exit = 0;
-			#1;
-			rst_n = 0;
-			#((`BOARD_CLOCK_PERIOD) * 32)
-			rst_n = 1;
-			orpsoc_testbench.dut.ram_wb0.ram_wb_b3_0.memory_file = "not_there.vmem";
-			$display("Restarting...");
+			$display("Simulation Complete (time: %t)", $time);
+			$finish;
+		end
 
+		// Initialize memory with program
+		$readmemh(memory_file, orpsoc_testbench.dut.ram_wb0.ram_wb_b3_0.mem);
+
+		// print memory stats
+		$display("Intializing Memory from:       %s", memory_file);
+		$display("Memory Address Width (Bits): %12d", orpsoc_testbench.dut.ram_wb0.ram_wb_b3_0.mem_adr_width);
+		$display("Memory Size (Num Words):     %12d", orpsoc_testbench.dut.ram_wb0.ram_wb_b3_0.mem_words);
+		$display("Memory Size (Num Bytes):     %12d", orpsoc_testbench.dut.ram_wb0.ram_wb_b3_0.mem_size_bytes);
+
+		// Increment Test Case Counter
+		i++;
+
+		// Complete DUT Reset
+		repeat (32) @(negedge clk)
+			rst_n <= 1;
+		$display("DUT Reset Complete (time: %t).", $time);
+		$display();
+	end
+
+	// 0-out memory on processor reset
+	always @(negedge orpsoc_testbench.dut.ram_wb0.ram_wb_b3_0.wb_rst_i) begin
+		for(k = 0; k < orpsoc_testbench.dut.ram_wb0.ram_wb_b3_0.mem_words; k++) begin
+			orpsoc_testbench.dut.ram_wb0.ram_wb_b3_0.mem[k] = 1'b0;
 		end
 	end
 

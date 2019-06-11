@@ -52,6 +52,8 @@ def parse_vcd(file, only_sigs=0, types={"reg", "wire"}, use_stdout=0, siglist=[]
 	re_Nb_val  = re.compile(r"^[br](\S+)\s+(.+)")
 
 	fh = open(file, 'r')
+	line_num = 1
+
 	while True:
 		line = fh.readline()
 		if line == '' : # EOF
@@ -151,9 +153,12 @@ def parse_vcd(file, only_sigs=0, types={"reg", "wire"}, use_stdout=0, siglist=[]
 						data[code]['tv'] = []
 					data[code]['tv'].append((time, list(value)))
 			else:
-				print "ERROR: invalid signal code (%s) encountered in var dump." % (code)
+				print "ERROR: invalid signal code (%s) encountered in var dump on line: %d" % (code, line_num)
 				sys.exit(1)
-				
+		
+		# Increment line number
+		line_num += 1
+		
 	fh.close()
 
 	# Swap signal names for symbols
