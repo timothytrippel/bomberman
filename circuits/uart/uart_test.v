@@ -4,6 +4,7 @@
 
 //  Defines
 `define CLOCK_PERIOD       10 // in ns
+`define CLOCK_DIVISOR       2
 `define RECEIVE_FIFO_SIZE  16 // in bytes
 `define TRANSMIT_FIFO_SIZE 16 // in bytes
 `define LFSR_SEED          0
@@ -16,6 +17,9 @@
 `else
     `define DATA_BUS_WIDTH 32
 `endif
+
+// Baud Period
+`define BAUD_PERIOD (`CLOCK_PERIOD * 16 * `CLOCK_DIVISOR)
 
 //--------------------------------------------------------------------------------
 // Global Includes
@@ -505,7 +509,9 @@ module uart_test ();
         // ------------------------------------------------------------
         $display("Toggling LCR (time: %7t)...", $time);
 
-        // Change word size to 8-bits
+        // Change word size to 8-bits,
+        // enable even parity bit, 
+        // and set 1 stop bit
         wbm1.wb_wr1(`UART_REG_LC, 4'b1000, {8'b00011011, 24'b0});
         wait2clocks();
         
@@ -523,7 +529,7 @@ module uart_test ();
         wbm1.wb_wr1(`UART_REG_LC, 4'b1000, {8'b10011011, 24'b0});
 
         // set dl to divide by 2
-        wbm1.wb_wr1(`UART_REG_DL1,4'b0001, 32'd2);
+        wbm1.wb_wr1(`UART_REG_DL1,4'b0001, 32'd`CLOCK_DIVISOR);
         wait2clocks();
 
         // set dl to divide by 3
@@ -531,7 +537,7 @@ module uart_test ();
         wait2clocks();
 
         // set dl to divide by 2
-        wbm1.wb_wr1(`UART_REG_DL1,4'b0001, 32'd2);
+        wbm1.wb_wr1(`UART_REG_DL1,4'b0001, 32'd`CLOCK_DIVISOR);
         wait2clocks();
 
         // restore normal registers by resetting bit 7 in lcr
@@ -727,8 +733,9 @@ module uart_test ();
         read_uart1_iir();
         $display();
 
+        // Receive data byte
+        $display("Parity Error Byte Received:");
         receivebyte1();
-        $display("Parity Error Byte Received: %8b", data1_o[7:0]);
         read_uart1_lsr();
         read_uart1_iir();
         $display();
@@ -739,6 +746,41 @@ module uart_test ();
 
         // Disable receiver line status interrupts
         wbm1.wb_wr1(`UART_REG_IE, 4'b0010, {16'd0, 8'b00000100, 8'd0});
+        wait2clocks();
+
+        // ------------------------------------------------------------
+        // Generate Framing Error - Bit 3 of LSR
+        // ------------------------------------------------------------
+        $display("------------------------------------------------------------");
+        $display("Generating Framing Error...\n");
+
+        // Change UART-1 frame size to 6 bits (UART-2 is 8 bits)
+        // Change # of UART-1 stop bits to 2 (# of UART-2 stop bits is 1)
+        $display("Changing frame size of UART-1 to 6...");
+        wbm1.wb_wr1(`UART_REG_LC, 4'b1000, {8'b00011101, 24'b0});
+        read_uart1_lsr();
+        read_uart1_iir();
+        $display();
+
+        // Send data byte
+        $display("Sending data byte from UART-2 to UART-1...");
+        sendbyte2(8'h0D);
+        // wait (uart2.regs.tstate==0 && uart2.regs.transmitter.tf_count==0);
+        wait (uart1.regs.rstate==0 && uart1.regs.receiver.rf_count==1);
+        read_uart1_lsr();
+        read_uart1_iir();
+        $display();
+
+        // Receive data byte
+        $display("Framing Error Byte Received:");
+        receivebyte1();
+        read_uart1_lsr();
+        read_uart1_iir();
+        $display();
+
+        // Change UART-1 frame size back to 8 bits (UART-2 is 8 bits)
+        // Change # of UART-1 stop bits back to 1 (# of UART-2 stop bits is 1)
+        wbm1.wb_wr1(`UART_REG_LC, 4'b1000, {8'b00011011, 24'b0});
         wait2clocks();
 
         // ------------------------------------------------------------
@@ -757,7 +799,7 @@ module uart_test ();
         #(`CLOCK_PERIOD * 70);
         wbm2.wb_wr1(`UART_REG_LC, 4'b1000, {8'b01011011, 24'b0});
         wait2clocks();
-        #((`CLOCK_PERIOD * 16 * 2) * 11);
+        #((`BAUD_PERIOD) * 11); // 11 bits in one 8-bit data frame
         read_uart1_lsr();
         read_uart1_iir();
         $display();
@@ -775,8 +817,8 @@ module uart_test ();
         read_uart1_iir();
         $display();
 
+        $display("Break Interrupt Byte Received:");
         receivebyte1();
-        $display("Framing Error Byte Received: %8b", data1_o[7:0]);
         read_uart1_lsr();
         read_uart1_iir();
         $display();
@@ -893,7 +935,9 @@ module uart_test ();
         // ------------------------------------------------------------
         // Initialize Line Control Register (LCR)
         // ------------------------------------------------------------
-        // Change word size to 8-bits and enable even parity bit
+        // Change word size to 8-bits, 
+        // enable even parity bit, 
+        // and set 1 stop bit
         wbm2.wb_wr1(`UART_REG_LC, 4'b1000, {8'b00011011, 24'b0});
         wait2clocks();
 
@@ -904,7 +948,7 @@ module uart_test ();
         wbm2.wb_wr1(`UART_REG_LC, 4'b1000, {8'b10011011, 24'b0});
 
         // set dl to divide by 2
-        wbm2.wb_wr1(`UART_REG_DL1,4'b0001, 32'd2);
+        wbm2.wb_wr1(`UART_REG_DL1,4'b0001, 32'd`CLOCK_DIVISOR);
         wait2clocks();
 
         // restore normal registers
