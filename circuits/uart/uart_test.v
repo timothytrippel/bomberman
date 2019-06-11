@@ -82,9 +82,8 @@ module uart_test ();
     integer i;
     integer e;
     integer num_tests;
-    reg     begin_rxtx_testing;
-    reg     error_testing_done;
     reg     uart2_initialized;
+    reg     debug;
 
     //--------------------------------------------------------------------------------
     // DUT Module Instantiations
@@ -321,9 +320,8 @@ module uart_test ();
 
     // initialize status flags
     initial begin
-        #1 begin_rxtx_testing <= 1'b0;
-        #1 error_testing_done <= 1'b0;
         #1 uart2_initialized  <= 1'b0;
+        #1 debug              <= 1'b0;
     end
 
     //--------------------------------------------------------------------------------
@@ -428,7 +426,7 @@ module uart_test ();
     task clear_uart1_rxtx_fifos;
         begin
 
-            $display("\nClearing UART-1 RX/TX FIFOs...");
+            // $display("Clearing UART-1 RX/TX FIFOs...");
             wbm1.wb_wr1(`UART_REG_FC, 4'b0100, {8'b0, 8'h06, 16'h0000});
             wait2clocks();
             wbm1.wb_wr1(`UART_REG_FC, 4'b0100, {8'b0, 8'h00, 16'h0000});
@@ -440,6 +438,7 @@ module uart_test ();
             $display("Cleared UART-1 RX/TX FIFOs.");
             read_uart1_lsr();
             read_uart1_iir();
+            $display();
         end
     endtask
 
@@ -447,7 +446,7 @@ module uart_test ();
     task clear_uart2_rxtx_fifos;
         begin
 
-            $display("\nClearing UART-2 RX/TX FIFOs...");
+            // $display("Clearing UART-2 RX/TX FIFOs...");
             wbm2.wb_wr1(`UART_REG_FC, 4'b0100, {8'b0, 8'h06, 16'h0000});
             wait2clocks();
             wbm2.wb_wr1(`UART_REG_FC, 4'b0100, {8'b0, 8'h00, 16'h0000});
@@ -457,6 +456,9 @@ module uart_test ();
             wait (uart2.regs.tstate==0 && uart2.regs.transmitter.tf_count==0);
             wait (uart2.regs.rstate==0 && uart2.regs.receiver.rf_count==0);
             $display("Cleared UART-2 RX/TX FIFOs.");
+            read_uart2_lsr();
+            read_uart2_iir();
+            $display();
 
         end
     endtask
@@ -467,6 +469,7 @@ module uart_test ();
 
     initial begin
         
+        $display("------------------------------------------------------------");
         $display("\nStarting Config Register Toggling (time: %7t)...", $time);
 
         @(negedge rst_1);
@@ -594,17 +597,21 @@ module uart_test ();
         //----------------------------------------------------------------------------
         // Run error generation tests
         //----------------------------------------------------------------------------
+        $display("------------------------------------------------------------");
         $display("Starting Error Generation Tests (time: %7t)...\n", $time);
         read_uart1_lsr();
         read_uart1_iir();
+        $display();
 
         // ------------------------------------------------------------
         // Generate TX Overrun Error - internal register
         // ------------------------------------------------------------
-        $display("\nGenerating TX Overrun Error...");
+        $display("------------------------------------------------------------");
+        $display("Generating TX Overrun Error...\n");
         repeat(`TRANSMIT_FIFO_SIZE + 4) begin
             sendbyte1(8'hAB);
         end
+        $display();
 
         // Clear Rx and Tx FIFOs
         clear_uart1_rxtx_fifos();
@@ -612,16 +619,20 @@ module uart_test ();
         // ------------------------------------------------------------
         // Generate RX Overrun Error - Bit 1 of LSR
         // ------------------------------------------------------------
-        $display("\nGenerating RX Overrun Error...");
+        $display("------------------------------------------------------------");
+        $display("Generating RX Overrun Error...\n");
         read_uart1_lsr();
         read_uart1_iir();
         $display();
+        $display("Transmitting too many (14) bytes from UART-2 to UART-1...\n");
         repeat(`TRANSMIT_FIFO_SIZE + 4) begin
             sendbyte2(8'hBA);
         end
         wait (uart2.regs.tstate==0 && uart2.regs.transmitter.tf_count==0);
+        $display("UART-1 received too many (14) bytes.");
         read_uart1_lsr();
         read_uart1_iir();
+        $display();
 
         // Clear Rx and Tx FIFOs
         clear_uart2_rxtx_fifos();
@@ -632,38 +643,91 @@ module uart_test ();
         // ------------------------------------------------------------
         // Generate Parity Error - Bit 2 of LSR
         // ------------------------------------------------------------
+        $display("------------------------------------------------------------");
+        $display("Generating Parity Error...\n");
 
-        $display("\nGenerating Parity Error...");
-
-        // Change UART-2 parity bit to odd
+        // Change UART-2 parity bit to odd (opposite of UART-1)
+        $display("Changing parity of UART-2 to odd...");
         wbm2.wb_wr1(`UART_REG_LC, 4'b1000, {8'b00001011, 24'b0});
         wait2clocks();
-
         read_uart1_lsr();
         read_uart1_iir();
         $display();
+
+        // Send data byte
+        $display("Sending data byte from UART-2 to UART-1...");
         sendbyte2(8'hDA);
         wait (uart2.regs.tstate==0 && uart2.regs.transmitter.tf_count==0);
         read_uart1_lsr();
         read_uart1_iir();
+        $display();
+
+        receivebyte1();
         $display("Parity Error Byte Received: %8b", data1_o[7:0]);
         read_uart1_lsr();
         read_uart1_iir();
+        $display();
 
         // Change UART-2 parity bit back to even
         wbm2.wb_wr1(`UART_REG_LC, 4'b1000, {8'b00011011, 24'b0});
         wait2clocks();
 
-        // Set error testing done flag
-        error_testing_done = 1'b1;
+        // ------------------------------------------------------------
+        // Generate Break Interrupt - Bit 4 of LSR
+        // ------------------------------------------------------------
+        $display("------------------------------------------------------------");
+        $display("Generating Break Interrupt...\n");
 
-        $display("\nError Generation Tests Completed.");
+        // Send data byte
+        $display("Sending data byte from UART-2 to UART-1...");
+        sendbyte2(8'hFF);
+        $display();
+
+        // Force UART-2 serial break
+        $display("Force UART-2 serial break...");
+        #(`CLOCK_PERIOD * 70);
+        wbm2.wb_wr1(`UART_REG_LC, 4'b1000, {8'b01011011, 24'b0});
+        wait2clocks();
+        #((`CLOCK_PERIOD * 16 * 2) * 11);
+        read_uart1_lsr();
+        read_uart1_iir();
+        $display();
+
+        // Stop UART-2 serial break
+        $display("Stop UART-2 serial break...");
+        wbm2.wb_wr1(`UART_REG_LC, 4'b1000, {8'b00011011, 24'b0});
+        wait2clocks();
+        $display();
+
+        // Wait until UART-2 done TXing
+        $display("Receive remaining byte from UART-2...");
+        wait (uart2.regs.tstate==0 && uart2.regs.transmitter.tf_count==0);
+        read_uart1_lsr();
+        read_uart1_iir();
+        $display();
+
+        receivebyte1();
+        $display("Framing Error Byte Received: %8b", data1_o[7:0]);
+        read_uart1_lsr();
+        read_uart1_iir();
+        $display();
+
+        $display("------------------------------------------------------------");
+        $display("Error Generation Tests Completed.\n");
+
+        // ------------------------------------------------------------
+        //  Reset TX/RX FIFOs on when error testing is complete
+        // ------------------------------------------------------------
+
+        // Clear UART-1 Rx and Tx FIFOs
+        clear_uart1_rxtx_fifos();
+
+        // Clear UART-2 Rx and Tx FIFOs
+        clear_uart2_rxtx_fifos();
 
         //----------------------------------------------------------------------------
         // Run <num_tests> TX/RX tests
         //----------------------------------------------------------------------------
-
-        @(posedge begin_rxtx_testing);
 
 `ifdef REPEAT
         repeat(2) begin
@@ -678,7 +742,10 @@ module uart_test ();
             //------------------------------------------------------------------------
             // Transmit Bytes from UART-1 (Main DUT) to UART-2 (Helper DUT)
             //------------------------------------------------------------------------
-            $display("Starting Transmit (time: %t)...", $time);
+            $display("------------------------------------------------------------");
+            $display("Starting TX/RX test...\n");
+
+            $display("Starting TX (time: %8t)...\n", $time);
 
             // Enable LFSR
             lfsr_enable_i = 1'b1;
@@ -686,17 +753,15 @@ module uart_test ();
                 sendbyte1(random_byte_o);
             end
             lfsr_enable_i = 1'b0;
+            $display();
 
             // Wait for all bytes to be transmitted out of UART-1
             wait(uart1.regs.tstate==0 && uart1.regs.transmitter.tf_count==0);
-
-            $display("Transmit Completed.");
+            $display("TX Completed.\n");
 
             //------------------------------------------------------------------------
             // Receive Bytes from UART-2 (Helper DUT)
             //------------------------------------------------------------------------
-            
-            $display("Starting Receive (time: %t)...", $time);
 
             // Now receiving
             // enable all interrupts
@@ -704,7 +769,7 @@ module uart_test ();
 
             // wait until the reciever FIFO is full
             wait(uart1.regs.receiver.rf_count == `RECEIVE_FIFO_SIZE);
-         
+
             e = 6400;
             while (e > 0)
             begin
@@ -712,13 +777,15 @@ module uart_test ();
                 if (uart1.regs.enable) e = e - 1;
             end
 
+            $display("Starting RX (time: %8t)...\n", $time);
+
             // Retrieve all bytes from WB bus
             repeat(`RECEIVE_FIFO_SIZE) begin
                 receivebyte1();
 
                 // Check that recieved bytes is correct
                 if ( data1_o[7:0] !== comp_random_byte_o)
-                  begin $display("ERROR: send/receive of byte 0x%2h failed.", data1_o[7:0]); $finish; end
+                  begin $display("ERROR: TX/RX of byte 0x%2h failed.", data1_o[7:0]); $finish; end
                 
                 // Update compare LFSR
                 #(1);
@@ -726,18 +793,20 @@ module uart_test ();
                 #(`CLOCK_PERIOD);
                 comp_lfsr_enable_i = 1'b0;
             end
+            $display();
 
             // disable all interrupts
             wbm1.wb_wr1(`UART_REG_IE, 4'b0010, {16'b0, 8'b00000000, 8'b0});
         
-            $display("%m : UART-1 receive finished.");
-            $display("Receive Completed.");
+            $display("RX Completed.\n");
         end
 
 `ifdef REPEAT
         end
 `endif
-
+    
+        $display("------------------------------------------------------------");
+        $display("Done.\n");
         $finish;
     end
 
@@ -750,7 +819,7 @@ module uart_test ();
         @(negedge rst_2);
         #(`CLOCK_PERIOD + 1);
 
-        $display("Initializing UART-2 (time: %7t)...", $time);
+        // $display("Initializing UART-2 (time: %7t)...", $time);
 
         // ------------------------------------------------------------
         // Initialize Line Control Register (LCR)
@@ -807,33 +876,21 @@ module uart_test ();
         // ------------------------------------------------------------
         // Read bits of Line Status Register (LSR)
         // ------------------------------------------------------------
-        read_uart2_lsr();
+        // read_uart2_lsr();
 
         // ------------------------------------------------------------
         // Read bits of Interrupt Identification Register (IIR)
         // ------------------------------------------------------------
-        read_uart2_iir();
+        // read_uart2_iir();
 
         // ------------------------------------------------------------
         // Read bits of Line Status Register (LSR)
         // ------------------------------------------------------------
-        read_uart2_lsr();
+        // read_uart2_lsr();
 
         // Set initialized flag
         uart2_initialized = 1'b1;
-        $display("UART-2 Initialized (time: %7t).\n", $time);
-    end
-
-    //----------------------------------------------------------------------------
-    // Reset TX/RX FIFOs on when error testing is complete
-    //----------------------------------------------------------------------------
-    always @(posedge error_testing_done) begin
-
-        // Clear Rx and Tx FIFOs
-        clear_uart2_rxtx_fifos();
-
-        // Set begin RX/TX Testing flag
-        begin_rxtx_testing = 1'b1;
+        // $display("UART-2 Initialized (time: %7t).\n", $time);
     end
 
     //----------------------------------------------------------------------------
@@ -844,7 +901,7 @@ module uart_test ();
         
         // Check that UART-2 (Helper DUT) has been initialized 
         // and UART-1 error testing is completed
-        if (uart2_initialized && error_testing_done) begin
+        if (uart2_initialized) begin
             
             // Wait
             e = 6400;
@@ -862,7 +919,7 @@ module uart_test ();
             
             // Wait for all bytes to be transmitted out of UART-2
             wait (uart2.regs.tstate==0 && uart2.regs.transmitter.tf_count==0);
-            $display("UART-2 transmit/receive finished.");
+            $display("UART-2 transmit/receive (echo back) completed.\n");
         end
     end
 
