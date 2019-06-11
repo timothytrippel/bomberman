@@ -11,6 +11,7 @@
 UTILS_DIR   := ../../utils
 INCLUDE_DIR := ../../include
 BTLDR_DIR   := ../../bootloader
+VMEMS_DIR   := ../../vmem
 
 # Compiler Configurations
 OPTLVL := -O3
@@ -24,7 +25,7 @@ all: $(BENCHMARK).vmem
 
 # Convert object file to VMEM file
 %.vmem: %.bin $(UTILS_DIR)/bin2vmem
-	$(UTILS_DIR)/bin2vmem $< > $@
+	$(UTILS_DIR)/bin2vmem $< > $(VMEMS_DIR)/$@
 
 # Convert ELF file to binary file
 %.bin: %.elf

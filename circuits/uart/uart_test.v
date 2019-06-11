@@ -868,7 +868,7 @@ module uart_test ();
 
             // Wait for all bytes to be transmitted out of UART-1
             wait(uart1.regs.tstate==0 && uart1.regs.transmitter.tf_count==0);
-            $display("TX Completed.\n");
+            $display("TX Completed (time: %8t).\n", $time);
 
             //------------------------------------------------------------------------
             // Receive Bytes from UART-2 (Helper DUT)
@@ -909,7 +909,7 @@ module uart_test ();
             // disable all interrupts
             wbm1.wb_wr1(`UART_REG_IE, 4'b0010, {16'b0, 8'b00000000, 8'b0});
         
-            $display("RX Completed.\n");
+            $display("RX Completed (time: %8t).\n", $time);
         end
 
 `ifdef REPEAT
