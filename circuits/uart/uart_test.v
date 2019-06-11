@@ -51,6 +51,10 @@ module uart_test ();
     wire                        stx1_o;
     reg                         srx1_ir;
     wire                        int1_o;
+    reg                         cts1_i;
+    reg                         dsr1_i;
+    reg                         ri1_i;
+    reg                         dcd1_i;
 
     // Wishbone/UART 2 Signals (?? transmit fifo ??)
     wire [`UART_ADDR_WIDTH-1:0] wb2_adr_i;
@@ -117,11 +121,11 @@ module uart_test ();
 
         // modem signals
         .rts_pad_o (rts1_o), 
-        .cts_pad_i (1'b1), 
+        .cts_pad_i (cts1_i), 
         .dtr_pad_o (dtr1_o), 
-        .dsr_pad_i (1'b1), 
-        .ri_pad_i  (1'b1), 
-        .dcd_pad_i (1'b1)
+        .dsr_pad_i (dsr1_i), 
+        .ri_pad_i  (ri1_i), 
+        .dcd_pad_i (dcd1_i)
     );
 
     // Instantiate UART Module 2 (Helper DUT)
@@ -304,6 +308,14 @@ module uart_test ();
         lfsr_rst <= 1'b0;
     end
 
+    // initialize modem control inputs
+    initial begin
+        cts1_i <= 1'b1;
+        dsr1_i <= 1'b1;
+        ri1_i  <= 1'b1;
+        dcd1_i <= 1'b1;
+    end
+
     // define LFSR reset
     always @(posedge lfsr_rst) begin
         #1
@@ -401,6 +413,15 @@ module uart_test ();
             wbm1.wb_rd1(`UART_REG_II, 4'b0100, data1_o);
             @(posedge clk);
             $display("Read UART-1 IIR (time: %7t): %8b", $time, data1_o[23:16]);
+        end
+    endtask
+
+    // Read UART-1 MSR
+    task read_uart1_msr;
+        begin
+            wbm1.wb_rd1(`UART_REG_MS, 4'b0100, data1_o);
+            @(posedge clk);
+            $display("Read UART-1 MSR (time: %7t): %8b", $time, data1_o[23:16]);
         end
     endtask
 
@@ -593,6 +614,46 @@ module uart_test ();
         read_uart1_lsr();
         
         $display("\nCompleted Register Toggling.\n");
+
+        //----------------------------------------------------------------------------
+        // Run modem testing
+        //----------------------------------------------------------------------------
+        $display("------------------------------------------------------------");
+        $display("Toggling Modem Control Inputs (time: %7t)...\n", $time);
+        
+        // Read MSR
+        read_uart1_msr();
+
+        // Enable modem status interrupts
+        wbm1.wb_wr1(`UART_REG_IE, 4'b0010, {16'd0, 8'b00001000, 8'd0});
+        wait2clocks();
+
+        // set to 0
+        cts1_i = 1'b0;
+        dsr1_i = 1'b0;
+        ri1_i  = 1'b0;
+        dcd1_i = 1'b0;
+
+        // Read MSR
+        read_uart1_msr();
+
+        // set to 1
+        cts1_i = 1'b1;
+        dsr1_i = 1'b1;
+        ri1_i  = 1'b1;
+        dcd1_i = 1'b1;
+
+        // Read MSR
+        read_uart1_msr();
+
+        // Disable modem status interrupts
+        wbm1.wb_wr1(`UART_REG_IE, 4'b0010, {16'd0, 8'b00000000, 8'd0}); 
+        wait2clocks();
+
+        // Read MSR
+        read_uart1_msr();
+        $display();
+        $display("Completed Register Toggling.\n");
 
         //----------------------------------------------------------------------------
         // Run error generation tests
