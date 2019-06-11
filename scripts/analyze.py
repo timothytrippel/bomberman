@@ -255,16 +255,16 @@ def analyze_counters(signals, coal_counters, dist_counters, start_time, time_lim
 	calculate_and_print_time(task_start_time, task_end_time)
 	print
 
-	# ##
-	# # Analyze Distributed Counters
-	# ##
-	# print
-	# print "Finding malicious distributed signals..."
-	# task_start_time    = time.time()
-	# classify_counters("dist", signals, dist_counters, start_time, time_limit, time_resolution, json_base_filename)
-	# task_end_time      = time.time()
-	# calculate_and_print_time(task_start_time, task_end_time)
-	# print
+	##
+	# Analyze Distributed Counters
+	##
+	print
+	print "Finding malicious distributed signals..."
+	task_start_time    = time.time()
+	classify_counters("dist", signals, dist_counters, start_time, time_limit, time_resolution, json_base_filename)
+	task_end_time      = time.time()
+	calculate_and_print_time(task_start_time, task_end_time)
+	print
 
 	print "Analysis complete."
 	print

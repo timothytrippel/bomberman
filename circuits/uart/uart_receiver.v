@@ -222,7 +222,7 @@ reg	[7:0]	rshift;			// receiver shift register
 reg		rparity;		// received parity
 reg		rparity_error;
 reg		rframing_error;		// framing error flag
-reg		rbit_in;
+// reg		rbit_in;
 reg		rparity_xor;
 reg	[7:0]	counter_b;	// counts the 0 (low) signals
 reg   rf_push_q;
@@ -277,7 +277,7 @@ begin
   if (wb_rst_i)
   begin
      rstate 			<= #1 sr_idle;
-	  rbit_in 				<= #1 1'b0;
+	  // rbit_in 				<= #1 1'b0;
 	  rcounter16 			<= #1 0;
 	  rbit_counter 		<= #1 0;
 	  rparity_xor 		<= #1 1'b0;
