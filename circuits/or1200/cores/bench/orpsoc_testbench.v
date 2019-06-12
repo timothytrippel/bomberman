@@ -57,20 +57,7 @@ module orpsoc_testbench;
 	assign clk_p = clk;
 	assign clk_n = ~clk;
 
-	// 
-	// Reset Processor, (ACTIVE LOW)
-	// 
-	// initial begin
-	// #1;
-	// repeat (32) @(negedge clk)
-	// 	rst_n <= 1;
-	// repeat (32) @(negedge clk)
-	// 	rst_n <= 0;
-	// repeat (32) @(negedge clk)
-	// 	rst_n <= 1;
-	// end
-
-	 // Include design parameters file
+	// Include design parameters file
 	`include "orpsoc-params.v"
 
 	// 
@@ -561,113 +548,124 @@ module orpsoc_testbench;
 	end
 	always @(posedge monitor.program_exit) begin
 
-		// Reset DUT
-		$display("Resetting the DUT (time: %t)...", $time);
-		#1;
-		repeat (32) @(negedge clk)
-			rst_n <= 1;
-		repeat (32) @(negedge clk)
-			rst_n <= 0;
-		$display();
 		$display("--------------------------------------------------------------------------------");
 
-		// Clear Program Exit Flag
-		monitor.program_exit = 0;
-
-		// Set simulation program filename
-		if (i == 0) begin
-			$display("Setting simulation program as: helloworld.vmem");
-			memory_file = "simulation/vmem/helloworld.vmem";
-		end
-		else if (i == 1) begin
-			$finish;
-			$display("Setting simulation program as: aes.vmem");
-			memory_file = "simulation/vmem/aes.vmem";
-		end
-		else if (i == 2) begin
-			$display("Setting simulation program as: basicmath.vmem");
-			memory_file = "simulation/vmem/basicmath.vmem";
-		end
-		else if (i == 3) begin
-			$display("Setting simulation program as: blowfish.vmem");
-			memory_file = "simulation/vmem/blowfish.vmem";
-		end
-		else if (i == 4) begin
-			$display("Setting simulation program as: crc.vmem");
-			memory_file = "simulation/vmem/crc.vmem";
-		end
-		else if (i == 5) begin
-			$display("Setting simulation program as: dijkstra.vmem");
-			memory_file = "simulation/vmem/dijkstra.vmem";
-		end
-		else if (i == 6) begin
-			$display("Setting simulation program as: fft.vmem");
-			memory_file = "simulation/vmem/fft.vmem";
-		end
-		else if (i == 7) begin
-			$display("Setting simulation program as: limits.vmem");
-			memory_file = "simulation/vmem/limits.vmem";
-		end
-		else if (i == 8) begin
-			$display("Setting simulation program as: lzfx.vmem");
-			memory_file = "simulation/vmem/lzfx.vmem";
-		end
-		else if (i == 9) begin
-			$display("Setting simulation program as: qsort.vmem");
-			memory_file = "simulation/vmem/qsort.vmem";
-		end
-		else if (i == 10) begin
-			$display("Setting simulation program as: randmath.vmem");
-			memory_file = "simulation/vmem/randmath.vmem";
-		end
-		else if (i == 11) begin
-			$display("Setting simulation program as: rc4.vmem");
-			memory_file = "simulation/vmem/rc4.vmem";
-		end
-		else if (i == 12) begin
-			$display("Setting simulation program as: rsa.vmem");
-			memory_file = "simulation/vmem/rsa.vmem";
-		end
-		else if (i == 13) begin
-			$display("Setting simulation program as: sha.vmem");
-			memory_file = "simulation/vmem/sha.vmem";
-		end
-		else if (i == 14) begin
-			$display("Setting simulation program as: stringsearch.vmem");
-			memory_file = "simulation/vmem/stringsearch.vmem";
-		end
-		else if (i == 14) begin
-			$display("Setting simulation program as: susan.vmem");
-			memory_file = "simulation/vmem/susan.vmem";
-		end
-		else begin
+		// Check if simulation done
+		if (i == 16) begin
 			$display("Simulation Complete (time: %t)", $time);
 			$finish;
 		end
+		else begin
 
-		// Initialize memory with program
-		$readmemh(memory_file, orpsoc_testbench.dut.ram_wb0.ram_wb_b3_0.mem);
+			// Reset DUT
+			$display("Putting DUT into Reset (time: %t)...", $time);
+			repeat (32) @(negedge clk)
+				rst_n <= 1;
+			repeat (32) @(negedge clk)
+				rst_n <= 0;
+			$display();
 
-		// print memory stats
-		$display("Intializing Memory from:       %s", memory_file);
-		$display("Memory Address Width (Bits): %12d", orpsoc_testbench.dut.ram_wb0.ram_wb_b3_0.mem_adr_width);
-		$display("Memory Size (Num Words):     %12d", orpsoc_testbench.dut.ram_wb0.ram_wb_b3_0.mem_words);
-		$display("Memory Size (Num Bytes):     %12d", orpsoc_testbench.dut.ram_wb0.ram_wb_b3_0.mem_size_bytes);
+			// Set simulation program filename
+			if (i == 0) begin
+				$display("Loading simulation program (time: %t): helloworld.vmem", $time);
+				memory_file = "simulation/vmem/helloworld.vmem";
+			end
+			// else if (i == 1) begin
+			// 	$display("Loading simulation program (time: %t): helloworld.vmem", $time);
+			// 	memory_file = "simulation/vmem/helloworld.vmem";
+			// 	i = 15;
+			// end
+			else if (i == 1) begin
+				$display("Loading simulation program (time: %t): aes.vmem", $time);
+				memory_file = "simulation/vmem/aes.vmem";
+				i = 15;
+			end
+			else if (i == 2) begin
+				$display("Loading simulation program (time: %t): basicmath.vmem", $time);
+				memory_file = "simulation/vmem/basicmath.vmem";
+			end
+			else if (i == 3) begin
+				$display("Loading simulation program (time: %t): blowfish.vmem", $time);
+				memory_file = "simulation/vmem/blowfish.vmem";
+			end
+			else if (i == 4) begin
+				$display("Loading simulation program (time: %t): crc.vmem", $time);
+				memory_file = "simulation/vmem/crc.vmem";
+			end
+			else if (i == 5) begin
+				$display("Loading simulation program (time: %t): dijkstra.vmem", $time);
+				memory_file = "simulation/vmem/dijkstra.vmem";
+			end
+			else if (i == 6) begin
+				$display("Loading simulation program (time: %t): fft.vmem", $time);
+				memory_file = "simulation/vmem/fft.vmem";
+			end
+			else if (i == 7) begin
+				$display("Loading simulation program (time: %t): limits.vmem", $time);
+				memory_file = "simulation/vmem/limits.vmem";
+			end
+			else if (i == 8) begin
+				$display("Loading simulation program (time: %t): lzfx.vmem", $time);
+				memory_file = "simulation/vmem/lzfx.vmem";
+			end
+			else if (i == 9) begin
+				$display("Loading simulation program (time: %t): qsort.vmem", $time);
+				memory_file = "simulation/vmem/qsort.vmem";
+			end
+			else if (i == 10) begin
+				$display("Loading simulation program (time: %t): randmath.vmem", $time);
+				memory_file = "simulation/vmem/randmath.vmem";
+			end
+			else if (i == 11) begin
+				$display("Loading simulation program (time: %t): rc4.vmem", $time);
+				memory_file = "simulation/vmem/rc4.vmem";
+			end
+			else if (i == 12) begin
+				$display("Loading simulation program (time: %t): rsa.vmem", $time);
+				memory_file = "simulation/vmem/rsa.vmem";
+			end
+			else if (i == 13) begin
+				$display("Loading simulation program (time: %t): sha.vmem", $time);
+				memory_file = "simulation/vmem/sha.vmem";
+			end
+			else if (i == 14) begin
+				$display("Loading simulation program (time: %t): stringsearch.vmem", $time);
+				memory_file = "simulation/vmem/stringsearch.vmem";
+			end
+			else if (i == 15) begin
+				$display("Loading simulation program (time: %t): susan.vmem", $time);
+				memory_file = "simulation/vmem/susan.vmem";
+			end
+			else begin
+				$display("ERROR: unkown program index (time: %t)", $time);
+				$finish;
+			end
 
-		// Increment Test Case Counter
-		i++;
+			// 0-out memory on processor reset
+			for(k = 0; k < orpsoc_testbench.dut.ram_wb0.ram_wb_b3_0.mem_words; k++) begin
+				orpsoc_testbench.dut.ram_wb0.ram_wb_b3_0.mem[k] = 1'b0;
+			end
 
-		// Complete DUT Reset
-		repeat (32) @(negedge clk)
-			rst_n <= 1;
-		$display("DUT Reset Complete (time: %t).", $time);
-		$display();
-	end
+			// Load program into memory
+			$readmemh(memory_file, orpsoc_testbench.dut.ram_wb0.ram_wb_b3_0.mem);
 
-	// 0-out memory on processor reset
-	always @(negedge orpsoc_testbench.dut.ram_wb0.ram_wb_b3_0.wb_rst_i) begin
-		for(k = 0; k < orpsoc_testbench.dut.ram_wb0.ram_wb_b3_0.mem_words; k++) begin
-			orpsoc_testbench.dut.ram_wb0.ram_wb_b3_0.mem[k] = 1'b0;
+			// print memory stats
+			$display("Memory Address Width (Bits): %12d", orpsoc_testbench.dut.ram_wb0.ram_wb_b3_0.mem_adr_width);
+			$display("Memory Size (Num Words):     %12d", orpsoc_testbench.dut.ram_wb0.ram_wb_b3_0.mem_words);
+			$display("Memory Size (Num Bytes):     %12d", orpsoc_testbench.dut.ram_wb0.ram_wb_b3_0.mem_size_bytes);
+			$display();
+			
+			// Clear Program Exit Flag
+			monitor.program_exit = 0;
+			
+			// Complete DUT Reset
+			repeat (32) @(negedge clk)
+				rst_n <= 1;
+			$display("DUT Reset Complete (time: %t).", $time);
+			$display();
+
+			// Increment Test Case Counter
+			i++;
 		end
 	end
 

@@ -58,8 +58,8 @@ $(TARGET).vcd: $(TARGET).vvp
 		vvp $< -DVCD_FILENAME=\"$@\" \
 			+num_tests=$(NUM_TESTS); \
 	else \
-		(vvp $< -DVCD_FILENAME=\"$@\" \
-			+num_tests=$(NUM_TESTS)) &> $(OUT_DIR)/$(TARGET).vcd.log; \
+		vvp $< -DVCD_FILENAME=\"$@\" \
+			+num_tests=$(NUM_TESTS) 2>&1 | tee $(OUT_DIR)/$(TARGET).vcd.log; \
 	fi;
 
 # IVL Simulation (Step 1: Executable Generation)
@@ -98,4 +98,8 @@ cleanall: clean
 	@$(MAKE) cleanall -C $(TGT_TTB_DIR)
 
 clean:
-	@$(RM) *.vcd *.vvp *.dot *.json *.log
+	@find . -maxdepth 1 -name "*.dot" -print0 | xargs -0 rm; \
+	find . -maxdepth 1 -name "*.vvp" -print0 | xargs -0 rm; \
+	find . -maxdepth 1 -name "*.vcd" -print0 | xargs -0 rm; \
+	find . -maxdepth 1 -name "*.json" -print0 | xargs -0 rm; \
+	find . -maxdepth 1 -name "*.log" -print0 | xargs -0 rm

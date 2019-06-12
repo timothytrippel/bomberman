@@ -405,7 +405,7 @@ module or1200_monitor;
 	  if (`OR1200_TOP.`CPU_cpu.`CPU_except.except_flushpipe)
 	    display_arch_state_except;
 	// small hack to stop simulation (l.nop 1):
-	if (`OR1200_TOP.`CPU_cpu.`CPU_ctrl.wb_insn == 32'h1500_0001) begin
+	if (`OR1200_TOP.`CPU_cpu.`CPU_ctrl.wb_insn == 32'h1500_0001 && ~program_exit) begin
 	   get_gpr(3, r3);
 	   $fdisplay(fgeneral, "%t: l.nop exit (%h)", $time, r3);
 `ifdef OR1200_MONITOR_VERBOSE_NOPS
@@ -413,7 +413,7 @@ module or1200_monitor;
        // like "exit(1)", therefore something like "exit(  1)" would fail.
        $display("\nexit(%0d)",r3);
 `endif
-		program_exit = 1;	   
+		program_exit = 1;
 	   // $finish;
 	end
 	// debug if test (l.nop 10)

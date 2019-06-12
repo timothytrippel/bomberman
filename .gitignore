@@ -6,7 +6,7 @@
 
 # Ignore Simulation Files
 *.vcd
-*.vmem
+#*.vmem
 *.asm
 
 # Ignore TTB Generated Files

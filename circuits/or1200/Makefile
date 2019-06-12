@@ -24,7 +24,7 @@ DUT_TOP_MODULE      := orpsoc_testbench.dut
 NUM_TESTS           := 1
 START_TIME          := 0
 TIME_LIMIT          := -1
-TIME_RESOLUTION     := 10000
+TIME_RESOLUTION     := 100000
 NUM_MALICIOUS_CNTRS := 0
 
 include ../common.mk

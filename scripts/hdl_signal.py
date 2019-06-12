@@ -121,35 +121,34 @@ class HDL_Signal:
 
 	def add_vcd_sim(self, vcd_data):
 
-		# Find matching VCD net
-		matching_vcd_net_found = False
-		for net_dict in vcd_data['nets']:
-			if (self.hierarchy == net_dict['hier']):
-				matching_vcd_net_found = True
-				break
-		assert matching_vcd_net_found
+		# Only process regs and wires (i.e. synthesizable constructs)
+		if self.type == 'reg' or self.type == 'wire':
 
-		# Load VCD Signal Info
-		self.tb_covered = True
-		self.type       = net_dict['type']
+			# Find matching VCD net
+			matching_vcd_net_found = False
+			for net_dict in vcd_data['nets']:
+				if (self.hierarchy == net_dict['hier']):
+					matching_vcd_net_found = True
+					break
+			assert matching_vcd_net_found
 
-		# Load Simulation Time Values
-		for tv in vcd_data['tv']:
-			time  = tv[0]
-			value = ''.join(tv[1])
-			assert time not in self.time_values.keys()
-			self.time_values[time] = value
+			# Load VCD Signal Info
+			self.tb_covered = True
+			self.type       = net_dict['type']
 
-		# Check names and widths of matching signal in Dot file
-		assert self.lsb   == int(vcd_data['lsb'])
-		assert self.msb   == int(vcd_data['msb'])
-		assert self.width == int(net_dict['size'])
+			# Load Simulation Time Values
+			for tv in vcd_data['tv']:
+				time  = tv[0]
+				value = ''.join(tv[1])
+				assert time not in self.time_values.keys()
+				self.time_values[time] = value
 
-		# self.debug_print()
+			# Check names and widths of matching signal in Dot file
+			assert self.lsb   == int(vcd_data['lsb'])
+			assert self.msb   == int(vcd_data['msb'])
+			assert self.width == int(net_dict['size'])
 
-		# Check wire type and isff/isinput match
-		assert (self.type == 'reg') or \
-			   (self.type == 'wire' and not self.isff)
+			# self.debug_print()
 
 	def debug_print(self):
 		print "	Signal: %s"             % (self.fullname())

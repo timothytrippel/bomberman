@@ -125,17 +125,17 @@ def parse_vcd(file, only_sigs=0, types={"reg", "wire"}, use_stdout=0, siglist=[]
 						'name' : name,
 						'size' : size,
 						'hier' : path,
-					 } 
+					}
 					if var_struct not in data[code]['nets']:
 						data[code]['nets'].append( var_struct )
-		
+			else:
+				print "WARNING: invalid signal type (%s) encountered in var dump on line: %d" % (type, line_num)
 
 		elif line.startswith('#'):
 			re_time_match   = re_time.match(line)
 			time = mult * int(re_time_match.group(1))
 			endtime = time
 		
-
 		elif line.startswith(('0', '1', 'x', 'z', 'b', 'r')):
 			re_1b_val_match = re_1b_val.match(line)
 			re_Nb_val_match = re_Nb_val.match(line)

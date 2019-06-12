@@ -303,7 +303,7 @@ def main():
 	##
 
 	# General Switches
-	sws.VERBOSE  = 3
+	sws.VERBOSE  = 0
 	sws.WARNINGS = False
 
 	# DEBUG Switches
@@ -373,7 +373,7 @@ def main():
 	task_start_time = time.time()
 
 	# Get VCD data
-	vcd = parse_vcd(vcd_file, types={"reg", "wire"})
+	vcd = parse_vcd(vcd_file, types={"reg", "wire", "integer"})
 	update_signals_with_vcd(signals, vcd)
 
 	# Get Timescale Info
