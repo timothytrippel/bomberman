@@ -569,17 +569,19 @@ module orpsoc_testbench;
 			if (i == 0) begin
 				$display("Loading simulation program (time: %t): helloworld.vmem", $time);
 				memory_file = "simulation/vmem/helloworld.vmem";
+				// $display("Loading simulation program (time: %t): crc.vmem", $time);
+				// memory_file = "simulation/vmem/crc.vmem";
+				// i = 15;
 			end
-			// else if (i == 1) begin
-			// 	$display("Loading simulation program (time: %t): helloworld.vmem", $time);
-			// 	memory_file = "simulation/vmem/helloworld.vmem";
-			// 	i = 15;
-			// end
 			else if (i == 1) begin
-				$display("Loading simulation program (time: %t): aes.vmem", $time);
-				memory_file = "simulation/vmem/aes.vmem";
+				$display("Loading simulation program (time: %t): helloworld.vmem", $time);
+				memory_file = "simulation/vmem/helloworld.vmem";
 				i = 15;
 			end
+			// else if (i == 1) begin
+			// 	$display("Loading simulation program (time: %t): aes.vmem", $time);
+			// 	memory_file = "simulation/vmem/aes.vmem";
+			// end
 			else if (i == 2) begin
 				$display("Loading simulation program (time: %t): basicmath.vmem", $time);
 				memory_file = "simulation/vmem/basicmath.vmem";

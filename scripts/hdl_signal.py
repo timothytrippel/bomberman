@@ -121,21 +121,23 @@ class HDL_Signal:
 
 	def add_vcd_sim(self, vcd_data):
 
+		# Find matching VCD net
+		matching_vcd_net_found = False
+		for net_dict in vcd_data['nets']:
+			if (self.hierarchy == net_dict['hier']):
+				matching_vcd_net_found = True
+				break
+		assert matching_vcd_net_found
+
+		# Get Signal Type
+		self.type = net_dict['type']
+
 		# Only process regs and wires (i.e. synthesizable constructs)
 		if self.type == 'reg' or self.type == 'wire':
 
-			# Find matching VCD net
-			matching_vcd_net_found = False
-			for net_dict in vcd_data['nets']:
-				if (self.hierarchy == net_dict['hier']):
-					matching_vcd_net_found = True
-					break
-			assert matching_vcd_net_found
-
 			# Load VCD Signal Info
 			self.tb_covered = True
-			self.type       = net_dict['type']
-
+			
 			# Load Simulation Time Values
 			for tv in vcd_data['tv']:
 				time  = tv[0]
