@@ -12,6 +12,9 @@ class SignalSlice:
 		self.msb    = msb
 		self.lsb    = lsb
 
+	def width(self):
+		return (self.msb - self.lsb + 1)
+
 # Builds out the dependencies for each signal passed in
 # @TODO: Currently inefficient, re-computing a lot of things
 def build_deps(source_sig, msb, lsb, ffs = [], seen = {}):
@@ -42,15 +45,15 @@ def build_deps(source_sig, msb, lsb, ffs = [], seen = {}):
 
 	return ffs
 
-def add_time_value(signals, dist_counter, source_signal, msb, lsb, time, values):
-	# print "MSB: %d; LSB: %d; Time: %d; Values: %s" % (msb, lsb, time, values)
-	if time in dist_counter.get_time_values(signals):
-		dist_counter.append_time_value(time, values[source_signal.width - msb - 1: source_signal.width - lsb])
+def add_time_value(vcd, dist_counter, source_signal, msb, lsb, time, value):
+	# print "MSB: %d; LSB: %d; Time: %d; Values: %s" % (msb, lsb, time, value)
+	if time in dist_counter.get_time_values(vcd):
+		dist_counter.append_time_value(time, value[source_signal.width() - msb - 1: source_signal.width() - lsb])
 	else:
-		dist_counter.set_time_value(time, values[source_signal.width - msb - 1: source_signal.width - lsb])
-	# print "Width:", dist_counter.width, "; After:", dist_counter.get_time_value(signals, time)
+		dist_counter.set_time_value(time, value[source_signal.width() - msb - 1: source_signal.width() - lsb])
+	# print "Width:", dist_counter.width, "; After:", dist_counter.get_time_value(vcd, time)
 
-def generate_distributed_counters(signals, num_mal_cntrs, dut_top_module):
+def generate_distributed_counters(signals, vcd, num_mal_cntrs, dut_top_module):
 	not_simd      = {}
 	dist_counters = {}
 
@@ -84,21 +87,25 @@ def generate_distributed_counters(signals, num_mal_cntrs, dut_top_module):
 		dist_counter_names     = []
 		dist_counter_simulated = True
 		dist_counter_in_dut    = True
+		dist_counter_msb       = 0
 		for ff in ffs:
 
-			# Build distributed counter name
+			# Build distributed counter name and size
 			slice_str = "[%d:%d]" % (ff.msb, ff.lsb)
 			dist_counter_names.append(ff.signal.fullname() + slice_str)
+			
+			# Udpate MSB
+			dist_counter_msb += ff.width() - 1
 
 			# Check that distributed counter is not comprised of un-simulated signals
-			if not ff.signal.tb_covered and ff.signal.fullname().startswith(dut_top_module):
+			if not ff.signal.vcd_symbol and ff.signal.fullname().startswith(dut_top_module):
 				dist_counter_simulated         = False
 				if ff.signal.fullname() not in not_simd:
 					if sws.WARNINGS:
 						print "WARNING: " + ff.signal.fullname() + " not found in VCD file."
 				not_simd[ff.signal.fullname()] = True
 			# Check that distributed counter only contains signals in the DUT top module
-			elif not ff.signal.tb_covered and not ff.signal.fullname().startswith(dut_top_module):
+			elif not ff.signal.vcd_symbol and not ff.signal.fullname().startswith(dut_top_module):
 				dist_counter_in_dut = False
 				break
 	
@@ -108,10 +115,7 @@ def generate_distributed_counters(signals, num_mal_cntrs, dut_top_module):
 
 		# Create new HDL_Signal object for distributed counter
 		dist_counter_name = '{' + ','.join(dist_counter_names) + '}'
-		dist_counter      = HDL_Signal(dist_counter_name, -1, 0, None)
-		
-		# Update tb_covered flag
-		dist_counter.tb_covered = dist_counter_simulated
+		dist_counter      = HDL_Signal(dist_counter_name, dist_counter_msb, 0, None)
 
 		# Check that dist_counter has not already been generated
 		if dist_counter_name not in dist_counters:
@@ -126,29 +130,25 @@ def generate_distributed_counters(signals, num_mal_cntrs, dut_top_module):
 		# Get (sorted) list of time values of signals changing
 		update_times = set()
 		for ff in ffs:
-			for time in signals[ff.signal.fullname()].get_update_times(signals):
-				update_times.add(time)
+			for tv in signals[ff.signal.fullname()].get_time_values(vcd):
+				update_times.add(tv[0])
 		update_times = sorted(update_times)
 
 		# Piece together simulated time values from dist. counter signals.
 		for ff in ffs:
 			source_signal = signals[ff.signal.fullname()]
-			width         = ff.msb - ff.lsb + 1
 			# print "REF Signal:"
 			# print "	NAME:  %s" % (source_signal.fullname())
 			# print "	MSB:   %d" % (ff.msb)
 			# print "	LSB:   %d" % (ff.lsb)
-			# print "	WIDTH: %d" % (width)
+			# print "	WIDTH: %d" % (ff.msb - ff.lsb + 1)
 			# source_signal.debug_print_wtvs(signals)
-
-			# Update counter width and msb
-			dist_counter.width += width
-			dist_counter.msb    = dist_counter.lsb + dist_counter.width - 1
 
 			# Update counter time values
 			for time in update_times:
-				tv = source_signal.get_time_value(signals, time)
-				add_time_value(signals, dist_counter, source_signal, ff.msb, ff.lsb, time, tv)
+				value = source_signal.get_time_value(vcd, time)
+				# print time, "-->", value
+				add_time_value(vcd, dist_counter, source_signal, ff.msb, ff.lsb, time, value)
 
 	# Generate artificial coalesced counters
 	if num_mal_cntrs > 0:

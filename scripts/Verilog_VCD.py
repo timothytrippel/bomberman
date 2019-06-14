@@ -27,7 +27,7 @@ def list_sigs(file) :
 	return sigs
 
 
-def parse_vcd(file, only_sigs=0, types={"reg", "wire"}, use_stdout=0, siglist=[], opt_timescale=''):
+def parse_vcd(file, signals, only_sigs=0, types={"reg", "wire"}, use_stdout=0, siglist=[], opt_timescale=''):
 	"""Parse input VCD file into data structure.
 	Also, print t-v pairs to STDOUT, if requested."""
 	global endtime
@@ -114,18 +114,21 @@ def parse_vcd(file, only_sigs=0, types={"reg", "wire"}, use_stdout=0, siglist=[]
 				code = ls[3]
 				name = "".join(ls[4:-1])
 				path = '.'.join(hier)
-				full_name = path + name
-				if (full_name in usigs) or all_sigs :
-					if code not in data :
+				full_name = path + "." + name
+				if (full_name in usigs) or all_sigs:
+					if code not in data:
 						data[code] = {}
+
 					if 'nets' not in data[code]:
 						data[code]['nets'] = []
+
 					var_struct = {
 						'type' : type,
 						'name' : name,
 						'size' : size,
 						'hier' : path,
 					}
+
 					if var_struct not in data[code]['nets']:
 						data[code]['nets'].append( var_struct )
 			else:
@@ -162,12 +165,12 @@ def parse_vcd(file, only_sigs=0, types={"reg", "wire"}, use_stdout=0, siglist=[]
 	fh.close()
 
 	# Swap signal names for symbols
-	data = exchange_sym_for_name_vcd(data)
+	signals = update_symbol_ref(data, signals)
 
 	# Pad signal time values if vectored
 	data = zero_pad_vectored_signal_tvs(data)
 	
-	return data
+	return data, signals
 
 def calc_mult (statement, opt_timescale=''):
 	""" 
@@ -262,89 +265,80 @@ def get_signal_lsb(signal_base_name):
 		return int(signal_base_name.split("[")[-1].split(":")[-1].split("]")[0])
 	return 0
 
-# This is added to format the VCD information. Signal names
-# are swapped with VCD signal symbols, and time values are 
-# padded to ensure they align with the signal widths.
-def exchange_sym_for_name_vcd(vcd):
-	formatted_vcd = {}
+def update_symbol_ref(vcd, signals):
 
 	# Iterate through symbol and signal info key-value pairs
 	for symbol, signal in vcd.items():
 
-		# If there are multiple net names take the name that
-		# is the longest (i.e. deepest in heirarchy).
-		signal_name = ''
+		# And VCD symbol references for each signal object in signals dict
 		for net in signal['nets']:
 			
-			# Extract bit offset signal info
-			signal_lsb  = get_signal_lsb(net['name'])
-			signal_msb  = signal_lsb + int(net['size']) - 1
-			msb_lsb_str = "[%d:%d]" % (signal_msb, signal_lsb)
-			
-			# Get local signal name (i.e. w/o bit offsets)
-			if '[' in net['name'] and ']' in net['name']:
-				local_signal_name = net['name'][0:-len(msb_lsb_str)] # remove MSB/LSB indices
-			else:
-				local_signal_name = net['name']
-			# print net['name'], '-->', net['name'][0:-len(msb_lsb_str)], '-->', local_signal_name
+			# Only process regs and wires (i.e. synthesizable constructs)
+			if net['type'] == 'reg' or net['type'] == 'wire':
 
-			# Check if net name was escaped (Icarus Verilog does 
-			# this for memories that are explicitly dumped)
-			if local_signal_name.startswith('\\'):
-				local_signal_name = local_signal_name[1:]
+				# Extract bit offset signal info
+				signal_lsb  = get_signal_lsb(net['name'])
+				signal_msb  = signal_lsb + int(net['size']) - 1
+				msb_lsb_str = "[%d:%d]" % (signal_msb, signal_lsb)
 
-			# Get signal hierachy name
-			hierarchy_signal_name = net['hier']
+				# Get local signal name (i.e. w/o bit offsets)
+				if '[' in net['name'] and ']' in net['name']:
+					local_signal_name = net['name'][0:-len(msb_lsb_str)] # remove MSB/LSB indices
+				else:
+					local_signal_name = net['name']
+				# print net['name'], '-->', net['name'][0:-len(msb_lsb_str)], '-->', local_signal_name
 
-			# Construct signal full name (without MSB/LSB info)
-			potential_signal_name = hierarchy_signal_name + '.' + local_signal_name
-			
-			# Check if longest signal name
-			if len(potential_signal_name) >= len(signal_name):
-				signal_name   = potential_signal_name
-				signal['lsb'] = signal_lsb
-				signal['msb'] = signal_msb
+				# Check if net name was escaped (Icarus Verilog does 
+				# this for memories that are explicitly dumped)
+				if local_signal_name.startswith('\\'):
+					local_signal_name = local_signal_name[1:]
 
-		# Check signal name is not empty
-		assert signal_name != ''
+				# Get signal hierachy name
+				hierarchy_signal_name = net['hier']
 
-		formatted_vcd[signal_name] = signal
-	# sys.exit()
+				# Construct signal full name (without MSB/LSB info)
+				full_signal_name = hierarchy_signal_name + '.' + local_signal_name
 
-	return formatted_vcd
+				# Check that VCD signal name in signals dict
+				# print full_name
+				assert full_signal_name in signals and "ERROR: VCD signal not in dot graph."
+
+				# Add symbol reference to signal object
+				signals[full_signal_name].vcd_symbol = symbol
+
+	return signals
 
 def zero_pad_vectored_signal_tvs(vcd):
-	formatted_vcd = {}
 
 	# Iterate through name and signal info key-value pairs
-	for signal_name, signal in vcd.items():
+	for symbol, signal in vcd.items():
 
-		# Check if signal is vectored
-		if is_signal_vectored(signal):
+		# Get first signal in the net
+		net  = signal['nets'][0]
+		size = int(signal['nets'][0]['size'])
+
+		# # Check if signal is vectored
+		# if (size > 1):
 			
-			for index, time_value in enumerate(signal['tv']):
-				time  = time_value[0]
-				value = time_value[1]
-				width = (signal['msb'] - signal['lsb'] + 1)
+		for index, time_value in enumerate(signal['tv']):
+			time  = time_value[0]
+			value = time_value[1]
 
-				# Check if padding is necessary
-				if len(value) != width:
-					# Check if value is unkown
-					if value[0] == 'x':
-						value = ['x'] * (width - len(value)) + value
-					else:
-						value = ['0'] * (width - len(value)) + value
-				
-				# Check value is correct width
-				assert len(value) == width
-
-				# Update time value
-				signal['tv'][index] = (time, value)
+			# Check if padding is necessary
+			if len(value) != size:
+				# Check if value is unkown
+				if value[0] == 'x':
+					value = ['x'] * (size - len(value)) + value
+				else:
+					value = ['0'] * (size - len(value)) + value
 			
-		# Update VCD dict
-		formatted_vcd[signal_name] = signal						
-		
-	return formatted_vcd
+			# Check value is correct width
+			assert len(value) == size
+
+			# Update time value
+			signal['tv'][index] = (time, ''.join(value))
+	
+	return vcd
 
 def debug_print_vcd(vcd):
 	for signal in vcd.keys():

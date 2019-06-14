@@ -44,54 +44,10 @@ def export_sizes_json(coal_counter_sizes, dist_counter_sizes, filename):
 def get_counter_sizes(counters):
 	counter_sizes = []
 	for counter_name, counter in counters.items():
-		counter_sizes.append(counter.width)
+		counter_sizes.append(counter.msb - counter.lsb + 1)
 	return counter_sizes
 
-def update_signals_with_vcd(signals, vcd):
-	for vcd_signal_name in vcd.keys():
-
-		# Check that VCD signal name in signals dict
-		# print vcd_signal_name
-		assert vcd_signal_name in signals and "ERROR: VCD signal not in dot graph."
-		
-		# Check signal simulation info not already loaded
-		assert signals[vcd_signal_name].tb_covered == False
-
-		# Load signal simulation data to only one signal object
-		signals[vcd_signal_name].add_vcd_sim(vcd[vcd_signal_name])
-
-		# Load reference to all signal objects on same net
-		for net_dict in vcd[vcd_signal_name]['nets']:
-
-			# Get net bit offset string
-			msb_lsb_str  = "[%d:%d]" % (signals[vcd_signal_name].msb, signals[vcd_signal_name].lsb)
-			
-			# Get local name
-			local_name = net_dict['name']
-			
-			# Strip escape character
-			if local_name.startswith('\\'):
-				local_name = local_name[1:]
-
-			# Get net fullname
-			net_fullname = (net_dict['hier'] + '.' + local_name)
-
-			# Strip bit offset string
-			if ('[' in net_fullname and ']' in net_fullname):
-				net_fullname = net_fullname[0:-len(msb_lsb_str)]
-			
-			# print net_fullname
-
-			# Update references of other signals on same net
-			if net_fullname in signals:
-				signals[net_fullname].ref_hierarchy  = signals[vcd_signal_name].hierarchy
-				signals[net_fullname].ref_local_name = signals[vcd_signal_name].local_name
-				signals[net_fullname].tb_covered     = True
-			else:
-				print "ERROR: VCD signal not in dot graph."
-				sys.exit(1)
-
-def classify_counters(counter_type, signals, counters, start_time, time_limit, time_resolution, json_base_filename):
+def classify_counters(counter_type, signals, vcd, counters, start_time, time_limit, time_resolution, json_base_filename):
 
 	# Counter Types
 	skipped             = {}
@@ -105,7 +61,7 @@ def classify_counters(counter_type, signals, counters, start_time, time_limit, t
 		malicious[counter.fullname()]           = set()
 
 		# Check that counter has been simulated by TB
-		if not counter.tb_covered:
+		if not counter.vcd_symbol and not counter.time_values:
 			if sws.WARNINGS:
 				print "WARNING: counter (%s) not exercised by test bench... skipping." % (counter.fullname())
 			skipped[counter.fullname()] = True
@@ -149,28 +105,27 @@ def classify_counters(counter_type, signals, counters, start_time, time_limit, t
 			benign = False
 
 			# Check counter has been simulated
-			if counter.tb_covered:
+			if counter.vcd_symbol or counter.time_values:
 
 				# Get time values for current time interval
-				counter_sim_times = counter.get_sorted_update_times(signals)
-				# print "Sim Times:  ", counter_sim_times
+				tvs = counter.get_time_values(vcd)
 
 				# Iterate over time simulation time indices in range of interest
-				while (time_ind < len(counter_sim_times) and counter_sim_times[time_ind] < curr_time_limit):
+				while (time_ind < len(tvs) and tvs[time_ind][0] < curr_time_limit):
 
 					# Get value at given time
-					current_tv = counter.get_time_value(signals, counter_sim_times[time_ind])
-					# print "Sim Time:", counter_sim_times[time_ind], "; Time Value:", current_tv
+					current_val = tvs[time_ind][1]
+					# print "Sim Time:", tvs[time_ind][0], "; Time Value:", current_val
 
 					# Check if time value is valid
-					if 'x' not in current_tv:
+					if 'x' not in current_val:
 
 						# Check if counter value already seen
-						if current_tv in malicious[mal_counter_name]:
+						if current_val in malicious[mal_counter_name]:
 
 							# NOT Malicious -> Continue
-							if sws.VERBOSE > 2: 
-								print "Repeated Value (%s) --> Not Malicious" % (current_tv)
+							if sws.VERBOSE > 2:
+								print "Repeated Value (%s) --> Not Malicious" % (current_val)
 								print
 							
 							# Mark counter as benign
@@ -180,7 +135,7 @@ def classify_counters(counter_type, signals, counters, start_time, time_limit, t
 						else:
 
 							# Still possibly malicious: add value to set of simulated counter values
-							malicious[mal_counter_name].add(current_tv)
+							malicious[mal_counter_name].add(current_val)
 
 					# Increment time index
 					time_ind += 1
@@ -189,7 +144,7 @@ def classify_counters(counter_type, signals, counters, start_time, time_limit, t
 				if not benign:
 
 					# Compute number of possible unique counter values
-					max_possible_values = 2 ** counter.width
+					max_possible_values = 2 ** counter.width()
 					if sws.VERBOSE > 2:
 						print "Values Seen/Possible: %d/%d" % (len(malicious[mal_counter_name]), max_possible_values)
 
@@ -242,7 +197,7 @@ def classify_counters(counter_type, signals, counters, start_time, time_limit, t
 		json_filename = json_base_filename + "." + counter_type + "." + str(curr_time_limit) + ".json"
 		export_stats_json(len(counters), len(skipped), len(constants), len(malicious) - len(constants), json_filename)
 
-def analyze_counters(signals, coal_counters, dist_counters, start_time, time_limit, time_resolution, json_base_filename):
+def analyze_counters(signals, vcd, coal_counters, dist_counters, start_time, time_limit, time_resolution, json_base_filename):
 
 	##
 	# Analyze Coalesced Counters
@@ -250,7 +205,7 @@ def analyze_counters(signals, coal_counters, dist_counters, start_time, time_lim
 	print
 	print "Finding malicious coalesced signals..."
 	task_start_time    = time.time()
-	classify_counters("coal", signals, coal_counters, start_time, time_limit, time_resolution, json_base_filename)
+	classify_counters("coal", signals, vcd, coal_counters, start_time, time_limit, time_resolution, json_base_filename)
 	task_end_time      = time.time()
 	calculate_and_print_time(task_start_time, task_end_time)
 	print
@@ -261,7 +216,7 @@ def analyze_counters(signals, coal_counters, dist_counters, start_time, time_lim
 	print
 	print "Finding malicious distributed signals..."
 	task_start_time    = time.time()
-	classify_counters("dist", signals, dist_counters, start_time, time_limit, time_resolution, json_base_filename)
+	classify_counters("dist", signals, vcd, dist_counters, start_time, time_limit, time_resolution, json_base_filename)
 	task_end_time      = time.time()
 	calculate_and_print_time(task_start_time, task_end_time)
 	print
@@ -273,13 +228,13 @@ def check_simulation_coverage(signals, dut_top_module):
 	print "--------------------------------------------------------------------------------"
 	print "Checking simulation coverage..."
 	print "Flip-Flops/Inputs NOT exercised by testbench:"
-	num_ff_simd  = 0
+	num_ff_simd   = 0
 	num_total_ffs = 0
 	for signal_name in signals:
 
 		# Check that signal is in the DUT top module (i.e. not a test bench signal)
 		if signal_name.startswith(dut_top_module):
-			if not signals[signal_name].tb_covered and (signals[signal_name].isff or signals[signal_name].isinput):
+			if not signals[signal_name].vcd_symbol and (signals[signal_name].isff or signals[signal_name].isinput):
 				print "	", signal_name
 			else:
 				num_ff_simd += 1
@@ -303,7 +258,7 @@ def main():
 	##
 
 	# General Switches
-	sws.VERBOSE  = 0
+	sws.VERBOSE  = 3
 	sws.WARNINGS = False
 
 	# DEBUG Switches
@@ -373,8 +328,7 @@ def main():
 	task_start_time = time.time()
 
 	# Get VCD data
-	vcd = parse_vcd(vcd_file, types={"reg", "wire", "integer"})
-	update_signals_with_vcd(signals, vcd)
+	vcd, signals = parse_vcd(vcd_file, signals, types={"reg", "wire", "integer"})
 
 	# Get Timescale Info
 	timescale_str   = get_timescale()
@@ -446,7 +400,7 @@ def main():
 	print "--------------------------------------------------------------------------------"
 	print "Identifying Distributed Counter Candidates..."
 	task_start_time = time.time()
-	dist_counters   = generate_distributed_counters(signals, num_mal_cntrs, dut_top_module)
+	dist_counters   = generate_distributed_counters(signals, vcd, num_mal_cntrs, dut_top_module)
 	task_end_time   = time.time()
 	print
 	print "Found " + str(len(dist_counters)) + " possible distributed counters."
@@ -458,6 +412,7 @@ def main():
 	print
 	calculate_and_print_time(task_start_time, task_end_time)
 
+	sys.exit()
 	##
 	# Write counter sizes to JSON file
 	##
@@ -466,7 +421,7 @@ def main():
 	##
 	# Classify counter behaviors
 	##
-	analyze_counters(signals, coal_counters, dist_counters, start_time, time_limit, time_resolution, json_base_filename)
+	analyze_counters(signals, vcd, coal_counters, dist_counters, start_time, time_limit, time_resolution, json_base_filename)
 
 	##
 	# Stop Overall Timer
