@@ -19,16 +19,16 @@ class HDL_Signal:
 		self.isinput        = False
 		self.conn           = []
 		self.vcd_symbol     = None
-		self.time_values    = []
-		# self.tb_covered     = False
-		# self.ref_local_name = None
-		# self.ref_hierarchy  = None
-		# self.width          = (self.msb + 1 - self.lsb)
-		# self.type           = None
-		# self.time_values    = {}
+		self.tv_index       = 0
 
 	def width(self):
 		return (self.msb - self.lsb + 1)
+
+	def is_simulated(self):
+		if self.vcd_symbol:
+			return True
+		else:
+			return False
 
 	def basename(self):
 		return (self.hierarchy + '.' + self.local_name)
@@ -42,73 +42,55 @@ class HDL_Signal:
 	def sliced_fullname(self):
 		return self.fullname() + "[" + str(self.msb) + ":" + str(self.lsb) + "]"
 
-	def ref_fullname(self):
-		if self.ref_hierarchy and self.ref_local_name:
-			if self.array_ind != None:
-				return (self.ref_hierarchy + '.' + self.ref_local_name + '[' + str(self.array_ind) + ']')
-			else:
-				return (self.ref_hierarchy + '.' + self.ref_local_name)
-		else:
-			return None
-
 	def connections(self):
 		return self.conn
 
-	def get_time_values(self, vcd):
-		if self.vcd_symbol:
-			# print vcd[self.vcd_symbol]
-			return vcd[self.vcd_symbol]['tv']
-		else:
-			return self.time_values
+	def get_time_value_at_index(self, vcd, index):
 
-	def get_time_value(self, vcd, time):
+		# Check signal was simulated
+		assert self.is_simulated()
+
+		# Get time value at index
+		tv = vcd[self.vcd_symbol]['tv'][index]
+
+		return tv[0], tv[1]
+
+	def get_time_value(self, vcd, time_limit):
+
+		# Check signal was simulated
+		assert self.is_simulated()
 
 		# Get all time values
-		tvs = self.get_time_values(vcd)
+		tvs = vcd[self.vcd_symbol]['tv']
 
-		# Indicator flag
-		time_value_found = False
-	
-		# Check if value exists for a given time
-		update_times = zip(*tvs)[0]
-		if time in update_times:
-			return tvs[update_times.index(time)][1]
+		# Check if reached last index of time values
+		if (self.tv_index == len(tvs)):
+			return None, None
 
-		# If not --> return value from previous update time
+		# Get current time value
+		current_tv    = tvs[self.tv_index]
+		current_time  = current_tv[0]
+		current_value = current_tv[1]
+
+		# Increment time value index and return value
+		if current_time <= time_limit:	
+			self.tv_index += 1
+			return current_time, current_value
 		else:
-			
-			# Iterate backwards over times (assuming they're sorted)
-			# until an earlier time is found
-			i = len(tvs) - 1
-			while i >= 0:
+			return None, None
 
-				# Get (earlier) time
-				earlier_time = tvs[i][0]
+	# def set_time_value(self, time, value):
+	# 	assert self.vcd_symbol == None \
+	# 	and "ERROR: cannot set time values for VCD signals"
+	# 	self.time_values.append([time, value])
 
-				# Check if earlier time is less than the time requested
-				if earlier_time < time:
-					return tvs[i][1]
-
-				# Decrement i
-				i -= 1
-
-			# If we reached here --> we have failed to find a time value
-			print "ERROR: unkown time value for signal (%s) at time (%d)" %\
-				(self.fullname(), time)
-			sys.exit(1) 
-
-	def set_time_value(self, time, value):
-		assert self.vcd_symbol == None \
-		and "ERROR: cannot set time values for VCD signals"
-		self.time_values.append([time, value])
-
-	def append_time_value(self, time, value):
-		assert self.vcd_symbol == None \
-		and "ERROR: cannot append time values for VCD signals"
-		for i in range(len(self.time_values) - 1, -1, -1):
-			if time == self.time_values[i][0]:
-				self.time_values[i][1] += value
-				break
+	# def append_time_value(self, time, value):
+	# 	assert self.vcd_symbol == None \
+	# 	and "ERROR: cannot append time values for VCD signals"
+	# 	for i in range(len(self.time_values) - 1, -1, -1):
+	# 		if time == self.time_values[i][0]:
+	# 			self.time_values[i][1] += value
+	# 			break
 
 	def add_conn(self, c):
 		self.conn.append(c)

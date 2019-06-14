@@ -4,16 +4,8 @@ import sys
 # Custom Modules
 import switches          as     sws
 from   hdl_signal        import HDL_Signal
+from   dist_signal       import SignalSlice, DistSignal
 from   malicious_counter import add_malicious_dist_counters
-
-class SignalSlice:
-	def __init__(self, signal, msb, lsb):
-		self.signal = signal
-		self.msb    = msb
-		self.lsb    = lsb
-
-	def width(self):
-		return (self.msb - self.lsb + 1)
 
 # Builds out the dependencies for each signal passed in
 # @TODO: Currently inefficient, re-computing a lot of things
@@ -44,17 +36,8 @@ def build_deps(source_sig, msb, lsb, ffs = [], seen = {}):
 		build_deps(c.source_sig, c.source_msb, c.source_lsb, ffs, seen)
 
 	return ffs
-
-def add_time_value(vcd, dist_counter, source_signal, msb, lsb, time, value):
-	# print "MSB: %d; LSB: %d; Time: %d; Values: %s" % (msb, lsb, time, value)
-	if time in dist_counter.get_time_values(vcd):
-		dist_counter.append_time_value(time, value[source_signal.width() - msb - 1: source_signal.width() - lsb])
-	else:
-		dist_counter.set_time_value(time, value[source_signal.width() - msb - 1: source_signal.width() - lsb])
-	# print "Width:", dist_counter.width, "; After:", dist_counter.get_time_value(vcd, time)
-
+	
 def generate_distributed_counters(signals, vcd, num_mal_cntrs, dut_top_module):
-	not_simd      = {}
 	dist_counters = {}
 
 	for sig_name, sig in signals.iteritems():
@@ -75,7 +58,7 @@ def generate_distributed_counters(signals, vcd, num_mal_cntrs, dut_top_module):
 			continue
 
 		# Only 1 flip-flop found --> ignore if it is itself
-		# @TODO-Tim --> check that ignore is only for self, not all signals.keys()
+		# @TODO --> check that ignore is only for self, not all signals.keys()
 		if len(ffs) == 1:
 			if ffs[0].signal.fullname() in signals.keys():
 				continue
@@ -83,72 +66,45 @@ def generate_distributed_counters(signals, vcd, num_mal_cntrs, dut_top_module):
 		# Num flip-flops found is greater than 1 --> counter is distributed
 		ffs.sort(key=lambda x: (x.signal.fullname(), x.lsb, x.msb)) # sort flip-flops alphabetically by name and msb:lsb range
 
-		# Build distributed counter signal name
-		dist_counter_names     = []
+		# Verify distributed counter components have been simulated
+		counter_slice_names    = []
+		dist_counter_width     = 0
 		dist_counter_simulated = True
 		dist_counter_in_dut    = True
-		dist_counter_msb       = 0
+
 		for ff in ffs:
 
 			# Build distributed counter name and size
 			slice_str = "[%d:%d]" % (ff.msb, ff.lsb)
-			dist_counter_names.append(ff.signal.fullname() + slice_str)
+			counter_slice_names.append(ff.signal.fullname() + slice_str)
 			
 			# Udpate MSB
-			dist_counter_msb += ff.width() - 1
+			dist_counter_width += ff.width()
 
-			# Check that distributed counter is not comprised of un-simulated signals
-			if not ff.signal.vcd_symbol and ff.signal.fullname().startswith(dut_top_module):
-				dist_counter_simulated         = False
-				if ff.signal.fullname() not in not_simd:
-					if sws.WARNINGS:
-						print "WARNING: " + ff.signal.fullname() + " not found in VCD file."
-				not_simd[ff.signal.fullname()] = True
-			# Check that distributed counter only contains signals in the DUT top module
-			elif not ff.signal.vcd_symbol and not ff.signal.fullname().startswith(dut_top_module):
+			# Check if base counter is in DUT
+			if not ff.signal.fullname().startswith(dut_top_module):
 				dist_counter_in_dut = False
 				break
-	
+
+			# Check that base counter is simulated by test bench
+			if not ff.signal.is_simulated():
+				dist_counter_simulated = False
+		
+		# Create distributed counter signal name
+		dist_counter_name = '{' + ','.join(counter_slice_names) + '}'
+
 		# Check if dist counter is outside DUT
 		if not dist_counter_in_dut:
 			continue	
 
-		# Create new HDL_Signal object for distributed counter
-		dist_counter_name = '{' + ','.join(dist_counter_names) + '}'
-		dist_counter      = HDL_Signal(dist_counter_name, dist_counter_msb, 0, None)
-
 		# Check that dist_counter has not already been generated
 		if dist_counter_name not in dist_counters:
 			
+			# Create new DistSignal object for distributed counter	
+			dist_counter = DistSignal(dist_counter_name, dist_counter_width - 1, dist_counter_simulated, ffs)
+
 			# Append dist_counter to list
 			dist_counters[dist_counter_name] = dist_counter
-
-		# Check if distributed signal was simd, if not, skip it
-		if not dist_counter_simulated:
-			continue
-
-		# Get (sorted) list of time values of signals changing
-		update_times = set()
-		for ff in ffs:
-			for tv in signals[ff.signal.fullname()].get_time_values(vcd):
-				update_times.add(tv[0])
-		update_times = sorted(update_times)
-
-		# Piece together simulated time values from dist. counter signals.
-		for ff in ffs:
-			source_signal = signals[ff.signal.fullname()]
-			# print "REF Signal:"
-			# print "	NAME:  %s" % (source_signal.fullname())
-			# print "	MSB:   %d" % (ff.msb)
-			# print "	LSB:   %d" % (ff.lsb)
-			# print "	WIDTH: %d" % (ff.msb - ff.lsb + 1)
-			# source_signal.debug_print_wtvs(signals)
-
-			# Update counter time values
-			for time in update_times:
-				value = source_signal.get_time_value(vcd, time)
-				# print time, "-->", value
-				add_time_value(vcd, dist_counter, source_signal, ff.msb, ff.lsb, time, value)
 
 	# Generate artificial coalesced counters
 	if num_mal_cntrs > 0:

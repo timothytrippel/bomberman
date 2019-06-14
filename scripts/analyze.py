@@ -44,27 +44,28 @@ def export_sizes_json(coal_counter_sizes, dist_counter_sizes, filename):
 def get_counter_sizes(counters):
 	counter_sizes = []
 	for counter_name, counter in counters.items():
-		counter_sizes.append(counter.msb - counter.lsb + 1)
+		counter_sizes.append(counter.width())
 	return counter_sizes
 
 def classify_counters(counter_type, signals, vcd, counters, start_time, time_limit, time_resolution, json_base_filename):
 
 	# Counter Types
-	skipped             = {}
-	constants           = {}
-	malicious           = {}
-	malicious_time_inds = {}
+	skipped   = {}
+	constants = {}
+	malicious = {}
+	benign    = {}
 
 	# Mark all counters as malicious
 	for counter_name, counter in counters.items():
-		malicious_time_inds[counter.fullname()] = 0
-		malicious[counter.fullname()]           = set()
 
 		# Check that counter has been simulated by TB
-		if not counter.vcd_symbol and not counter.time_values:
+		if not counter.is_simulated():
 			if sws.WARNINGS:
 				print "WARNING: counter (%s) not exercised by test bench... skipping." % (counter.fullname())
 			skipped[counter.fullname()] = True
+		else:
+			benign[counter_name]    = False
+			malicious[counter_name] = set()
 
 	timescale_str = '100ps'
 
@@ -94,94 +95,75 @@ def classify_counters(counter_type, signals, vcd, counters, start_time, time_lim
 			# Get HDL_Signal object representing counter
 			counter = counters[mal_counter_name]
 
-			# Get counter sim time index
-			time_ind = malicious_time_inds[mal_counter_name]
-
 			# Print counter's name
 			if sws.VERBOSE > 2:
 				print counter.fullname()
 
-			# Benign flag
-			benign = False
+			# Get next time value
+			time, value = counter.get_time_value(vcd, curr_time_limit)
+	
+			# Iterate over time simulation time indices in range of interest
+			while (time != None and value != None):
 
-			# Check counter has been simulated
-			if counter.vcd_symbol or counter.time_values:
+				# print "Sim Time:", time, "; Time Value:", value
 
-				# Get time values for current time interval
-				tvs = counter.get_time_values(vcd)
+				# Check if time value is valid
+				if 'x' not in value:
 
-				# Iterate over time simulation time indices in range of interest
-				while (time_ind < len(tvs) and tvs[time_ind][0] < curr_time_limit):
+					# Check if counter value already seen
+					if value in malicious[mal_counter_name]:
 
-					# Get value at given time
-					current_val = tvs[time_ind][1]
-					# print "Sim Time:", tvs[time_ind][0], "; Time Value:", current_val
-
-					# Check if time value is valid
-					if 'x' not in current_val:
-
-						# Check if counter value already seen
-						if current_val in malicious[mal_counter_name]:
-
-							# NOT Malicious -> Continue
-							if sws.VERBOSE > 2:
-								print "Repeated Value (%s) --> Not Malicious" % (current_val)
-								print
-							
-							# Mark counter as benign
-							benign = True
-							break
-
-						else:
-
-							# Still possibly malicious: add value to set of simulated counter values
-							malicious[mal_counter_name].add(current_val)
-
-					# Increment time index
-					time_ind += 1
-
-				# Check if malicious counter was not already re-classified (i.e. a repeated value was seen)
-				if not benign:
-
-					# Compute number of possible unique counter values
-					max_possible_values = 2 ** counter.width()
-					if sws.VERBOSE > 2:
-						print "Values Seen/Possible: %d/%d" % (len(malicious[mal_counter_name]), max_possible_values)
-
-					# Classify counter as a constant
-					if len(malicious[mal_counter_name]) == 1:
-						if sws.VERBOSE > 1:
-							print "Constant: " + mal_counter_name
-
-						# Add to constants dict
-						constants[mal_counter_name] = True
-
-					# Classify counter as malicious
-					elif len(malicious[mal_counter_name]) < max_possible_values:
-						if sws.VERBOSE > 1:
-							print "Possible Malicious Symbol: " + mal_counter_name
-
-						# Remove from constants dict if it was previously a constant
-						if mal_counter_name in constants:
-							del constants[mal_counter_name]
-
-					# Classify counter as NOT malicious
-					else:
+						# NOT Malicious -> Continue
 						if sws.VERBOSE > 2:
-							print "Enumerated All Values"
-						benign = True
+							print "Repeated Value (%s) --> Not Malicious" % (value)
+							print
+						
+						# Mark counter as benign
+						benign[mal_counter_name] = True
+						break
 
-				# Check if counter was marked as benign
-				if benign:
-					# Set time index to -1 to indicate benign
-				 	malicious_time_inds[mal_counter_name] = -1
+					else:
+
+						# Still possibly malicious: add value to set of simulated counter values
+						malicious[mal_counter_name].add(value)
+
+				# Get next time value
+				time, value = counter.get_time_value(vcd, curr_time_limit)
+
+			# Check if malicious counter was not already re-classified (i.e. a repeated value was seen)
+			if not benign[mal_counter_name]:
+
+				# Compute number of possible unique counter values
+				max_possible_values = 2 ** counter.width()
+				if sws.VERBOSE > 2:
+					print "Values Seen/Possible: %d/%d" % (len(malicious[mal_counter_name]), max_possible_values)
+
+				# Classify counter as a constant
+				if len(malicious[mal_counter_name]) == 1:
+					if sws.VERBOSE > 1:
+						print "Constant: " + mal_counter_name
+
+					# Add to constants dict
+					constants[mal_counter_name] = True
+
+				# Classify counter as malicious
+				elif len(malicious[mal_counter_name]) < max_possible_values:
+					if sws.VERBOSE > 1:
+						print "Possible Malicious Symbol: " + mal_counter_name
+
+					# Remove from constants dict if it was previously a constant
+					if mal_counter_name in constants:
+						del constants[mal_counter_name]
+
+				# Classify counter as NOT malicious
 				else:
-				 	# Save last time index
-					malicious_time_inds[mal_counter_name] = time_ind
+					if sws.VERBOSE > 2:
+						print "Enumerated All Values"
+					benign[mal_counter_name] = True
 
 		# Remove non-malicious counters
-		for mal_counter_name in malicious_time_inds:
-			if malicious_time_inds[mal_counter_name] == -1:
+		for mal_counter_name in benign:
+			if benign[mal_counter_name]:
 				if mal_counter_name in malicious:
 					del malicious[mal_counter_name]
 				if mal_counter_name in constants:
@@ -258,7 +240,7 @@ def main():
 	##
 
 	# General Switches
-	sws.VERBOSE  = 3
+	sws.VERBOSE  = 0
 	sws.WARNINGS = False
 
 	# DEBUG Switches
@@ -412,7 +394,6 @@ def main():
 	print
 	calculate_and_print_time(task_start_time, task_end_time)
 
-	sys.exit()
 	##
 	# Write counter sizes to JSON file
 	##
