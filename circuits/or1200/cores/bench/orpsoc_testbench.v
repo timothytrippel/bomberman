@@ -44,8 +44,14 @@ module orpsoc_testbench;
 	reg clk   = 0;
 	reg rst_n = 1; // Active LOW
 
+	// Index for dumping arrayed registers (i.e. memories) to VCD
+	integer z;
+
 	// Program Filename to Load
 	integer     k;
+	reg [31:0]  program_index;
+	reg [31:0]  num_tests;
+	reg [31:0]  test_num;
 	reg [255:0] memory_file;
 	 
 	// Define Clock
@@ -512,10 +518,10 @@ module orpsoc_testbench;
 	 	`else
 			`define VCD_SUFFIX ".vcd"
 		`endif
-		
+
 		// Set VCD file path
-		$display("* VCD in %s\n", {`TEST_NAME_STRING,`VCD_SUFFIX});
-		$dumpfile({`TEST_NAME_STRING,`VCD_SUFFIX});
+		$display("* VCD in %s\n", `VCD_FILENAME);
+		$dumpfile(`VCD_FILENAME);
 		
 		`ifndef VCD_DEPTH
 			`define VCD_DEPTH 0
@@ -524,12 +530,23 @@ module orpsoc_testbench;
 		// Set variables to dump to VCD
 		$dumpvars(`VCD_DEPTH, `VCD_PATH);
 
+		// Dump all arrayed variables
+        for(z = 0; z < 32; z++) begin
+        	$dumpvars(0, orpsoc_testbench.dut.or1200_top0.or1200_cpu.or1200_rf.rf_a.mem[z]);
+        	$dumpvars(0, orpsoc_testbench.dut.or1200_top0.or1200_cpu.or1200_rf.rf_b.mem[z]);
+        end
+        // for(z = 0; z < 16; z++) begin
+            // $dumpvars(0, orpsoc_testbench.dut.uart16550_0.regs.receiver.fifo_rx.rfifo.ram[z]);
+            // $dumpvars(0, orpsoc_testbench.dut.uart16550_0.regs.transmitter.fifo_tx.tfifo.ram[z]);
+            // $dumpvars(0, orpsoc_testbench.dut.uart16550_0.regs.receiver.fifo_rx.fifo[z]);
+        // end
 	end
 
 `endif // ifdef VCD
 	 
 	initial begin
-		$display("\n* Starting simulation of design RTL.\n* Test: %s\n", `TEST_NAME_STRING);	
+
+		$display("Starting simulation...");	
 	
 	`ifdef VCD
 		vcd_go = 1;
@@ -542,7 +559,20 @@ module orpsoc_testbench;
 	// 
 	integer i;
 	initial begin
-		i = 0;
+		
+		// Get cmd line arg for number of tests to run
+		test_num = 0;
+        if (! $value$plusargs("num_tests=%d", num_tests)) begin
+        	$display("ERROR: please specify +num_tests=<value> to start.");
+            $finish;
+        end
+
+        // Get cmd line arg for program index to run
+        if (! $value$plusargs("program_index=%d", program_index)) begin
+        	$display("Program index not specified... setting to 0.");
+            program_index = 0;
+        end
+
 		#1;
 		monitor.program_exit = 1;
 	end
@@ -551,7 +581,7 @@ module orpsoc_testbench;
 		$display("--------------------------------------------------------------------------------");
 
 		// Check if simulation done
-		if (i == 16) begin
+		if (test_num == num_tests) begin
 			$display("Simulation Complete (time: %t)", $time);
 			$finish;
 		end
@@ -566,75 +596,67 @@ module orpsoc_testbench;
 			$display();
 
 			// Set simulation program filename
-			if (i == 0) begin
+			if (program_index == 0) begin
 				$display("Loading simulation program (time: %t): helloworld.vmem", $time);
 				memory_file = "simulation/vmem/helloworld.vmem";
-				// $display("Loading simulation program (time: %t): crc.vmem", $time);
-				// memory_file = "simulation/vmem/crc.vmem";
-				i = 15;
 			end
-			else if (i == 1) begin
-				$display("Loading simulation program (time: %t): helloworld.vmem", $time);
-				memory_file = "simulation/vmem/helloworld.vmem";
-				i = 15;
+			else if (program_index == 1) begin
+				$display("Loading simulation program (time: %t): aes.vmem", $time);
+				memory_file = "simulation/vmem/aes.vmem";
 			end
-			// else if (i == 1) begin
-			// 	$display("Loading simulation program (time: %t): aes.vmem", $time);
-			// 	memory_file = "simulation/vmem/aes.vmem";
-			// end
-			else if (i == 2) begin
+			else if (program_index == 2) begin
 				$display("Loading simulation program (time: %t): basicmath.vmem", $time);
 				memory_file = "simulation/vmem/basicmath.vmem";
 			end
-			else if (i == 3) begin
+			else if (program_index == 3) begin
 				$display("Loading simulation program (time: %t): blowfish.vmem", $time);
 				memory_file = "simulation/vmem/blowfish.vmem";
 			end
-			else if (i == 4) begin
+			else if (program_index == 4) begin
 				$display("Loading simulation program (time: %t): crc.vmem", $time);
 				memory_file = "simulation/vmem/crc.vmem";
 			end
-			else if (i == 5) begin
+			else if (program_index == 5) begin
 				$display("Loading simulation program (time: %t): dijkstra.vmem", $time);
 				memory_file = "simulation/vmem/dijkstra.vmem";
 			end
-			else if (i == 6) begin
+			else if (program_index == 6) begin
 				$display("Loading simulation program (time: %t): fft.vmem", $time);
 				memory_file = "simulation/vmem/fft.vmem";
 			end
-			else if (i == 7) begin
+			else if (program_index == 7) begin
 				$display("Loading simulation program (time: %t): limits.vmem", $time);
 				memory_file = "simulation/vmem/limits.vmem";
 			end
-			else if (i == 8) begin
+			else if (program_index == 8) begin
 				$display("Loading simulation program (time: %t): lzfx.vmem", $time);
 				memory_file = "simulation/vmem/lzfx.vmem";
 			end
-			else if (i == 9) begin
+			else if (program_index == 9) begin
 				$display("Loading simulation program (time: %t): qsort.vmem", $time);
 				memory_file = "simulation/vmem/qsort.vmem";
 			end
-			else if (i == 10) begin
+			else if (program_index == 10) begin
 				$display("Loading simulation program (time: %t): randmath.vmem", $time);
 				memory_file = "simulation/vmem/randmath.vmem";
 			end
-			else if (i == 11) begin
+			else if (program_index == 11) begin
 				$display("Loading simulation program (time: %t): rc4.vmem", $time);
 				memory_file = "simulation/vmem/rc4.vmem";
 			end
-			else if (i == 12) begin
+			else if (program_index == 12) begin
 				$display("Loading simulation program (time: %t): rsa.vmem", $time);
 				memory_file = "simulation/vmem/rsa.vmem";
 			end
-			else if (i == 13) begin
+			else if (program_index == 13) begin
 				$display("Loading simulation program (time: %t): sha.vmem", $time);
 				memory_file = "simulation/vmem/sha.vmem";
 			end
-			else if (i == 14) begin
+			else if (program_index == 14) begin
 				$display("Loading simulation program (time: %t): stringsearch.vmem", $time);
 				memory_file = "simulation/vmem/stringsearch.vmem";
 			end
-			else if (i == 15) begin
+			else if (program_index == 15) begin
 				$display("Loading simulation program (time: %t): susan.vmem", $time);
 				memory_file = "simulation/vmem/susan.vmem";
 			end
@@ -667,7 +689,7 @@ module orpsoc_testbench;
 			$display();
 
 			// Increment Test Case Counter
-			i++;
+			test_num++;
 		end
 	end
 

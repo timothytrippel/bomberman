@@ -3,6 +3,7 @@
 #include <math.h>
 #include "fourier.h"
 #include "bareBench.h"
+#include "debug.h"
 
 int invfft=0;
 unsigned MAXSIZE; // small 4096, 8192 inverse, 512 for memory-limited systems
@@ -82,15 +83,15 @@ int old_main() {
  /* regular*/
  fft_float (MAXSIZE,invfft,RealIn,ImagIn,RealOut,ImagOut);
  
- printf("RealOut:\n");
+ DEBUG_PRINT(printf("RealOut:\n");
  for (i=0;i<MAXSIZE;i++)
    printf("%f \t", RealOut[i]);
- printf("\n");
+ printf("\n");)
 
-printf("ImagOut:\n");
+DEBUG_PRINT(printf("ImagOut:\n");
  for (i=0;i<MAXSIZE;i++)
    printf("%f \t", ImagOut[i]);
-   printf("\n");
+   printf("\n");)
 
 /* free(RealIn);
  free(ImagIn);

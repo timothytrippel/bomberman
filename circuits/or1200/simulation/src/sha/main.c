@@ -7,13 +7,14 @@
 #include "bareBench.h"
 #include "sha.h"
 #include "input.h"
+#include "debug.h"
 
 int main()
 {
   SHA_INFO sha_info;
 
   sha_stream(&sha_info, inputString);
-  sha_print(&sha_info);
+  DEBUG_PRINT(sha_print(&sha_info);)
   
   return(0);
 }

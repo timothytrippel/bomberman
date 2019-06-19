@@ -39,6 +39,7 @@
 #include "twain.h"
 
 #include "lzfx.h"
+#include "debug.h"
 
 #define LZFX_HSIZE (1 << (LZFX_HLOG))
 
@@ -312,30 +313,30 @@ int main ( void )
     def_len=sizeof(def_data);
     ret=lzfx_compress(test_data,TEST_DATA_LEN,def_data,&def_len);
 
-    printf("%d\n",ret);
-    printf("%u\n",def_len);
+    DEBUG_PRINT(printf("%d\n",ret);)
+    DEBUG_PRINT(printf("%u\n",def_len);)
     if(ret) return(ret);
     inf_len = sizeof(inf_data);
     ret=lzfx_decompress(def_data,def_len,inf_data,&inf_len);
-    printf("%d\n",ret);
-    printf("%u\n",inf_len);
+    DEBUG_PRINT(printf("%d\n",ret);)
+    DEBUG_PRINT(printf("%u\n",inf_len);)
     if(ret) return(ret);
     if(inf_len!=TEST_DATA_LEN) return(1);
     for(ra=0;ra<TEST_DATA_LEN;ra++) if(inf_data[ra]!=test_data[ra]) break;
     if(ra<TEST_DATA_LEN) return(1);
-    printf("good\n");
+    DEBUG_PRINT(printf("good\n");)
 
     ret=lzfx_decompress_tiny(def_data,def_len,inf_data,&inf_len);
-    printf("%d\n",ret);
-    printf("%u\n",inf_len);
+    DEBUG_PRINT(printf("%d\n",ret);)
+    DEBUG_PRINT(printf("%u\n",inf_len);)
     if(ret) return(ret);
     if(inf_len!=TEST_DATA_LEN) return(1);
     for(ra=0;ra<TEST_DATA_LEN;ra++) if(inf_data[ra]!=test_data[ra]) break;
     if(ra<TEST_DATA_LEN) return(1);
-    printf("good\n");
+    DEBUG_PRINT(printf("good\n");)
 
 
-    fp=fopen("def_data.h","wt");
+    DEBUG_PRINT(fp=fopen("def_data.h","wt");
     if(fp==NULL) return(1);
     fprintf(fp,"\n");
     fprintf(fp,"#define DEF_DATA_LEN %u\n",def_len);
@@ -354,7 +355,7 @@ int main ( void )
     fprintf(fp,"\n");
     fclose(fp);
 
-    printf("done\n");
+    printf("done\n");)
     return(0);
 }
 

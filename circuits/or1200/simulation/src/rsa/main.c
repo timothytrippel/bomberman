@@ -32,6 +32,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "rsa.h"
+#include "debug.h"
 
 /*
  * generate a public key and exponent suitable for RSA encryption like this:
@@ -651,15 +652,15 @@ int main (void) {
     plaintext[3] = 0x6f73; // os
 
     int cnt;
-    printf("Plaintext:\n\r");
+    DEBUG_PRINT(printf("Plaintext:\n\r");
     for(cnt = 0; cnt < KEYLEN; ++cnt)
-      printf("0x%08X\n\r", plaintext[cnt]);
+      printf("0x%08X\n\r", plaintext[cnt]);)
 
     test_rsa_encrypt();
 
-    printf("Cipertext:\n\r");
+    DEBUG_PRINT(printf("Cipertext:\n\r");
     for(cnt = 0; cnt < KEYLEN; ++cnt)
-      printf("0x%08X\n\r", ciphertext[cnt]);
+      printf("0x%08X\n\r", ciphertext[cnt]);)
 
     return 11;
 }

@@ -1,5 +1,5 @@
 
-`timescale 1ns / 1ps
+`timescale 1ns / 100ps
 
 module wiredelay # (
   parameter Delay_g = 0,

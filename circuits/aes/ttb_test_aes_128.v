@@ -163,7 +163,7 @@ module ttb_test_aes_128;
             lfsr_key_enable   = 1'b0;
 
             // Random tests complete
-            $display("Completed %4d random encryptions.", num_tests);
+            $display("Completed %4d random encryptions (time: %t).", num_tests, $time);
         end
 
         // // Start image encryption test

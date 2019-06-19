@@ -21,7 +21,7 @@ INCLUDEDIRS := -I$(ORPSOC_RTL) -I$(DBG_IF_RTL) -I$(UART_RTL)  -I$(DBG_IF_RTL) -I
 
 # Simulation Confingurations
 DUT_TOP_MODULE      := orpsoc_testbench.dut
-NUM_TESTS           := 1
+NUM_TESTS           := 2
 START_TIME          := 0
 TIME_LIMIT          := -1
 TIME_RESOLUTION     := 100000

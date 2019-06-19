@@ -303,6 +303,7 @@ typedef float      TOTAL_TYPE; /* for my PowerPC accelerator only */
 #include <math.h>
 #include "bareBench.h"
 #include "input_small.h"
+#include "debug.h"
 
 int argc = 4;
 char *argv[] = {"susan", "input.pgm", "output.pgm", "-s"};
@@ -377,7 +378,7 @@ char header [100];
   *x_size = getint();
   *y_size = getint();
 
-      printf(" %d %d\n", *x_size, *y_size);
+      DEBUG_PRINT(printf(" %d %d\n", *x_size, *y_size);)
       
 /* }}} */
 
@@ -392,9 +393,9 @@ void put_image(in,x_size,y_size)
   int  x_size,
        y_size;
 {
-  printf("P5\n");
-  printf("%d %d\n",x_size,y_size);
-  printf("255\n");
+  DEBUG_PRINT(printf("P5\n");)
+  DEBUG_PRINT(printf("%d %d\n",x_size,y_size);)
+  DEBUG_PRINT(printf("255\n");)
 }
 
 /* }}} */
@@ -659,15 +660,15 @@ TOTAL_TYPE total;
   total=0.1; /* test for total's type */
   if ( (dt>15) && (total==0) )
   {
-    printf("Distance_thresh (%f) too big for integer arithmetic.\n",dt);
-    printf("Either reduce it to <=15 or recompile with variable \"total\"\n");
-    printf("as a float: see top \"defines\" section.\n");
+    DEBUG_PRINT(printf("Distance_thresh (%f) too big for integer arithmetic.\n",dt);)
+    DEBUG_PRINT(printf("Either reduce it to <=15 or recompile with variable \"total\"\n");)
+    DEBUG_PRINT(printf("as a float: see top \"defines\" section.\n");)
     exit(0);
   }
 
   if ( (2*mask_size+1>x_size) || (2*mask_size+1>y_size) )
   {
-    printf("Mask size (1.5*distance_thresh+1=%d) too big for image (%dx%d).\n",mask_size,x_size,y_size);
+    DEBUG_PRINT(printf("Mask size (1.5*distance_thresh+1=%d) too big for image (%dx%d).\n",mask_size,x_size,y_size);)
     exit(0);
   }
 
@@ -1696,7 +1697,7 @@ corner_list[n].dy=cgy[i*x_size+j];
 corner_list[n].I=in[i*x_size+j];
 n++;
 if(n==MAX_CORNERS){
-      printf("Too many corners.\n");
+      DEBUG_PRINT(printf("Too many corners.\n");)
       exit(1);
          }}}}
 corner_list[n].info=7;
@@ -1913,7 +1914,7 @@ corner_list[n].dx=x/15;
 corner_list[n].dy=y/15;
 n++;
 if(n==MAX_CORNERS){
-      printf("Too many corners.\n");
+      DEBUG_PRINT(printf("Too many corners.\n");)
       exit(1);
          }}}}
 corner_list[n].info=7;
@@ -1977,14 +1978,14 @@ CORNER_LIST corner_list;;
 	  break;
 	case 'd': /* distance threshold */
           if (++argindex >= argc){
-	    printf ("No argument following -d\n");
+	    DEBUG_PRINT(printf ("No argument following -d\n");)
 	    exit(0);}
 	  dt=atof(argv[argindex]);
           if (dt<0) three_by_three=1;
 	  break;
 	case 't': /* brightness threshold */
           if (++argindex >= argc){
-	    printf ("No argument following -t\n");
+	    DEBUG_PRINT(printf ("No argument following -t\n");)
 	    exit(0);}
 	  bt=atoi(argv[argindex]);
 	  break;
@@ -2003,7 +2004,7 @@ CORNER_LIST corner_list;;
   {
     case 0:
       /* {{{ smoothing */
-          puts("smoothing\n");
+          DEBUG_PRINT(puts("smoothing\n");)
       setup_brightness_lut(&bp,bt,2);
       susan_smoothing(three_by_three,in,dt,x_size,y_size,bp);
       break;
@@ -2011,7 +2012,7 @@ CORNER_LIST corner_list;;
 /* }}} */
     case 1:
       /* {{{ edges */
-          puts("edges\n");
+          DEBUG_PRINT(puts("edges\n");)
       r   = (int *) malloc(x_size * y_size * sizeof(int));
       setup_brightness_lut(&bp,bt,6);
 
@@ -2042,7 +2043,7 @@ CORNER_LIST corner_list;;
 /* }}} */
     case 2:
       /* {{{ corners */
-          puts("corners\n");
+          DEBUG_PRINT(puts("corners\n");)
       r   = (int *) malloc(x_size * y_size * sizeof(int));
       setup_brightness_lut(&bp,bt,6);
 

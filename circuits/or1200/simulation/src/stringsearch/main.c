@@ -16,6 +16,7 @@
 #include <string.h>
 #include <limits.h>
 #include "bareBench.h"
+#include "debug.h"
 
 static size_t table[UCHAR_MAX + 1];
 static size_t len;
@@ -1701,11 +1702,11 @@ NULL};
       {
             init_search(find_strings[i]);
             here = strsearch(search_strings[i]);
-            printf("\"%s\" is%s in \"%s\"", find_strings[i],
+            DEBUG_PRINT(printf("\"%s\" is%s in \"%s\"", find_strings[i],
                   here ? "" : " not", search_strings[i]);
             if (here)
                   printf(" [\"%s\"]", here);
-            printf("\n");
+            printf("\n");)
       }
       }
 

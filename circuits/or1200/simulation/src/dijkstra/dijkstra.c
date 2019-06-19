@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "bareBench.h"
 #include "input.h"
+#include "debug.h"
 
 #define NUM_NODES                          100
 #define NONE                               9999
@@ -51,7 +52,7 @@ void enqueue (int iNode, int iDist, int iPrev)
   
   if (!qNew) 
     {
-      printf("Out of memory.\n");
+      DEBUG_PRINT(printf("Out of memory.\n");)
       exit(1);
     }
   qNew->iNode = iNode;
@@ -106,7 +107,7 @@ int dijkstra(int chStart, int chEnd)
     }
   if (chStart == chEnd) 
     {
-      printf("Shortest path is 0 in cost. Just stay where you are.\n");
+      DEBUG_PRINT(printf("Shortest path is 0 in cost. Just stay where you are.\n");)
     }
   else
     {
@@ -132,10 +133,10 @@ int dijkstra(int chStart, int chEnd)
 	    }
 	}
       
-      printf("Shortest path is %d in cost. ", rgnNodes[chEnd].iDist);
+      DEBUG_PRINT(printf("Shortest path is %d in cost. ", rgnNodes[chEnd].iDist);
       printf("Path is: ");
       print_path(rgnNodes, chEnd);
-      printf("\n");
+      printf("\n");)
     }
     return 0;
 }

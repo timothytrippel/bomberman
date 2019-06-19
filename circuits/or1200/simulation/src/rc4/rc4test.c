@@ -3,6 +3,7 @@
 //-------------------------------------------------------------------
 
 #include "testdata.h"
+#include "debug.h"
 
 void hexstring ( unsigned int d ); //printf("%08X\n");
 void hexstrings ( unsigned int d ); //printf("%08X ");
@@ -45,7 +46,6 @@ unsigned char udata[TESTDATALEN];
 * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-
 typedef struct
 {
     unsigned int x;
@@ -82,7 +82,6 @@ void arcfour_init(ArcfourContext *ctx, const unsigned char *key, unsigned int ke
     }
 }
 
-
 unsigned int arcfour_byte(ArcfourContext *ctx)
 {
     unsigned int x;
@@ -102,16 +101,11 @@ unsigned int arcfour_byte(ArcfourContext *ctx)
     return state[(sx + sy) & 0xff];
 }
 
-
 void arcfour_encrypt(ArcfourContext *ctx, unsigned char *dest, const unsigned char *src, unsigned int len)
 {
     unsigned int i;
     for (i = 0; i < len; i++) dest[i] = src[i] ^ arcfour_byte(ctx);
 }
-
-
-
-
 
 int run_tea_test ( void )
 {
@@ -128,7 +122,7 @@ int run_tea_test ( void )
 
     ArcfourContext mycontext;
 
-    hexstring(0x12345678);
+    DEBUG_PRINT(hexstring(0x12345678);)
 
     errors=0;
 
@@ -151,18 +145,18 @@ int run_tea_test ( void )
         if(udata[ra]!=testdata[ra])
         {
             errors++;
-            hexstrings(ra); hexstrings(udata[ra]); hexstring(testdata[ra]);
+            DEBUG_PRINT(hexstrings(ra); hexstrings(udata[ra]); hexstring(testdata[ra]);)
         }
         if(errors>20) break;
     }
-    hexstring(errors);
+    DEBUG_PRINT(hexstring(errors);)
     if(errors)
     {
-        hexstring(0xBADBAD99);
+        DEBUG_PRINT(hexstring(0xBADBAD99);)
         return(1);
     }
 
-    hexstring(0x12345678);
+    DEBUG_PRINT(hexstring(0x12345678);)
     return(0);
 }
 

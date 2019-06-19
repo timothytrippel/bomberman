@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "debug.h"
 
 
 FILE *fpout;
@@ -33,7 +34,7 @@ int main ( void )
 
     prand=0x1234;
 
-    fpout=fopen("abcmath.c","wt");
+    DEBUG_PRINT(fpout=fopen("abcmath.c","wt");
     if(fpout==NULL) return(1);
 
     fprintf(fpout,"\n");
@@ -62,7 +63,7 @@ int main ( void )
     for(ra=0;ra<16;ra++)
     {
         fprintf(fpout,"prand=prand32(prand); %c=prand;\n",'a'+ra);
-    }
+    })
     for(ra=0;ra<2000;ra++)
     {
         prand=prand32(prand);
@@ -94,34 +95,34 @@ int main ( void )
         prand=prand32(prand);
         switch((prand>>24)&15)
         {
-            case  0: fprintf(fpout,"%c = %c + %c;\n",rb+'a',rc+'a',rd+'a'); break;
-            case  1: fprintf(fpout,"%c = %c - %c;\n",rb+'a',rc+'a',rd+'a'); break;
-            case  2: fprintf(fpout,"%c = %c * %c;\n",rb+'a',rc+'a',rd+'a'); break;
-            case  3: fprintf(fpout,"%c = %c ^ %c;\n",rb+'a',rc+'a',rd+'a'); break;
-            case  4: fprintf(fpout,"%c = %c & %c;\n",rb+'a',rc+'a',rd+'a'); break;
-            case  5: fprintf(fpout,"%c = %c | %c;\n",rb+'a',rc+'a',rd+'a'); break;
-            case  6: fprintf(fpout,"%c = %c + %c;\n",rb+'a',rc+'a',rd+'a'); break;
-            case  7: fprintf(fpout,"prand=prand32(prand); %c = prand;\n",rb+'a'); break;
+            case  0: DEBUG_PRINT(fprintf(fpout,"%c = %c + %c;\n",rb+'a',rc+'a',rd+'a');) break;
+            case  1: DEBUG_PRINT(fprintf(fpout,"%c = %c - %c;\n",rb+'a',rc+'a',rd+'a');) break;
+            case  2: DEBUG_PRINT(fprintf(fpout,"%c = %c * %c;\n",rb+'a',rc+'a',rd+'a');) break;
+            case  3: DEBUG_PRINT(fprintf(fpout,"%c = %c ^ %c;\n",rb+'a',rc+'a',rd+'a');) break;
+            case  4: DEBUG_PRINT(fprintf(fpout,"%c = %c & %c;\n",rb+'a',rc+'a',rd+'a');) break;
+            case  5: DEBUG_PRINT(fprintf(fpout,"%c = %c | %c;\n",rb+'a',rc+'a',rd+'a');) break;
+            case  6: DEBUG_PRINT(fprintf(fpout,"%c = %c + %c;\n",rb+'a',rc+'a',rd+'a');) break;
+            case  7: DEBUG_PRINT(fprintf(fpout,"prand=prand32(prand); %c = prand;\n",rb+'a');) break;
 
-            case  8: fprintf(fpout,"if(%c>%c) { prand=prand32(prand); %c = prand; }\n",rb+'a',rc+'a',rd+'a'); break;
-            case  9: fprintf(fpout,"if(%c<%c) { prand=prand32(prand); %c = prand; }\n",rb+'a',rc+'a',rd+'a'); break;
-            case 10: fprintf(fpout,"if(%c==%c) { prand=prand32(prand); %c = prand; }\n",rb+'a',rc+'a',rd+'a'); break;
-            case 11: fprintf(fpout,"if(%c>=%c) { prand=prand32(prand); %c = prand; }\n",rb+'a',rc+'a',rd+'a'); break;
-            case 12: fprintf(fpout,"if(%c<=%c) { prand=prand32(prand); %c = prand; }\n",rb+'a',rc+'a',rd+'a'); break;
+            case  8: DEBUG_PRINT(fprintf(fpout,"if(%c>%c) { prand=prand32(prand); %c = prand; }\n",rb+'a',rc+'a',rd+'a');) break;
+            case  9: DEBUG_PRINT(fprintf(fpout,"if(%c<%c) { prand=prand32(prand); %c = prand; }\n",rb+'a',rc+'a',rd+'a');) break;
+            case 10: DEBUG_PRINT(fprintf(fpout,"if(%c==%c) { prand=prand32(prand); %c = prand; }\n",rb+'a',rc+'a',rd+'a');) break;
+            case 11: DEBUG_PRINT(fprintf(fpout,"if(%c>=%c) { prand=prand32(prand); %c = prand; }\n",rb+'a',rc+'a',rd+'a');) break;
+            case 12: DEBUG_PRINT(fprintf(fpout,"if(%c<=%c) { prand=prand32(prand); %c = prand; }\n",rb+'a',rc+'a',rd+'a');) break;
             default:
-                fprintf(fpout,"%c = %c | %c;\n",rb+'a',rc+'a',rd+'a'); break;
+                DEBUG_PRINT(fprintf(fpout,"%c = %c | %c;\n",rb+'a',rc+'a',rd+'a'); break;)
                 break;
         }
     }
 
+    DEBUG_PRINT(
     for(ra=1;ra<16;ra++)
     {
         fprintf(fpout,"a += %c;\n",'a'+ra);
     }
-    fprintf(fpout,"return(a);\n");
+    fprintf(fpout,"return(a);\n");)
 
-
-    fprintf(fpout,"}\n");
-    fprintf(fpout,"\n");
+    DEBUG_PRINT(fprintf(fpout,"}\n");)
+    DEBUG_PRINT(fprintf(fpout,"\n");)
     return(0);
 }
