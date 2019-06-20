@@ -26,7 +26,8 @@ if [[ $LOGGING -eq 1 ]]; then
 	(time vvp \
 		${OUTPUT_DIR}/${DESIGN}.vvp \
 		-DVCD_FILENAME=\"${OUTPUT_DIR}/${DESIGN}.vcd\" \
-		+num_tests=${NUM_TESTS}) >> ${VCD_LOG_FILE} 2>&1
+		+num_tests=${NUM_TESTS} \
+		+program_index=${PROGRAM_NUM}) >> ${VCD_LOG_FILE} 2>&1
 else
 
 	# Print status
@@ -36,5 +37,6 @@ else
 	time vvp \
 		${OUTPUT_DIR}/${DESIGN}.vvp \
 		-DVCD_FILENAME=\"${OUTPUT_DIR}/${DESIGN}.vcd\" \
-		+num_tests=${NUM_TESTS}
+		+num_tests=${NUM_TESTS} \
+		+program_index=${PROGRAM_NUM}
 fi

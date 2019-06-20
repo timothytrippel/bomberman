@@ -4,14 +4,11 @@
 # User-Defined Configurations
 #-------------------------------------------------------------------------------
 
-# Design
-DESIGNS='uart'
-# DESIGNS='aes'
+# Clock Basename (for IVL backend)
 CLK_BASENAME='clk'
 
 # Directories
 BASE_DIR='/home/gridsan/TI27457/ttb'
-LOGS_DIR_TAG=''
 
 # Resources
 # PROCESSOR=opteron
@@ -19,34 +16,42 @@ PROCESSOR=xeon-e5
 MEMORY=128gb
 # MEMORY=64gb
 
-# Num Total (High Level) Test Cases
-# AES    --> number of encryptions performed
-# UART   --> number of sets of 16 bytes transmitted/received
-# OR1200 --> number of (randomly selected) programs executed
-# NUM_TESTS=50000
-# NUM_TESTS=100
-NUM_TESTS=1
-
-# Counter Analysis Time Range 
-# (in simulation timescale units)
-START_TIME=0
+# Design Configurations
+# # AES
+# DESIGN='aes'
+# NUM_TESTS=50
+# START_TIME=0
+# TIME_LIMIT=-1
 # TIME_RESOLUTION=100
-# START_TIME=5000
-TIME_RESOLUTION=10000
-# TIME_RESOLUTION=5000
-TIME_LIMIT=-1
+# NUM_MALICIOUS_CNTRS=0
 
-# Num Malcious Counters to Add
+# # UART
+# DESIGN='uart'
+# NUM_TESTS=1
+# START_TIME=0
+# TIME_LIMIT=-1
+# TIME_RESOLUTION=10000
+# NUM_MALICIOUS_CNTRS=0
+
+# OR1200
+DESIGN='or1200'
+NUM_TESTS=2
+START_TIME=0
+TIME_LIMIT=-1
+TIME_RESOLUTION=100000
 NUM_MALICIOUS_CNTRS=0
+# PROGRAM_NUMS='0'
+PROGRAM_NUMS='0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15'
 
 # Flags
 OVERWRITE_RESULTS=0
-INTERACTIVE=1
-LOGGING=0
+INTERACTIVE=0
+LOGGING=1
 
 #-------------------------------------------------------------------------------
 # System Configurations (DO NOT EDIT)
 #-------------------------------------------------------------------------------
+HDL_BASE_DIR="${BASE_DIR}/circuits/${DESIGN}"
 SLURM_SCRIPTS_DIR="${BASE_DIR}/circuits/scripts"
 
 #-------------------------------------------------------------------------------
@@ -106,16 +111,19 @@ gen_vcd() {
 	if [[ $INTERACTIVE -eq 1 ]]; then
 
 		# Run job interactively
+		pushd ${HDL_BASE_DIR} > /dev/null
 		source ${SLURM_SCRIPTS_DIR}/gen_vcd.sbatch
+		popd > /dev/null
 	else
 
 		# Run job non-interactively
 		VCD_JOB_ID=$(\
 			sbatch \
+				-D ${HDL_BASE_DIR} \
 				--job-name=${DESIGN}.vcd \
 				--constraint=${PROCESSOR} \
 				--dependency=afterok:${VVP_JOB_ID##* } \
-				--export=LOGGING=${LOGGING},OUTPUT_DIR=${OUTPUT_DIR},DESIGN=${DESIGN},NUM_TESTS=${NUM_TESTS} \
+				--export=LOGGING=${LOGGING},OUTPUT_DIR=${OUTPUT_DIR},DESIGN=${DESIGN},NUM_TESTS=${NUM_TESTS},PROGRAM_NUM=${PROGRAM_NUM} \
 				--mem=${MEMORY} \
 				${SLURM_SCRIPTS_DIR}/gen_vcd.sbatch)
 	fi	
@@ -139,18 +147,10 @@ analyze_counters() {
 	fi
 }
 
-#-------------------------------------------------------------------------------
-# Launch tests
-#-------------------------------------------------------------------------------
-
-# Iterate over designs
-for DESIGN in ${DESIGNS}; do
-
-	# Set HDL source directory
-	HDL_BASE_DIR="${BASE_DIR}/circuits/${DESIGN}"
+launch_tests() {
 
 	# Set output directory
-	OUTPUT_DIR="${BASE_DIR}/circuits/${DESIGN}-logs-${NUM_TESTS}tests-${TIME_RESOLUTION}res-100ps${LOGS_DIR_TAG}"
+	OUTPUT_DIR="${HDL_BASE_DIR}/tjfree_${NUM_TESTS}tests-${TIME_RESOLUTION}res-100ps${OUT_DIR_TAG}-wprinting"
 
 	# Create Output Directory
 	echo "Creating output directory (${OUTPUT_DIR})..."
@@ -168,6 +168,112 @@ for DESIGN in ${DESIGNS}; do
 	# Analyze design for counters
 	echo "Analyzing design for counters with time limit: ${TIME_LIMIT} ps ..."
 	analyze_counters
-done
+}
+
+#-------------------------------------------------------------------------------
+# Launch tests
+#-------------------------------------------------------------------------------
+
+# Launch tests based on design
+case $DESIGN in
+
+	aes)
+		OUT_DIR_TAG=''
+		launch_tests
+	;;
+
+	uart)
+		OUT_DIR_TAG=''
+		launch_tests
+	;;
+
+	or1200)
+	
+		# Iterate over OR1200 simulation programs
+		for PROGRAM_NUM in ${PROGRAM_NUMS}; do
+
+			case $PROGRAM_NUM in
+
+				0)
+					OUT_DIR_TAG='-helloworld'
+				;;
+
+				1)
+					OUT_DIR_TAG='-aes'
+				;;
+
+				2)
+					OUT_DIR_TAG='-basicmath'
+				;;
+
+				3)
+					OUT_DIR_TAG='-blowfish'
+				;;
+
+				4)
+					OUT_DIR_TAG='-crc'
+				;;
+
+				5)
+					OUT_DIR_TAG='-dijkstra'
+				;;
+
+				6)
+					OUT_DIR_TAG='-fft'
+				;;
+
+				7)
+					OUT_DIR_TAG='-limits'
+				;;
+
+				8)
+					OUT_DIR_TAG='-lzfx'
+				;;
+
+				9)
+					OUT_DIR_TAG='-qsort'
+				;;
+
+				10)
+					OUT_DIR_TAG='-randmath'
+				;;
+
+				11)
+					OUT_DIR_TAG='-rc4'
+				;;
+
+				12)
+					OUT_DIR_TAG='-rsa'
+				;;
+
+				13)
+					OUT_DIR_TAG='-sha'
+				;;
+
+				14)
+					OUT_DIR_TAG='-stringsearch'
+				;;
+
+				15)
+					OUT_DIR_TAG='-susan'
+				;;
+
+				*)
+					echo "ERROR: invalid program number name... abort."
+					exit
+				;;
+			esac
+
+			# Launch counter simulations and analysis
+			launch_tests
+			
+		done
+	;;
+
+	*)
+		echo "ERROR: invalid design name... abort."
+		exit
+	;;
+esac
 
 echo "Done."

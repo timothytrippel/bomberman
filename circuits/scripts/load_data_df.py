@@ -8,6 +8,9 @@ import os
 import sys
 import json
 import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 def load_data_df_wf(data_dir):
 	coal_counter_data = {
@@ -220,3 +223,26 @@ def load_counter_sizes(data_dir):
 	            f.close()
 
 	return counter_sizes_data
+
+def plot_counter_df(fig_width, fig_height, counter_data_dir, line_separators=[], save_as_pdf=False, pdf_fname='temp.pdf'):
+	
+	# Load Data
+	counter_df = load_data_df_lf(counter_data_dir)
+
+	# Plot Data
+	fig, ax = plt.subplots(1, 1, figsize=(fig_width, fig_height), dpi=200)
+	sns.lineplot(x="Time", y="Num. Counters", hue="Type", style="Class", data=counter_df, ax=ax)
+	ax.set_ylabel('# Malicious Counters')
+	ax.set_xlabel('Time (ns)')
+	plt.setp(ax.lines[0], linewidth=5)
+	plt.setp(ax.lines[2], linewidth=5)
+	ax.grid()
+	plt.tight_layout(h_pad=1)
+
+	# Add Line Separators
+	for x_coord in line_separators:
+		plt.axvline(x=x_coord, color='k', linestyle='-')
+
+	# Save as PDF
+	if save_as_pdf:
+		plt.savefig(pdf_fname, format='pdf')

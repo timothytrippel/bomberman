@@ -21,7 +21,7 @@ case $DESIGN in
 	;;
 
 	or1200)
-		DUT_TOP_MODULE="or1200"
+		DUT_TOP_MODULE="orpsoc_testbench.dut"
 	;;
 
 	*)
@@ -42,7 +42,7 @@ if [[ $LOGGING -eq 1 ]]; then
 
 	# Analyze design for counters
 	(time pypy \
-		${OUTPUT_DIR}/../../scripts/analyze.py \
+		${OUTPUT_DIR}/../../../scripts/analyze.py \
 		${START_TIME} \
 		${TIME_LIMIT} \
 		${TIME_RESOLUTION} \
@@ -55,7 +55,7 @@ else
 
 	# Analyze design for counters
 	time pypy \
-		${OUTPUT_DIR}/../../scripts/analyze.py \
+		${OUTPUT_DIR}/../../../scripts/analyze.py \
 		${START_TIME} \
 		${TIME_LIMIT} \
 		${TIME_RESOLUTION} \
