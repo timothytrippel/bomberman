@@ -21,7 +21,7 @@ case $DESIGN in
 	;;
 
 	or1200)
-		DUT_TOP_MODULE="orpsoc_testbench.dut"
+		DUT_TOP_MODULE="orpsoc_testbench.dut.or1200_top0"
 	;;
 
 	*)

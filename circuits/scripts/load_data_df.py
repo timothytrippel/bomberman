@@ -231,7 +231,7 @@ def plot_counter_df(fig_width, fig_height, counter_data_dir, line_separators=[],
 
 	# Plot Data
 	fig, ax = plt.subplots(1, 1, figsize=(fig_width, fig_height), dpi=200)
-	sns.lineplot(x="Time", y="Num. Counters", hue="Type", style="Class", data=counter_df, ax=ax)
+	sns.scatterplot(x="Time", y="Num. Counters", hue="Type", style="Class", data=counter_df, ax=ax)
 	ax.set_ylabel('# Malicious Counters')
 	ax.set_xlabel('Time (ns)')
 	plt.setp(ax.lines[0], linewidth=5)

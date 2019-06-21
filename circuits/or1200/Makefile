@@ -20,7 +20,7 @@ TESTBENCH := $(filter-out %-defines.v %-params.v %_defines.v, $(TESTBENCH))
 INCLUDEDIRS := -I$(ORPSOC_RTL) -I$(DBG_IF_RTL) -I$(UART_RTL)  -I$(DBG_IF_RTL) -I$(OR1200_RTL) -I$(TEST_BENCH)
 
 # Simulation Confingurations
-DUT_TOP_MODULE      := orpsoc_testbench.dut
+DUT_TOP_MODULE      := orpsoc_testbench.dut.or1200_top0
 NUM_TESTS           := 2
 START_TIME          := 0
 TIME_LIMIT          := -1

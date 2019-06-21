@@ -41,12 +41,13 @@ TIME_LIMIT=-1
 TIME_RESOLUTION=100000
 NUM_MALICIOUS_CNTRS=0
 # PROGRAM_NUMS='0'
-PROGRAM_NUMS='0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15'
+PROGRAM_NUMS='0 1 4 7 10 11 12'
+# PROGRAM_NUMS='0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15'
 
 # Flags
 OVERWRITE_RESULTS=0
-INTERACTIVE=1
-LOGGING=0
+INTERACTIVE=0
+LOGGING=1
 
 #-------------------------------------------------------------------------------
 # System Configurations (DO NOT EDIT)
@@ -120,7 +121,7 @@ gen_vcd() {
 		VCD_JOB_ID=$(\
 			sbatch \
 				-D ${HDL_BASE_DIR} \
-				--job-name=${DESIGN}.vcd \
+				--job-name=${OUT_DIR_TAG}.vcd \
 				--constraint=${PROCESSOR} \
 				--dependency=afterok:${VVP_JOB_ID##* } \
 				--export=LOGGING=${LOGGING},OUTPUT_DIR=${OUTPUT_DIR},DESIGN=${DESIGN},NUM_TESTS=${NUM_TESTS},PROGRAM_NUM=${PROGRAM_NUM} \
@@ -138,7 +139,7 @@ analyze_counters() {
 
 		# Run job non-interactively
 		sbatch \
-			--job-name=${DESIGN}.${TIME_LIMIT}.ac \
+			--job-name=${OUT_DIR_TAG}.ac \
 			--constraint=${PROCESSOR} \
 			--dependency=afterok:${DOT_JOB_ID##* },${VCD_JOB_ID##* } \
 			--export=LOGGING=${LOGGING},OUTPUT_DIR=${OUTPUT_DIR},DESIGN=${DESIGN},START_TIME=${START_TIME},TIME_LIMIT=${TIME_LIMIT},TIME_RESOLUTION=${TIME_RESOLUTION},NUM_MALICIOUS_CNTRS=${NUM_MALICIOUS_CNTRS} \
@@ -150,7 +151,7 @@ analyze_counters() {
 launch_tests() {
 
 	# Set output directory
-	OUTPUT_DIR="${HDL_BASE_DIR}/tjfree_${NUM_TESTS}tests-${TIME_RESOLUTION}res-100ps${OUT_DIR_TAG}-wprinting"
+	OUTPUT_DIR="${HDL_BASE_DIR}/tjfree_${NUM_TESTS}tests-${TIME_RESOLUTION}res-100ps-${OUT_DIR_TAG}"
 
 	# Create Output Directory
 	echo "Creating output directory (${OUTPUT_DIR})..."
@@ -195,67 +196,67 @@ case $DESIGN in
 			case $PROGRAM_NUM in
 
 				0)
-					OUT_DIR_TAG='-helloworld'
+					OUT_DIR_TAG='helloworld'
 				;;
 
 				1)
-					OUT_DIR_TAG='-aes'
+					OUT_DIR_TAG='aes'
 				;;
 
 				2)
-					OUT_DIR_TAG='-basicmath'
+					OUT_DIR_TAG='basicmath'
 				;;
 
 				3)
-					OUT_DIR_TAG='-blowfish'
+					OUT_DIR_TAG='blowfish'
 				;;
 
 				4)
-					OUT_DIR_TAG='-crc'
+					OUT_DIR_TAG='crc'
 				;;
 
 				5)
-					OUT_DIR_TAG='-dijkstra'
+					OUT_DIR_TAG='dijkstra'
 				;;
 
 				6)
-					OUT_DIR_TAG='-fft'
+					OUT_DIR_TAG='fft'
 				;;
 
 				7)
-					OUT_DIR_TAG='-limits'
+					OUT_DIR_TAG='limits'
 				;;
 
 				8)
-					OUT_DIR_TAG='-lzfx'
+					OUT_DIR_TAG='lzfx'
 				;;
 
 				9)
-					OUT_DIR_TAG='-qsort'
+					OUT_DIR_TAG='qsort'
 				;;
 
 				10)
-					OUT_DIR_TAG='-randmath'
+					OUT_DIR_TAG='randmath'
 				;;
 
 				11)
-					OUT_DIR_TAG='-rc4'
+					OUT_DIR_TAG='rc4'
 				;;
 
 				12)
-					OUT_DIR_TAG='-rsa'
+					OUT_DIR_TAG='rsa'
 				;;
 
 				13)
-					OUT_DIR_TAG='-sha'
+					OUT_DIR_TAG='sha'
 				;;
 
 				14)
-					OUT_DIR_TAG='-stringsearch'
+					OUT_DIR_TAG='stringsearch'
 				;;
 
 				15)
-					OUT_DIR_TAG='-susan'
+					OUT_DIR_TAG='susan'
 				;;
 
 				*)
