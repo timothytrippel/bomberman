@@ -103,8 +103,8 @@ cleanall: clean
 	@$(MAKE) cleanall -C $(TGT_TTB_DIR)
 
 clean:
-	@find . -maxdepth 1 -name "*.dot" -print0 | xargs -0 rm; \
-	find . -maxdepth 1 -name "*.vvp" -print0 | xargs -0 rm; \
-	find . -maxdepth 1 -name "*.vcd" -print0 | xargs -0 rm; \
-	find . -maxdepth 1 -name "*.json" -print0 | xargs -0 rm; \
-	find . -maxdepth 1 -name "*.log" -print0 | xargs -0 rm
+	@find . -maxdepth 1 -name "*.dot" -print0 | xargs -0 rm -f; \
+	find . -maxdepth 1 -name "*.vvp" -print0 | xargs -0 rm -f; \
+	find . -maxdepth 1 -name "*.vcd" -print0 | xargs -0 rm -f; \
+	find . -maxdepth 1 -name "*.json" -print0 | xargs -0 rm -f; \
+	find . -maxdepth 1 -name "*.log" -print0 | xargs -0 rm -f

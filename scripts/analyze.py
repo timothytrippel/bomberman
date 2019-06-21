@@ -84,10 +84,11 @@ def classify_counters(counter_type, signals, vcd, counters, start_time, time_lim
 		
 	for curr_time_limit in time_analysis_range:
 
-		print "--------------------------------------------------------------------------------"
-		print "Analyzing simulation at time interval:"
-		print "[%d (*%s), %d (*%s)]" % \
-		(start_time, timescale_str, curr_time_limit, timescale_str)
+		if sws.VERBOSE > 1:
+			print "--------------------------------------------------------------------------------"
+			print "Analyzing simulation at time interval:"
+			print "[%d (*%s), %d (*%s)]" % \
+			(start_time, timescale_str, curr_time_limit, timescale_str)
 
 		# Iterate over (potentially) malicious counters
 		for mal_counter_name in malicious:
@@ -170,14 +171,27 @@ def classify_counters(counter_type, signals, vcd, counters, start_time, time_lim
 					del constants[mal_counter_name]
 
 		# Create counter stats objects
-		print "# Possible:  %d" % (len(counters))
-		print "# Not Simd:  %d" % (len(skipped))
-		print "# Constants: %d" % (len(constants))
-		print "# Malicious: %d" % (len(malicious) - len(constants))
+		if sws.VERBOSE > 1:
+			print "# Possible:  %d" % (len(counters))
+			print "# Not Simd:  %d" % (len(skipped))
+			print "# Constants: %d" % (len(constants))
+			print "# Malicious: %d" % (len(malicious) - len(constants))
 
 		# Save counter stats to JSON file
 		json_filename = json_base_filename + "." + counter_type + "." + str(curr_time_limit) + ".json"
 		export_stats_json(len(counters), len(skipped), len(constants), len(malicious) - len(constants), json_filename)
+
+	# Print remaining malicious signals/constants
+	print
+	print "Malicious Signals:"
+	for mal_counter_name in malicious:
+		if mal_counter_name not in constants:
+			print "	%s" % (mal_counter_name)
+	print
+	print "Constants:"
+	for const_counter_name in constants:
+		print "	%s" % (const_counter_name)
+	print
 
 def analyze_counters(signals, vcd, coal_counters, dist_counters, start_time, time_limit, time_resolution, json_base_filename):
 
@@ -185,6 +199,7 @@ def analyze_counters(signals, vcd, coal_counters, dist_counters, start_time, tim
 	# Analyze Coalesced Counters
 	##
 	print
+	print "--------------------------------------------------------------------------------"
 	print "Finding malicious coalesced signals..."
 	task_start_time    = time.time()
 	classify_counters("coal", signals, vcd, coal_counters, start_time, time_limit, time_resolution, json_base_filename)
@@ -195,7 +210,7 @@ def analyze_counters(signals, vcd, coal_counters, dist_counters, start_time, tim
 	##
 	# Analyze Distributed Counters
 	##
-	print
+	print "--------------------------------------------------------------------------------"
 	print "Finding malicious distributed signals..."
 	task_start_time    = time.time()
 	classify_counters("dist", signals, vcd, dist_counters, start_time, time_limit, time_resolution, json_base_filename)
@@ -203,6 +218,7 @@ def analyze_counters(signals, vcd, coal_counters, dist_counters, start_time, tim
 	calculate_and_print_time(task_start_time, task_end_time)
 	print
 
+	print "--------------------------------------------------------------------------------"
 	print "Analysis complete."
 	print
 

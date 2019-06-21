@@ -45,8 +45,8 @@ PROGRAM_NUMS='0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15'
 
 # Flags
 OVERWRITE_RESULTS=0
-INTERACTIVE=0
-LOGGING=1
+INTERACTIVE=1
+LOGGING=0
 
 #-------------------------------------------------------------------------------
 # System Configurations (DO NOT EDIT)
