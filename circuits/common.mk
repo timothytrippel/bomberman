@@ -23,6 +23,10 @@ else
 	OUT_FILE_BASENAME := $(OUT_DIR)/$(TARGET)
 endif
 
+# Check program number
+ifndef PROGRAM_NUM
+	PROGRAM_NUM := 0
+endif
 
 all: output_dir script
 
@@ -61,10 +65,12 @@ $(OUT_FILE_BASENAME).vcd: $(OUT_FILE_BASENAME).vvp
 	@echo "Starting simulation with ${NUM_TESTS} tests ..."; \
 	if [ $(LOG) == 0 ]; then \
 		vvp $< -DVCD_FILENAME=\"$@\" \
-			+num_tests=$(NUM_TESTS); \
+			+num_tests=$(NUM_TESTS) \
+			+program_index=${PROGRAM_NUM}; \
 	else \
 		vvp $< -DVCD_FILENAME=\"$@\" \
-			+num_tests=$(NUM_TESTS) 2>&1 | tee $(OUT_FILE_BASENAME).vcd.log; \
+			+num_tests=$(NUM_TESTS) \
+			+program_index=${PROGRAM_NUM} 2>&1 | tee $(OUT_FILE_BASENAME).vcd.log; \
 	fi;
 
 # IVL Simulation (Step 1: Executable Generation)

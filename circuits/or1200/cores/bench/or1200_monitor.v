@@ -192,8 +192,12 @@ module or1200_monitor;
 			`OR1200_MONITOR_CRASH_TRACE_SIZE);
 
 	      $fdisplay(fgeneral, "PC\t\tINSTR");
+	      $display("ERROR - no instruction at PC %h", `OR1200_TOP.`CPU_cpu.`CPU_except.wb_pc);
+	      $display("Crash trace: Last %d instructions: ",`OR1200_MONITOR_CRASH_TRACE_SIZE);
+	      $display("PC\t\tINSTR");
 	      for(i=`OR1200_MONITOR_CRASH_TRACE_SIZE-1;i>=0;i=i-1) begin
-		 $fdisplay(fgeneral, "%h\t%h",addr_trace[i], insn_trace[i]);
+		 	$fdisplay(fgeneral, "%h\t%h",addr_trace[i], insn_trace[i]);
+		 	$display("%h\t%h",addr_trace[i], insn_trace[i]);
 	      end
 	      $display("*");	      
 	      $display("* or1200_monitor : OR1200 crash detected (suspected CPU PC corruption)");

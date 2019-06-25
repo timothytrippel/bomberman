@@ -183,12 +183,12 @@ def classify_counters(counter_type, signals, vcd, counters, start_time, time_lim
 
 	# Print remaining malicious signals/constants
 	print
-	print "Malicious Signals:"
+	print "Malicious Signals (%d):" % (len(malicious) - len(constants))
 	for mal_counter_name in malicious:
 		if mal_counter_name not in constants:
 			print "	%s" % (mal_counter_name)
 	print
-	print "Constants:"
+	print "Constants (%d):" % (len(constants))
 	for const_counter_name in constants:
 		print "	%s" % (const_counter_name)
 	print

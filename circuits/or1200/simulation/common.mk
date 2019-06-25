@@ -10,6 +10,7 @@
 # Directory Structure
 UTILS_DIR   := ../../utils
 INCLUDE_DIR := ../../include
+LIB_DIR     := ../../lib
 BTLDR_DIR   := ../../bootloader
 VMEMS_DIR   := ../../vmem
 
@@ -21,7 +22,7 @@ LIBS   := -lc -lm
 # CFLAGS := -I$(INCLUDE_DIR) -Wall $(OPTLVL) -ffreestanding -std=c99 -fomit-frame-pointer -fno-optimize-sibling-calls
 
 # Make Targets
-all: $(BENCHMARK).vmem
+all: $(BENCHMARK).vmem $(BENCHMARK).elf
 
 # Convert object file to VMEM file
 %.vmem: %.bin $(UTILS_DIR)/bin2vmem
@@ -39,6 +40,13 @@ all: $(BENCHMARK).vmem
 # Cross-Compile C program to object file
 %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
+
+# # Cross-Compile Assembly program to object file
+# %.elf: %.S lib
+# 	$(CC) -nostartfiles -I$(INCLUDE_DIR) -O2 -nostdlib -L$(LIB_DIR) -lsupport $< $(BTLDR_DIR)/bootloader.S  -o $@
+
+lib:
+	$(MAKE) --directory=../../$@
 
 .PHONY: all binutils clean cleanall
 
