@@ -167,7 +167,7 @@ reg	[2:0]			id_exceptflags;
 reg	[2:0]			ex_exceptflags;
 reg	[`OR1200_EXCEPTFSM_WIDTH-1:0]	state;
 reg				extend_flush;
-reg				extend_flush_last;
+// reg				extend_flush_last;
 reg				ex_dslot /* verilator public */;
 reg				delayed1_ex_dslot;
 reg				delayed2_ex_dslot;
@@ -464,7 +464,7 @@ assign except_flushpipe = |except_trig & ~|state;
 	 epcr <=  32'b0;
 	 eear <=  32'b0;
 	 esr <=  {2'h1, {`OR1200_SR_WIDTH-3{1'b0}}, 1'b1};
-	 extend_flush_last <=  1'b0;
+	 // extend_flush_last <=  1'b0;
 	 dsx <= 1'b0;
       end
       else begin
@@ -637,7 +637,7 @@ assign except_flushpipe = |except_trig & ~|state;
 	       if (except_type == `OR1200_EXCEPT_TRAP) begin
 		  state <=  `OR1200_EXCEPTFSM_IDLE;
 		  extend_flush <=  1'b0;
-		  extend_flush_last <=  1'b0;
+		  // extend_flush_last <=  1'b0;
 		  except_type <=  `OR1200_EXCEPT_NONE;
 	       end
                else
@@ -650,7 +650,7 @@ assign except_flushpipe = |except_trig & ~|state;
 	     `OR1200_EXCEPTFSM_FLU4: begin
 		state <=  `OR1200_EXCEPTFSM_FLU5;
 		extend_flush <=  1'b0;
-		extend_flush_last <=  1'b0; // damjan
+		// extend_flush_last <=  1'b0; // damjan
 	     end
 `ifdef OR1200_CASE_DEFAULT
 	     default: begin
@@ -660,7 +660,7 @@ assign except_flushpipe = |except_trig & ~|state;
 		   if (!if_stall && !id_freeze) begin
 		      state <=  `OR1200_EXCEPTFSM_IDLE;
 		      except_type <=  `OR1200_EXCEPT_NONE;
-		      extend_flush_last <=  1'b0;
+		      // extend_flush_last <=  1'b0;
 		   end
 		end
 	   endcase

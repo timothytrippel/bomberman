@@ -588,7 +588,7 @@ module orpsoc_testbench;
 		end
 
 		// Check if all simulations complete
-		if (program_index == 9) begin
+		if (program_index == 10) begin
 			$display("All Program Simulations Complete (time: %t)", $time);
 			$finish;
 		end
@@ -605,6 +605,8 @@ module orpsoc_testbench;
 		if (program_index == 0) begin
 			$display("Loading simulation program (time: %t): or1k-dsx.vmem", $time);
 			memory_file = "simulation/vmem/or1k-dsx.vmem";
+			// $display("Loading simulation program (time: %t): or1k-custom.vmem", $time);
+			// memory_file = "simulation/vmem/or1k-custom.vmem";
 		end
 		else if (program_index == 1) begin
 			$display("Loading simulation program (time: %t): or1k-insnfetcherror.vmem", $time);
@@ -637,6 +639,10 @@ module orpsoc_testbench;
 		else if (program_index == 8) begin
 			$display("Loading simulation program (time: %t): or1k-trapdelayslot.vmem", $time);
 			memory_file = "simulation/vmem/or1k-trapdelayslot.vmem";
+		end
+		else if (program_index == 9) begin
+			$display("Loading simulation program (time: %t): or1k-custom.vmem", $time);
+			memory_file = "simulation/vmem/or1k-custom.vmem";
 		end
 		else begin
 			$display("ERROR: unkown program index (time: %t)", $time);
