@@ -588,7 +588,7 @@ module orpsoc_testbench;
 		end
 
 		// Check if all simulations complete
-		if (program_index == 2) begin
+		if (program_index == 9) begin
 			$display("All Program Simulations Complete (time: %t)", $time);
 			$finish;
 		end
@@ -603,16 +603,40 @@ module orpsoc_testbench;
 
 		// Select program to load
 		if (program_index == 0) begin
+			$display("Loading simulation program (time: %t): or1k-dsx.vmem", $time);
+			memory_file = "simulation/vmem/or1k-dsx.vmem";
+		end
+		else if (program_index == 1) begin
+			$display("Loading simulation program (time: %t): or1k-insnfetcherror.vmem", $time);
+			memory_file = "simulation/vmem/or1k-insnfetcherror.vmem";
+		end
+		else if (program_index == 2) begin
+			$display("Loading simulation program (time: %t): or1k-lsu.vmem", $time);
+			memory_file = "simulation/vmem/or1k-lsu.vmem";
+		end
+		else if (program_index == 3) begin
+			$display("Loading simulation program (time: %t): or1k-lwjr.vmem", $time);
+			memory_file = "simulation/vmem/or1k-lwjr.vmem";
+		end
+		else if (program_index == 4) begin
 			$display("Loading simulation program (time: %t): or1k-ov.vmem", $time);
 			memory_file = "simulation/vmem/or1k-ov.vmem";
 		end
-		else if (program_index == 1) begin
+		else if (program_index == 5) begin
 			$display("Loading simulation program (time: %t): or1k-shortjump.vmem", $time);
 			memory_file = "simulation/vmem/or1k-shortjump.vmem";
 		end
-		else if (program_index == 2) begin
+		else if (program_index == 6) begin
 			$display("Loading simulation program (time: %t): or1k-ticksyscall.vmem", $time);
 			memory_file = "simulation/vmem/or1k-ticksyscall.vmem";
+		end
+		else if (program_index == 7) begin
+			$display("Loading simulation program (time: %t): or1k-trap.vmem", $time);
+			memory_file = "simulation/vmem/or1k-trap.vmem";
+		end
+		else if (program_index == 8) begin
+			$display("Loading simulation program (time: %t): or1k-trapdelayslot.vmem", $time);
+			memory_file = "simulation/vmem/or1k-trapdelayslot.vmem";
 		end
 		else begin
 			$display("ERROR: unkown program index (time: %t)", $time);
