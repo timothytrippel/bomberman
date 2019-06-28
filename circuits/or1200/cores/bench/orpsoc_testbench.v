@@ -560,6 +560,9 @@ module orpsoc_testbench;
 	integer i;
 	initial begin
 		
+		// Set testing signals
+		orpsoc_testbench.dut.or1200_dbg_stb_i_reg = 0;
+
 		// Get cmd line arg for number of tests to run
 		test_num = 0;
         if (! $value$plusargs("num_tests=%d", num_tests)) begin
@@ -589,6 +592,11 @@ module orpsoc_testbench;
 
 		// Check if all simulations complete
 		if (program_index == 10) begin
+			#1;
+			orpsoc_testbench.dut.or1200_dbg_stb_i_reg = 1;
+			#100;
+			orpsoc_testbench.dut.or1200_dbg_stb_i_reg = 0;
+			#100;
 			$display("All Program Simulations Complete (time: %t)", $time);
 			$finish;
 		end

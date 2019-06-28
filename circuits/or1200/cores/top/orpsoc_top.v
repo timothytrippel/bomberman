@@ -907,7 +907,7 @@ module orpsoc_top
 
    ////////////////////////////////////////////////////////////////////////   
 `else // !`ifdef JTAG_DEBUG !`ifdef ADV_DEBUG
-
+    reg or1200_dbg_stb_i_reg; // Added for TTB testing
    assign wbm_d_dbg_adr_o = 0;   
    assign wbm_d_dbg_dat_o = 0;   
    assign wbm_d_dbg_cyc_o = 0;   
@@ -919,10 +919,11 @@ module orpsoc_top
 
    assign or1200_dbg_adr_i = 0;   
    assign or1200_dbg_dat_i = 0;   
-   assign or1200_dbg_stb_i = 0;   
+   // assign or1200_dbg_stb_i = 0;
+   assign or1200_dbg_stb_i = or1200_dbg_stb_i_reg; // Added for TTB testing
    assign or1200_dbg_we_i = 0;
    assign or1200_dbg_stall_i = 0;
-   
+
    ////////////////////////////////////////////////////////////////////////   
 `endif // !`ifdef JTAG_DEBUG and ! `ifdef ADV_DEBUG   
 
@@ -1143,8 +1144,8 @@ module orpsoc_top
       .wbm0_stb_i			(wbs_i_ram0_stb_i),
       .wbm0_dat_o			(wbs_i_ram0_dat_o),
       .wbm0_ack_o			(wbs_i_ram0_ack_o),
-      .wbm0_err_o                       (wbs_i_ram0_err_o),
-      .wbm0_rty_o                       (wbs_i_ram0_rty_o),
+      .wbm0_err_o     (wbs_i_ram0_err_o),
+      .wbm0_rty_o     (wbs_i_ram0_rty_o),
       // Wishbone slave interface 1
       .wbm1_dat_i			(wbs_d_ram0_dat_i),
       .wbm1_adr_i			(wbs_d_ram0_adr_i),
@@ -1156,8 +1157,8 @@ module orpsoc_top
       .wbm1_stb_i			(wbs_d_ram0_stb_i),
       .wbm1_dat_o			(wbs_d_ram0_dat_o),
       .wbm1_ack_o			(wbs_d_ram0_ack_o),
-      .wbm1_err_o                       (wbs_d_ram0_err_o),
-      .wbm1_rty_o                       (wbs_d_ram0_rty_o),     
+      .wbm1_err_o     (wbs_d_ram0_err_o),
+      .wbm1_rty_o     (wbs_d_ram0_rty_o),     
       // Wishbone slave interface 2
       .wbm2_dat_i			(32'b0),
       .wbm2_adr_i			(32'b0),
@@ -1169,8 +1170,8 @@ module orpsoc_top
       .wbm2_stb_i			(1'b0),
       .wbm2_dat_o			(),
       .wbm2_ack_o			(),
-      .wbm2_err_o                       (),
-      .wbm2_rty_o                       (),       
+      .wbm2_err_o     (),
+      .wbm2_rty_o     (),       
       // Clock, reset
       .wb_clk_i				(wb_clk),
       .wb_rst_i				(wb_rst));

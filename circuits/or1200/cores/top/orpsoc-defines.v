@@ -80,7 +80,7 @@
 
 // Byte bus (peripheral bus) arbiter
 // Don't really need the watchdog here - the databus will pick it up
-//`define ARBITER_BYTEBUS_WATCHDOG
+`define ARBITER_BYTEBUS_WATCHDOG
 // Watchdog timeout: 2^(ARBITER_BYTEBUS_WATCHDOG_TIMER_WIDTH+1) cycles
 `define ARBITER_BYTEBUS_WATCHDOG_TIMER_WIDTH 9
 

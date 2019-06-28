@@ -81,6 +81,7 @@ def classify_counters(counter_type, signals, vcd, counters, start_time, time_lim
 	##
 	else:
 		time_analysis_range = range(start_time, time_limit, time_resolution)
+		time_analysis_range.append(time_limit)
 		
 	for curr_time_limit in time_analysis_range:
 

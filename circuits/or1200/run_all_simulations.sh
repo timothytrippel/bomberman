@@ -59,7 +59,6 @@ done
 
 # # Tests that don't finish
 # alignillegalinsn
-# dsx
 # intloop
 # intmulticycle
 # intsyscall
