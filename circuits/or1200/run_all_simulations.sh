@@ -51,7 +51,7 @@ timer
 trapdelayslot
 trap)
 
-for i in {47..48}; do
+for i in {0..48}; do
 # for i in {13..13}; do
 	rm -rf tjfree_${BENCHMARKS[i]}
 	make all LOG=1 OUT_DIR=tjfree_${BENCHMARKS[i]} PROGRAM_NUM=${i}

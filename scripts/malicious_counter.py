@@ -17,16 +17,9 @@ class MaliciousCounter:
 		self.increment_msb         = 0
 		self.increment_lsb         = 0
 		self.hdl_signal            = None
+		self.vcd_dict              = {'nets': {}, 'tv': []}
 
-	def get_event_signal_time_value_str(self, signals, time):
-		tv_str = self.event_signal.get_time_value(signals, time)
-		tv_str = tv_str[::-1][self.event_signal_bit : self.event_signal_bit + 1][::-1]
-		return tv_str
-
-	def get_event_signal_time_value_int(self, signals, time):
-		return int(self.get_event_signal_time_value_str(signals, time), 2)
-
-	def get_increment(self, signals, time):
+	def get_increment(self, signals, vcd, time):
 
 		# Check if increment value is an integer or a signal name (str)
 		if isinstance(self.increment, int):
@@ -36,45 +29,47 @@ class MaliciousCounter:
 		elif isinstance(self.increment, str):
 
 			# is NON-DETERMINISTIC --> get value of increment signal at time
-			tv_str = signals[self.increment].get_time_value(signals, time)
-			tv_str = tv_str[::-1][self.increment_lsb : self.increment_msb + 1][::-1]
-			return int(tv_str, 2)
+			value = signals[self.increment].get_value_at_time(vcd, time)
+			value = value[::-1][self.increment_lsb : self.increment_msb + 1][::-1]
+			return int(value, 2)
 
 		else:
 			print "ERROR: unsupported count increment type:", type(increment)
 			sys.exit(1)
 
-def generate_malicious_time_values(signals, mal_counter):
+	def add_vcd_tv(self, time, value):
+		self.vcd_dict['tv'].append((time, value))
+
+def generate_malicious_time_values(signals, vcd, mal_counter):
 
 	# Initialize counter at time 0
-	counts = [mal_counter.initial_count]
+	counts        = [mal_counter.initial_count]
 	count         = mal_counter.initial_count
 	format_string = "{0:0%sb}" % (mal_counter.width)
-	mal_counter.hdl_signal.set_time_value(0, format_string.format(count))
+	# print vcd.items()[0][1]['nets'][0]
+	# print vcd.items()[0][1]['tv'][0]
+	mal_counter.add_vcd_tv(0, format_string.format(count))
 
 	# Increment counter values based on event signal toggle times/values
-	update_times  = mal_counter.event_signal.get_sorted_update_times(signals)
-	for i in range(1, min(len(update_times), 2**mal_counter.width - 1)):
+	sorted_tvs = mal_counter.event_signal.get_sorted_time_values(vcd)
+	for i in range(1, min(len(sorted_tvs), 2**mal_counter.width - 1)):
 
-		# Get times
-		before_time = update_times[i-1]
-		curr_time   = update_times[i]
+		# Get times and values
+		before_time  = sorted_tvs[i-1][0]
+		before_value = sorted_tvs[i-1][1][::-1][mal_counter.event_signal_bit : mal_counter.event_signal_bit + 1][::-1]
+		before_value = int(before_value)
+		curr_time    = sorted_tvs[i][0]
+		curr_value   = sorted_tvs[i][1][::-1][mal_counter.event_signal_bit : mal_counter.event_signal_bit + 1][::-1]
+		curr_value   = int(curr_value)
+		# print "Before  Time/Value:", before_time, "/", before_value, sorted_tvs[i-1]
+		# print "Current Time/Value:", curr_time, "/", curr_value
+		# print
 
-		# Get Values 
-		if 'x' not in mal_counter.get_event_signal_time_value_str(signals, before_time):
-			before_value = mal_counter.get_event_signal_time_value_int(signals, before_time)
-		else:
-			before_value = -1
-		if 'x' not in mal_counter.get_event_signal_time_value_str(signals, curr_time):
-			curr_value = mal_counter.get_event_signal_time_value_int(signals, curr_time)
-		else:
-			curr_value = -1
-		
 		# Only trigger even on RISING edge
 		if before_value == 0 and curr_value == 1:
 
 			# get counter increment
-			counter_increment = mal_counter.get_increment(signals, curr_time)
+			counter_increment = mal_counter.get_increment(signals, vcd, curr_time)
 
 			# increment the counter if the increment is non-zero
 			if counter_increment:
@@ -88,22 +83,28 @@ def generate_malicious_time_values(signals, mal_counter):
 					"ERROR: malicious counter value exceeds maximum size." 
 
 				# record the counter time value (bitstring)
-				mal_counter.hdl_signal.set_time_value(curr_time, count_bitstring)
+				mal_counter.add_vcd_tv(curr_time, count_bitstring)
 
-	return mal_counter
+	# Update VCD dictionary
+	vcd[mal_counter.fullname] = mal_counter.vcd_dict
 
-def generate_malicious_counter(signals, mal_counter):
+	return mal_counter, vcd
+
+def generate_malicious_counter(signals, vcd, mal_counter):
 	
 	# Create (Malicious) Counter HDL Signal
-	mal_counter.hdl_signal = HDL_Signal(mal_counter.fullname, mal_counter.width - 1, 0)
+	mal_counter.hdl_signal = HDL_Signal(mal_counter.fullname, mal_counter.width - 1, 0, None)
 
-	# Initialize Counter Characteristics
-	mal_counter.hdl_signal.is_ff         = True
-	mal_counter.hdl_signal.is_input      = False
-	mal_counter.hdl_signal.tb_covered    = True
-	mal_counter.hdl_signal.hierarchy     = None
-	mal_counter.hdl_signal.ref_hierarchy = None
-	mal_counter.hdl_signal.type          = 'reg'
+	# Initialize Counter VCD Data HDL Signal
+	# VCD
+	mal_counter.vcd_dict['nets']['type'] = 'reg'
+	mal_counter.vcd_dict['nets']['name'] = mal_counter.fullname
+	mal_counter.vcd_dict['nets']['size'] = mal_counter.width
+	mal_counter.vcd_dict['nets']['hier'] = '.'.join(mal_counter.fullname.split('.')[0:-1])
+	# HDL_Signal
+	mal_counter.hdl_signal.is_ff      = True
+	mal_counter.hdl_signal.is_input   = False
+	mal_counter.hdl_signal.vcd_symbol = mal_counter.fullname
 
 	# Get counter increment event signal from signal name
 	event_signal = None
@@ -111,9 +112,10 @@ def generate_malicious_counter(signals, mal_counter):
 		if signal_name == mal_counter.event_signal_fullname:
 			if event_signal == None:
 				mal_counter.event_signal = signals[signal_name]
-				# print "Found event signal:", mal_counter.event_signal_fullname
-				# mal_counter.event_signal.debug_print(signals)
-				# print
+				# reset event signal index
+				print "Found event signal:", mal_counter.event_signal_fullname
+				mal_counter.event_signal.debug_print()
+				print
 			else:
 				print "ERROR: non-unique event signal for adding malicious counter." 
 				sys.exit(1)
@@ -125,29 +127,29 @@ def generate_malicious_counter(signals, mal_counter):
 		"ERROR: event signal bit index outside event signal vector bounds."
 
 	# Generate malicious counter time values
-	mal_counter = generate_malicious_time_values(signals, mal_counter)
+	mal_counter, vcd = generate_malicious_time_values(signals, vcd, mal_counter)
 	
 	if sws.VERBOSE > 1:
-		mal_counter.hdl_signal.debug_print(signals)
+		mal_counter.hdl_signal.debug_print_wtvs(vcd)
 
-	return mal_counter.hdl_signal
+	return mal_counter.hdl_signal, vcd
 
 # Add Malicious Coalesced Counters
-def add_malicious_coal_counters(signals, coal_counters, num_cntrs):
+def add_malicious_coal_counters(signals, vcd, coal_counters, num_cntrs):
 
 	# CDD
 	if sws.VERBOSE:
 		print "Generating Malicious (CDD) Counter..."
 	cdd = MaliciousCounter()
-	cdd.fullname              = 'ttb_test_aes_128.dut.mal_cdd'
-	cdd.width                 = 8
-	cdd.event_signal_fullname = 'ttb_test_aes_128.dut.clk'
-	cdd.event_signal_bit      = 0
-	cdd.initial_count         = 0
-	cdd.increment             = 1
-	cdd.increment_msb         = 0
-	cdd.increment_lsb         = 0
-	coal_counters.append(generate_malicious_counter(signals, cdd))
+	cdd.fullname                = 'ttb_test_aes_128.dut.mal_cdd'
+	cdd.width                   = 8
+	cdd.event_signal_fullname   = 'ttb_test_aes_128.dut.clk'
+	cdd.event_signal_bit        = 0
+	cdd.initial_count           = 0
+	cdd.increment               = 1
+	cdd.increment_msb           = 0
+	cdd.increment_lsb           = 0
+	coal_counters[cdd.fullname], vcd = generate_malicious_counter(signals, vcd, cdd)
 
 	# CDN
 	if sws.VERBOSE:
@@ -161,7 +163,7 @@ def add_malicious_coal_counters(signals, coal_counters, num_cntrs):
 	cdn.increment             = 1
 	cdn.increment_msb         = 0
 	cdn.increment_lsb         = 0
-	coal_counters.append(generate_malicious_counter(signals, cdn))
+	coal_counters[cdn.fullname], vcd = generate_malicious_counter(signals, vcd, cdn)
 
 	# CND
 	if sws.VERBOSE:
@@ -175,7 +177,7 @@ def add_malicious_coal_counters(signals, coal_counters, num_cntrs):
 	cnd.increment             = 'ttb_test_aes_128.dut.key'
 	cnd.increment_msb         = 2
 	cnd.increment_lsb         = 1
-	coal_counters.append(generate_malicious_counter(signals, cnd))
+	coal_counters[cnd.fullname], vcd = generate_malicious_counter(signals, vcd, cnd)
 
 	# CNN
 	if sws.VERBOSE:
@@ -189,12 +191,12 @@ def add_malicious_coal_counters(signals, coal_counters, num_cntrs):
 	cnn.increment             = 'ttb_test_aes_128.dut.key'
 	cnn.increment_msb         = 2
 	cnn.increment_lsb         = 1
-	coal_counters.append(generate_malicious_counter(signals, cnn))
+	coal_counters[cnn.fullname], vcd = generate_malicious_counter(signals, vcd, cnn)
 
 	return coal_counters
 
 # Add Malicious Distributed Counters
-def add_malicious_dist_counters(signals, dist_counters, num_cntrs):
+def add_malicious_dist_counters(signals, vcd, dist_counters, num_cntrs):
 	
 	# DDD
 	if sws.VERBOSE:
@@ -208,7 +210,7 @@ def add_malicious_dist_counters(signals, dist_counters, num_cntrs):
 	ddd.increment             = 1
 	ddd.increment_msb         = 0
 	ddd.increment_lsb         = 0
-	dist_counters.append(generate_malicious_counter(signals, ddd))
+	dist_counters[ddd.fullname], vcd = generate_malicious_counter(signals, vcd, ddd)
 
 	# DDN
 	if sws.VERBOSE:
@@ -222,7 +224,7 @@ def add_malicious_dist_counters(signals, dist_counters, num_cntrs):
 	ddn.increment             = 1
 	ddn.increment_msb         = 0
 	ddn.increment_lsb         = 0
-	dist_counters.append(generate_malicious_counter(signals, ddn))
+	dist_counters[ddn.fullname], vcd = generate_malicious_counter(signals, vcd, ddn)
 
 	# DND
 	if sws.VERBOSE:
@@ -236,7 +238,7 @@ def add_malicious_dist_counters(signals, dist_counters, num_cntrs):
 	dnd.increment             = 'ttb_test_aes_128.dut.state'
 	dnd.increment_msb         = 3
 	dnd.increment_lsb         = 0
-	dist_counters.append(generate_malicious_counter(signals, dnd))
+	dist_counters[dnd.fullname], vcd = generate_malicious_counter(signals, vcd, dnd)
 
 	# DNN
 	if sws.VERBOSE:
@@ -250,6 +252,6 @@ def add_malicious_dist_counters(signals, dist_counters, num_cntrs):
 	dnn.increment             = 'ttb_test_aes_128.dut.state'
 	dnn.increment_msb         = 63
 	dnn.increment_lsb         = 60
-	dist_counters.append(generate_malicious_counter(signals, dnn))
+	dist_counters[dnn.fullname], vcd = generate_malicious_counter(signals, vcd, dnn)
 
 	return dist_counters

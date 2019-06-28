@@ -257,11 +257,11 @@ def main():
 	##
 
 	# General Switches
-	sws.VERBOSE  = 0
+	sws.VERBOSE  = 1
 	sws.WARNINGS = False
 
 	# DEBUG Switches
-	sws.DEBUG        = False
+	sws.DEBUG        = True
 	sws.DEBUG_PRINTS = False
 
 	##
@@ -381,7 +381,7 @@ def main():
 	print "--------------------------------------------------------------------------------"
 	print "Identifying Coalesced Counter Candidates..."
 	task_start_time = time.time()
-	coal_counters   = generate_coalesced_counters(signals, num_mal_cntrs, dut_top_module)
+	coal_counters   = generate_coalesced_counters(signals, vcd, num_mal_cntrs, dut_top_module)
 	task_end_time   = time.time()
 	print
 	print "Found " + str(len(coal_counters)) + " possible coalesced counters."

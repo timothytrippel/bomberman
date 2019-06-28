@@ -109,6 +109,6 @@ def generate_distributed_counters(signals, vcd, num_mal_cntrs, dut_top_module):
 	# Generate artificial coalesced counters
 	if num_mal_cntrs > 0:
 		print "Generating Malicious Distributed Counters..."
-		dist_counters = add_malicious_dist_counters(signals, dist_counters, num_mal_cntrs)
+		dist_counters = add_malicious_dist_counters(signals, vcd, dist_counters, num_mal_cntrs)
 
 	return dist_counters

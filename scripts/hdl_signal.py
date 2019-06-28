@@ -45,6 +45,17 @@ class HDL_Signal:
 	def connections(self):
 		return self.conn
 
+	def get_sorted_time_values(self, vcd):
+
+		# Check signal was simulated
+		assert self.is_simulated()
+
+		# Get all time values
+		tvs = vcd[self.vcd_symbol]['tv']
+
+		# Sort time values
+		return sorted(tvs, key=lambda x: x[0])
+
 	def get_time_value_at_index(self, vcd, index):
 
 		# Check signal was simulated
@@ -54,6 +65,32 @@ class HDL_Signal:
 		tv = vcd[self.vcd_symbol]['tv'][index]
 
 		return tv[0], tv[1]
+
+	def get_value_at_time(self, vcd, time):
+
+		# Check signal was simulated
+		assert self.is_simulated()
+
+		# Iterate over time values
+		curr_time  = None
+		curr_value = None
+		for i in range(len(vcd[self.vcd_symbol]['tv'])):
+			curr_time  = vcd[self.vcd_symbol]['tv'][i][0]
+			curr_value = vcd[self.vcd_symbol]['tv'][i][1]
+			if curr_time == time:
+				return curr_value
+			elif curr_time > time:
+				if i > 0:
+					return vcd[self.vcd_symbol]['tv'][i - 1][1]
+				else:
+					print "ERROR: no value for time (%d)" % (time)
+					sys.exit(-1)
+
+		if curr_value:
+			return curr_value
+		else:
+			print "ERROR: no value for time (%d)" % (time)
+			sys.exit(-1)
 
 	def get_time_value(self, vcd, time_limit):
 
@@ -79,19 +116,6 @@ class HDL_Signal:
 		else:
 			return None, None
 
-	# def set_time_value(self, time, value):
-	# 	assert self.vcd_symbol == None \
-	# 	and "ERROR: cannot set time values for VCD signals"
-	# 	self.time_values.append([time, value])
-
-	# def append_time_value(self, time, value):
-	# 	assert self.vcd_symbol == None \
-	# 	and "ERROR: cannot append time values for VCD signals"
-	# 	for i in range(len(self.time_values) - 1, -1, -1):
-	# 		if time == self.time_values[i][0]:
-	# 			self.time_values[i][1] += value
-	# 			break
-
 	def add_conn(self, c):
 		self.conn.append(c)
 
@@ -105,17 +129,10 @@ class HDL_Signal:
 		print "		Is Flip-Flop:   %s" % (self.isff)
 		print "		Is Input:       %s" % (self.isinput)
 		print "		VCD Symbol:     %s" % (self.vcd_symbol)
+		print "		TV Index:       %d" % (self.tv_index)
 
 	def debug_print_wtvs(self, vcd):
-		print "	Signal: %s"            % (self)
-		print "		Hierarchy:     %s" % (self.hierarchy)
-		print "		Local Name:    %s" % (self.local_name)
-		print "		LSB:           %d" % (self.lsb)
-		print "		MSB:           %d" % (self.msb)
-		print "		Width:         %d" % (self.width())
-		print "		Is Flip-Flop:  %s" % (self.isff)
-		print "		Is Input:      %s" % (self.isinput)
-		print "		VCD Symbol:    %s" % (self.vcd_symbol)
+		self.debug_print()
 		# print "		Connections   (%d):" % (len(self.conn))
 		# for connection in self.conn:
 		# 	print "			%s" % (connection)
