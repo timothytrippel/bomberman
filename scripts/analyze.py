@@ -137,7 +137,7 @@ def classify_counters(counter_type, signals, vcd, counters, start_time, time_lim
 
 				# Compute number of possible unique counter values
 				max_possible_values = 2 ** counter.width()
-				if sws.VERBOSE > 2:
+				if sws.VERBOSE > 1:
 					print "Values Seen/Possible: %d/%d" % (len(malicious[mal_counter_name]), max_possible_values)
 
 				# Classify counter as a constant
@@ -257,7 +257,7 @@ def main():
 	##
 
 	# General Switches
-	sws.VERBOSE  = 1
+	sws.VERBOSE  = 2
 	sws.WARNINGS = False
 
 	# DEBUG Switches

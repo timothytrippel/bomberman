@@ -137,7 +137,7 @@ class HDL_Signal:
 		# for connection in self.conn:
 		# 	print "			%s" % (connection)
 		if self.vcd_symbol:
-			tvs = self.get_time_values(vcd)
+			tvs = vcd[self.vcd_symbol]['tv']
 			print "		Time Values    (%d):" % (len(tvs))
 			for tv in tvs:
 				print "			%4d -- %s" % (tv[0], tv[1])
