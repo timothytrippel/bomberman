@@ -6,7 +6,9 @@ DUT_TOP_MODULE      := uart_test.uart1
 NUM_TESTS           := 1
 START_TIME          := 0
 TIME_LIMIT          := -1
-TIME_RESOLUTION     := 10000
-NUM_MALICIOUS_CNTRS := 0
+TIME_RESOLUTION     := 1000
+NUM_MALICIOUS_CNTRS := 1
+D_SIGNAL_BASENAME   := wb_clk_i
+N_SIGNAL_BASENAME   := rf_count
 
 include ../common.mk

@@ -46,6 +46,8 @@ script: $(OUT_FILE_BASENAME).dot $(OUT_FILE_BASENAME).vcd
 			$(TIME_RESOLUTION) \
 			$(DUT_TOP_MODULE) \
 			$(NUM_MALICIOUS_CNTRS) \
+			$(D_SIGNAL_BASENAME) \
+			$(N_SIGNAL_BASENAME) \
 			$^ \
 			$(OUT_FILE_BASENAME); \
 	else \
@@ -55,6 +57,8 @@ script: $(OUT_FILE_BASENAME).dot $(OUT_FILE_BASENAME).vcd
 			$(TIME_RESOLUTION) \
 			$(DUT_TOP_MODULE) \
 			$(NUM_MALICIOUS_CNTRS) \
+			$(D_SIGNAL_BASENAME) \
+			$(N_SIGNAL_BASENAME) \
 			$^ \
 			$(OUT_FILE_BASENAME)) &> $(OUT_FILE_BASENAME).$(TIME_LIMIT).ac.log; \
 	fi; \

@@ -257,17 +257,17 @@ def main():
 	##
 
 	# General Switches
-	sws.VERBOSE  = 2
+	sws.VERBOSE  = 0
 	sws.WARNINGS = False
 
 	# DEBUG Switches
-	sws.DEBUG        = True
+	sws.DEBUG        = False
 	sws.DEBUG_PRINTS = False
 
 	##
 	# Check argv
 	##
-	if (len(sys.argv) != 9):
+	if (len(sys.argv) != 11):
 		print "Usage: ./analyze.py"
 		print "	<start time>"
 		print "	<time limit>"
@@ -294,14 +294,19 @@ def main():
 	time_resolution    = int(sys.argv[3])
 	dut_top_module     = sys.argv[4]
 	num_mal_cntrs      = int(sys.argv[5])
-	dot_file           = sys.argv[6]
-	vcd_file           = sys.argv[7]
-	json_base_filename = sys.argv[8]
+	mal_d_sig_basename = sys.argv[6]
+	mal_n_sig_basename = sys.argv[7]
+	dot_file           = sys.argv[8]
+	vcd_file           = sys.argv[9]
+	json_base_filename = sys.argv[10]
 	print
 	print "Start Time:                 ", start_time
 	print "Time Limit:                 ", time_limit
 	print "Time Resolution:            ", time_resolution
 	print "DUT Top Module:             ", dut_top_module
+	print "Num. Malicious Cntrs:       ", num_mal_cntrs
+	print "Deter. Signal Basename:     ", mal_d_sig_basename
+	print "Nondeter. Signal Basename:  ", mal_n_sig_basename
 	print "Num. Malicious Cntrs:       ", num_mal_cntrs
 	print "DOT File:                   ", dot_file
 	print "VCD File:                   ", vcd_file
@@ -320,7 +325,6 @@ def main():
 	##
 	# Load VCD file
 	##
-
 	print "--------------------------------------------------------------------------------"
 	print "Loading VCD File..."
 	print
@@ -381,7 +385,7 @@ def main():
 	print "--------------------------------------------------------------------------------"
 	print "Identifying Coalesced Counter Candidates..."
 	task_start_time = time.time()
-	coal_counters   = generate_coalesced_counters(signals, vcd, num_mal_cntrs, dut_top_module)
+	coal_counters   = generate_coalesced_counters(signals, vcd, num_mal_cntrs, dut_top_module, mal_d_sig_basename, mal_n_sig_basename)
 	task_end_time   = time.time()
 	print
 	print "Found " + str(len(coal_counters)) + " possible coalesced counters."
@@ -399,7 +403,7 @@ def main():
 	print "--------------------------------------------------------------------------------"
 	print "Identifying Distributed Counter Candidates..."
 	task_start_time = time.time()
-	dist_counters   = generate_distributed_counters(signals, vcd, num_mal_cntrs, dut_top_module)
+	dist_counters   = generate_distributed_counters(signals, vcd, num_mal_cntrs, dut_top_module, mal_d_sig_basename, mal_n_sig_basename)
 	task_end_time   = time.time()
 	print
 	print "Found " + str(len(dist_counters)) + " possible distributed counters."

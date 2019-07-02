@@ -25,7 +25,9 @@ DUT_TOP_MODULE      := orpsoc_testbench.dut.or1200_top0.or1200_cpu
 NUM_TESTS           := 2
 START_TIME          := 0
 TIME_LIMIT          := -1
-TIME_RESOLUTION     := 100000
+TIME_RESOLUTION     := 10000
 NUM_MALICIOUS_CNTRS := 0
+D_SIGNAL_BASENAME   := clk
+N_SIGNAL_BASENAME   := wb_pc
 
 include ../common.mk

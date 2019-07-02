@@ -583,424 +583,424 @@ module orpsoc_testbench;
 
 		$display("--------------------------------------------------------------------------------");
 
-		// // Check if time to switch program
-		// if (test_num == num_tests) begin
-		// 	$display("Simulation Complete (time: %t)", $time);
-		// 	test_num = 0;
-		// 	program_index++;
-		// end
-
-		// // Check if all simulations complete
-		// if (program_index == 10) begin
-		// 	#1;
-		// 	orpsoc_testbench.dut.or1200_dbg_stb_i_reg = 1;
-		// 	#100;
-		// 	orpsoc_testbench.dut.or1200_dbg_stb_i_reg = 0;
-		// 	#100;
-		// 	$display("All Program Simulations Complete (time: %t)", $time);
-		// 	$finish;
-		// end
-
-		// // Reset DUT
-		// $display("Putting DUT into Reset (time: %t)...", $time);
-		// repeat (32) @(negedge clk)
-		// 	rst_n <= 1;
-		// repeat (32) @(negedge clk)
-		// 	rst_n <= 0;
-		// $display();
-
-		// // Select program to load
-		// if (program_index == 0) begin
-		// 	$display("Loading simulation program (time: %t): or1k-dsx.vmem", $time);
-		// 	memory_file = "simulation/vmem/or1k-dsx.vmem";
-		// 	// $display("Loading simulation program (time: %t): or1k-custom.vmem", $time);
-		// 	// memory_file = "simulation/vmem/or1k-custom.vmem";
-		// end
-		// else if (program_index == 1) begin
-		// 	$display("Loading simulation program (time: %t): or1k-insnfetcherror.vmem", $time);
-		// 	memory_file = "simulation/vmem/or1k-insnfetcherror.vmem";
-		// end
-		// else if (program_index == 2) begin
-		// 	$display("Loading simulation program (time: %t): or1k-lsu.vmem", $time);
-		// 	memory_file = "simulation/vmem/or1k-lsu.vmem";
-		// end
-		// else if (program_index == 3) begin
-		// 	$display("Loading simulation program (time: %t): or1k-lwjr.vmem", $time);
-		// 	memory_file = "simulation/vmem/or1k-lwjr.vmem";
-		// end
-		// else if (program_index == 4) begin
-		// 	$display("Loading simulation program (time: %t): or1k-ov.vmem", $time);
-		// 	memory_file = "simulation/vmem/or1k-ov.vmem";
-		// end
-		// else if (program_index == 5) begin
-		// 	$display("Loading simulation program (time: %t): or1k-shortjump.vmem", $time);
-		// 	memory_file = "simulation/vmem/or1k-shortjump.vmem";
-		// end
-		// else if (program_index == 6) begin
-		// 	$display("Loading simulation program (time: %t): or1k-ticksyscall.vmem", $time);
-		// 	memory_file = "simulation/vmem/or1k-ticksyscall.vmem";
-		// end
-		// else if (program_index == 7) begin
-		// 	$display("Loading simulation program (time: %t): or1k-trap.vmem", $time);
-		// 	memory_file = "simulation/vmem/or1k-trap.vmem";
-		// end
-		// else if (program_index == 8) begin
-		// 	$display("Loading simulation program (time: %t): or1k-trapdelayslot.vmem", $time);
-		// 	memory_file = "simulation/vmem/or1k-trapdelayslot.vmem";
-		// end
-		// else if (program_index == 9) begin
-		// 	$display("Loading simulation program (time: %t): or1k-custom.vmem", $time);
-		// 	memory_file = "simulation/vmem/or1k-custom.vmem";
-		// end
-		// else begin
-		// 	$display("ERROR: unkown program index (time: %t)", $time);
-		// 	$finish;
-		// end
-
-		// // 0-out memory on processor reset
-		// for(k = 0; k < orpsoc_testbench.dut.ram_wb0.ram_wb_b3_0.mem_words; k++) begin
-		// 	orpsoc_testbench.dut.ram_wb0.ram_wb_b3_0.mem[k] = 1'b0;
-		// end
-
-		// // Load program into memory
-		// $readmemh(memory_file, orpsoc_testbench.dut.ram_wb0.ram_wb_b3_0.mem);
-
-		// // print memory stats
-		// $display("Memory Address Width (Bits): %12d", orpsoc_testbench.dut.ram_wb0.ram_wb_b3_0.mem_adr_width);
-		// $display("Memory Size (Num Words):     %12d", orpsoc_testbench.dut.ram_wb0.ram_wb_b3_0.mem_words);
-		// $display("Memory Size (Num Bytes):     %12d", orpsoc_testbench.dut.ram_wb0.ram_wb_b3_0.mem_size_bytes);
-		// $display();
-		
-		// // Clear Program Exit Flag
-		// monitor.program_exit = 0;
-			
-		// // Complete DUT Reset
-		// repeat (32) @(negedge clk)
-		// 	rst_n <= 1;
-		// $display("DUT Reset Complete (time: %t).", $time);
-		// $display();
-
-		// // Increment Test Case Counter
-		// test_num++;
-
-		// Check if simulation done
+		// Check if time to switch program
 		if (test_num == num_tests) begin
 			$display("Simulation Complete (time: %t)", $time);
+			test_num = 0;
+			program_index++;
+		end
+
+		// Check if all simulations complete
+		if (program_index == 10) begin
+			#1;
+			orpsoc_testbench.dut.or1200_dbg_stb_i_reg = 1;
+			#100;
+			orpsoc_testbench.dut.or1200_dbg_stb_i_reg = 0;
+			#100;
+			$display("All Program Simulations Complete (time: %t)", $time);
 			$finish;
 		end
-		else begin
 
-			// Reset DUT
-			$display("Putting DUT into Reset (time: %t)...", $time);
-			repeat (32) @(negedge clk)
-				rst_n <= 1;
-			repeat (32) @(negedge clk)
-				rst_n <= 0;
-			$display();
+		// Reset DUT
+		$display("Putting DUT into Reset (time: %t)...", $time);
+		repeat (32) @(negedge clk)
+			rst_n <= 1;
+		repeat (32) @(negedge clk)
+			rst_n <= 0;
+		$display();
 
-			if (program_index == 0) begin
-				$display("Loading simulation program (time: %t): helloworld.vmem", $time);
-				memory_file = "simulation/vmem/helloworld.vmem";
-			end
-			else if (program_index == 1) begin
-				$display("Loading simulation program (time: %t): or1k-alignillegalinsn.vmem", $time);
-				memory_file = "simulation/vmem/or1k-alignillegalinsn.vmem";
-			end
-			else if (program_index == 2) begin
-				$display("Loading simulation program (time: %t): or1k-backtoback_jmp.vmem", $time);
-				memory_file = "simulation/vmem/or1k-backtoback_jmp.vmem";
-			end
-			else if (program_index == 3) begin
-				$display("Loading simulation program (time: %t): or1k-basic.vmem", $time);
-				memory_file = "simulation/vmem/or1k-basic.vmem";
-			end
-			else if (program_index == 4) begin
-				$display("Loading simulation program (time: %t): or1k-cmov.vmem", $time);
-				memory_file = "simulation/vmem/or1k-cmov.vmem";
-			end
-			else if (program_index == 5) begin
-				$display("Loading simulation program (time: %t): or1k-cy.vmem", $time);
-				memory_file = "simulation/vmem/or1k-cy.vmem";
-			end
-			else if (program_index == 6) begin
-				$display("Loading simulation program (time: %t): or1k-dsxinsn.vmem", $time);
-				memory_file = "simulation/vmem/or1k-dsxinsn.vmem";
-			end
-			else if (program_index == 7) begin
-				$display("Loading simulation program (time: %t): or1k-dsx.vmem", $time);
-				memory_file = "simulation/vmem/or1k-dsx.vmem";
-			end
-			else if (program_index == 8) begin
-				$display("Loading simulation program (time: %t): or1k-ext.vmem", $time);
-				memory_file = "simulation/vmem/or1k-ext.vmem";
-			end
-			else if (program_index == 9) begin
-				$display("Loading simulation program (time: %t): or1k-ffl1.vmem", $time);
-				memory_file = "simulation/vmem/or1k-ffl1.vmem";
-			end
-			else if (program_index == 10) begin
-				$display("Loading simulation program (time: %t): or1k-icache.vmem", $time);
-				memory_file = "simulation/vmem/or1k-icache.vmem";
-			end
-			else if (program_index == 11) begin
-				$display("Loading simulation program (time: %t): or1k-illegalinsndelayslot.vmem", $time);
-				memory_file = "simulation/vmem/or1k-illegalinsndelayslot.vmem";
-			end
-			else if (program_index == 12) begin
-				$display("Loading simulation program (time: %t): or1k-illegalinsn.vmem", $time);
-				memory_file = "simulation/vmem/or1k-illegalinsn.vmem";
-			end
-			else if (program_index == 13) begin
-				$display("Loading simulation program (time: %t): or1k-insnfetchalign.vmem", $time);
-				memory_file = "simulation/vmem/or1k-insnfetchalign.vmem";
-			end
-			else if (program_index == 14) begin
-				$display("Loading simulation program (time: %t): or1k-insnfetcherror.vmem", $time);
-				memory_file = "simulation/vmem/or1k-insnfetcherror.vmem";
-			end
-			else if (program_index == 15) begin
-				$display("Loading simulation program (time: %t): or1k-intloop.vmem", $time);
-				memory_file = "simulation/vmem/or1k-intloop.vmem";
-			end
-			else if (program_index == 16) begin
-				$display("Loading simulation program (time: %t): or1k-intmulticycle.vmem", $time);
-				memory_file = "simulation/vmem/or1k-intmulticycle.vmem";
-			end
-			else if (program_index == 17) begin
-				$display("Loading simulation program (time: %t): or1k-intsyscall.vmem", $time);
-				memory_file = "simulation/vmem/or1k-intsyscall.vmem";
-			end
-			else if (program_index == 18) begin
-				$display("Loading simulation program (time: %t): or1k-inttickloop.vmem", $time);
-				memory_file = "simulation/vmem/or1k-inttickloop.vmem";
-			end
-			else if (program_index == 19) begin
-				$display("Loading simulation program (time: %t): or1k-jmp.vmem", $time);
-				memory_file = "simulation/vmem/or1k-jmp.vmem";
-			end
-			else if (program_index == 20) begin
-				$display("Loading simulation program (time: %t): or1k-jr.vmem", $time);
-				memory_file = "simulation/vmem/or1k-jr.vmem";
-			end
-			else if (program_index == 21) begin
-				$display("Loading simulation program (time: %t): or1k-lsualigndelayslot.vmem", $time);
-				memory_file = "simulation/vmem/or1k-lsualigndelayslot.vmem";
-			end
-			else if (program_index == 22) begin
-				$display("Loading simulation program (time: %t): or1k-lsualign.vmem", $time);
-				memory_file = "simulation/vmem/or1k-lsualign.vmem";
-			end
-			else if (program_index == 23) begin
-				$display("Loading simulation program (time: %t): or1k-lsuerrordelayslot.vmem", $time);
-				memory_file = "simulation/vmem/or1k-lsuerrordelayslot.vmem";
-			end
-			else if (program_index == 24) begin
-				$display("Loading simulation program (time: %t): or1k-lsuerror.vmem", $time);
-				memory_file = "simulation/vmem/or1k-lsuerror.vmem";
-			end
-			else if (program_index == 25) begin
-				$display("Loading simulation program (time: %t): or1k-lsu.vmem", $time);
-				memory_file = "simulation/vmem/or1k-lsu.vmem";
-			end
-			else if (program_index == 26) begin
-				$display("Loading simulation program (time: %t): or1k-lwjr.vmem", $time);
-				memory_file = "simulation/vmem/or1k-lwjr.vmem";
-			end
-			else if (program_index == 27) begin
-				$display("Loading simulation program (time: %t): or1k-mmu.vmem", $time);
-				memory_file = "simulation/vmem/or1k-mmu.vmem";
-			end
-			else if (program_index == 28) begin
-				$display("Loading simulation program (time: %t): or1k-mul.vmem", $time);
-				memory_file = "simulation/vmem/or1k-mul.vmem";
-			end
-			else if (program_index == 29) begin
-				$display("Loading simulation program (time: %t): or1k-mul-basic.vmem", $time);
-				memory_file = "simulation/vmem/or1k-mul-basic.vmem";
-			end
-			else if (program_index == 30) begin
-				$display("Loading simulation program (time: %t): or1k-msync.vmem", $time);
-				memory_file = "simulation/vmem/or1k-msync.vmem";
-			end
-			else if (program_index == 31) begin
-				$display("Loading simulation program (time: %t): or1k-newlibirq.vmem", $time);
-				memory_file = "simulation/vmem/or1k-newlibirq.vmem";
-			end
-			else if (program_index == 32) begin
-				$display("Loading simulation program (time: %t): or1k-ovcy.vmem", $time);
-				memory_file = "simulation/vmem/or1k-ovcy.vmem";
-			end
-			else if (program_index == 33) begin
-				$display("Loading simulation program (time: %t): or1k-ov.vmem", $time);
-				memory_file = "simulation/vmem/or1k-ov.vmem";
-			end
-			else if (program_index == 34) begin
-				$display("Loading simulation program (time: %t): or1k-regjmp.vmem", $time);
-				memory_file = "simulation/vmem/or1k-regjmp.vmem";
-			end
-			else if (program_index == 35) begin
-				$display("Loading simulation program (time: %t): or1k-rfe.vmem", $time);
-				memory_file = "simulation/vmem/or1k-rfe.vmem";
-			end
-			else if (program_index == 36) begin
-				$display("Loading simulation program (time: %t): or1k-sfbf.vmem", $time);
-				memory_file = "simulation/vmem/or1k-sfbf.vmem";
-			end
-			else if (program_index == 37) begin
-				$display("Loading simulation program (time: %t): or1k-sf.vmem", $time);
-				memory_file = "simulation/vmem/or1k-sf.vmem";
-			end
-			else if (program_index == 38) begin
-				$display("Loading simulation program (time: %t): or1k-shiftopts.vmem", $time);
-				memory_file = "simulation/vmem/or1k-shiftopts.vmem";
-			end
-			else if (program_index == 39) begin
-				$display("Loading simulation program (time: %t): or1k-shortbranch.vmem", $time);
-				memory_file = "simulation/vmem/or1k-shortbranch.vmem";
-			end
-			else if (program_index == 40) begin
-				$display("Loading simulation program (time: %t): or1k-shortjump.vmem", $time);
-				memory_file = "simulation/vmem/or1k-shortjump.vmem";
-			end
-			else if (program_index == 41) begin
-				$display("Loading simulation program (time: %t): or1k-simple.vmem", $time);
-				memory_file = "simulation/vmem/or1k-simple.vmem";
-			end
-			else if (program_index == 42) begin
-				$display("Loading simulation program (time: %t): or1k-systemcall.vmem", $time);
-				memory_file = "simulation/vmem/or1k-systemcall.vmem";
-			end
-			else if (program_index == 43) begin
-				$display("Loading simulation program (time: %t): or1k-tickloop.vmem", $time);
-				memory_file = "simulation/vmem/or1k-tickloop.vmem";
-			end
-			else if (program_index == 44) begin
-				$display("Loading simulation program (time: %t): or1k-tickrfforward.vmem", $time);
-				memory_file = "simulation/vmem/or1k-tickrfforward.vmem";
-			end
-			else if (program_index == 45) begin
-				$display("Loading simulation program (time: %t): or1k-ticksyscall.vmem", $time);
-				memory_file = "simulation/vmem/or1k-ticksyscall.vmem";
-			end
-			else if (program_index == 46) begin
-				$display("Loading simulation program (time: %t): or1k-timer.vmem", $time);
-				memory_file = "simulation/vmem/or1k-timer.vmem";
-			end
-			else if (program_index == 47) begin
-				$display("Loading simulation program (time: %t): or1k-trapdelayslot.vmem", $time);
-				memory_file = "simulation/vmem/or1k-trapdelayslot.vmem";
-			end
-			else if (program_index == 48) begin
-				$display("Loading simulation program (time: %t): or1k-trap.vmem", $time);
-				memory_file = "simulation/vmem/or1k-trap.vmem";
-			end
-			else begin
-				$display("ERROR: unkown program index (time: %t)", $time);
-				$finish;
-			end
-
-			// // Set simulation program filename
-			// if (program_index == 0) begin
-			// 	$display("Loading simulation program (time: %t): helloworld.vmem", $time);
-			// 	memory_file = "simulation/vmem/helloworld.vmem";
-			// end
-			// else if (program_index == 1) begin
-			// 	$display("Loading simulation program (time: %t): aes.vmem", $time);
-			// 	memory_file = "simulation/vmem/aes.vmem";
-			// end
-			// else if (program_index == 2) begin
-			// 	$display("Loading simulation program (time: %t): basicmath.vmem", $time);
-			// 	memory_file = "simulation/vmem/basicmath.vmem";
-			// end
-			// else if (program_index == 3) begin
-			// 	$display("Loading simulation program (time: %t): blowfish.vmem", $time);
-			// 	memory_file = "simulation/vmem/blowfish.vmem";
-			// end
-			// else if (program_index == 4) begin
-			// 	$display("Loading simulation program (time: %t): crc.vmem", $time);
-			// 	memory_file = "simulation/vmem/crc.vmem";
-			// end
-			// else if (program_index == 5) begin
-			// 	$display("Loading simulation program (time: %t): dijkstra.vmem", $time);
-			// 	memory_file = "simulation/vmem/dijkstra.vmem";
-			// end
-			// else if (program_index == 6) begin
-			// 	$display("Loading simulation program (time: %t): fft.vmem", $time);
-			// 	memory_file = "simulation/vmem/fft.vmem";
-			// end
-			// else if (program_index == 7) begin
-			// 	$display("Loading simulation program (time: %t): limits.vmem", $time);
-			// 	memory_file = "simulation/vmem/limits.vmem";
-			// end
-			// else if (program_index == 8) begin
-			// 	$display("Loading simulation program (time: %t): lzfx.vmem", $time);
-			// 	memory_file = "simulation/vmem/lzfx.vmem";
-			// end
-			// else if (program_index == 9) begin
-			// 	$display("Loading simulation program (time: %t): qsort.vmem", $time);
-			// 	memory_file = "simulation/vmem/qsort.vmem";
-			// end
-			// else if (program_index == 10) begin
-			// 	$display("Loading simulation program (time: %t): randmath.vmem", $time);
-			// 	memory_file = "simulation/vmem/randmath.vmem";
-			// end
-			// else if (program_index == 11) begin
-			// 	$display("Loading simulation program (time: %t): rc4.vmem", $time);
-			// 	memory_file = "simulation/vmem/rc4.vmem";
-			// end
-			// else if (program_index == 12) begin
-			// 	$display("Loading simulation program (time: %t): rsa.vmem", $time);
-			// 	memory_file = "simulation/vmem/rsa.vmem";
-			// end
-			// else if (program_index == 13) begin
-			// 	$display("Loading simulation program (time: %t): sha.vmem", $time);
-			// 	memory_file = "simulation/vmem/sha.vmem";
-			// end
-			// else if (program_index == 14) begin
-			// 	$display("Loading simulation program (time: %t): stringsearch.vmem", $time);
-			// 	memory_file = "simulation/vmem/stringsearch.vmem";
-			// end
-			// else if (program_index == 15) begin
-			// 	$display("Loading simulation program (time: %t): susan.vmem", $time);
-			// 	memory_file = "simulation/vmem/susan.vmem";
-			// end
-			// else if (program_index == 16) begin
-			// 	// $display("Loading simulation program (time: %t): syscall.vmem", $time);
-			// 	// memory_file = "simulation/vmem/syscall.vmem";
-			// 	$display("Loading simulation program (time: %t): or1k-systemcall.vmem", $time);
-			// 	memory_file = "simulation/vmem/or1k-systemcall.vmem";
-			// end
-			// else begin
-			// 	$display("ERROR: unkown program index (time: %t)", $time);
-			// 	$finish;
-			// end
-
-			// 0-out memory on processor reset
-			for(k = 0; k < orpsoc_testbench.dut.ram_wb0.ram_wb_b3_0.mem_words; k++) begin
-				orpsoc_testbench.dut.ram_wb0.ram_wb_b3_0.mem[k] = 1'b0;
-			end
-
-			// Load program into memory
-			$readmemh(memory_file, orpsoc_testbench.dut.ram_wb0.ram_wb_b3_0.mem);
-
-			// print memory stats
-			$display("Memory Address Width (Bits): %12d", orpsoc_testbench.dut.ram_wb0.ram_wb_b3_0.mem_adr_width);
-			$display("Memory Size (Num Words):     %12d", orpsoc_testbench.dut.ram_wb0.ram_wb_b3_0.mem_words);
-			$display("Memory Size (Num Bytes):     %12d", orpsoc_testbench.dut.ram_wb0.ram_wb_b3_0.mem_size_bytes);
-			$display();
-			
-			// Clear Program Exit Flag
-			monitor.program_exit = 0;
-			
-			// Complete DUT Reset
-			repeat (32) @(negedge clk)
-				rst_n <= 1;
-			$display("DUT Reset Complete (time: %t).", $time);
-			$display();
-
-			// Increment Test Case Counter
-			test_num++;
+		// Select program to load
+		if (program_index == 0) begin
+			$display("Loading simulation program (time: %t): or1k-dsx.vmem", $time);
+			memory_file = "simulation/vmem/or1k-dsx.vmem";
+			// $display("Loading simulation program (time: %t): or1k-custom.vmem", $time);
+			// memory_file = "simulation/vmem/or1k-custom.vmem";
 		end
+		else if (program_index == 1) begin
+			$display("Loading simulation program (time: %t): or1k-insnfetcherror.vmem", $time);
+			memory_file = "simulation/vmem/or1k-insnfetcherror.vmem";
+		end
+		else if (program_index == 2) begin
+			$display("Loading simulation program (time: %t): or1k-lsu.vmem", $time);
+			memory_file = "simulation/vmem/or1k-lsu.vmem";
+		end
+		else if (program_index == 3) begin
+			$display("Loading simulation program (time: %t): or1k-lwjr.vmem", $time);
+			memory_file = "simulation/vmem/or1k-lwjr.vmem";
+		end
+		else if (program_index == 4) begin
+			$display("Loading simulation program (time: %t): or1k-ov.vmem", $time);
+			memory_file = "simulation/vmem/or1k-ov.vmem";
+		end
+		else if (program_index == 5) begin
+			$display("Loading simulation program (time: %t): or1k-shortjump.vmem", $time);
+			memory_file = "simulation/vmem/or1k-shortjump.vmem";
+		end
+		else if (program_index == 6) begin
+			$display("Loading simulation program (time: %t): or1k-ticksyscall.vmem", $time);
+			memory_file = "simulation/vmem/or1k-ticksyscall.vmem";
+		end
+		else if (program_index == 7) begin
+			$display("Loading simulation program (time: %t): or1k-trap.vmem", $time);
+			memory_file = "simulation/vmem/or1k-trap.vmem";
+		end
+		else if (program_index == 8) begin
+			$display("Loading simulation program (time: %t): or1k-trapdelayslot.vmem", $time);
+			memory_file = "simulation/vmem/or1k-trapdelayslot.vmem";
+		end
+		else if (program_index == 9) begin
+			$display("Loading simulation program (time: %t): or1k-custom.vmem", $time);
+			memory_file = "simulation/vmem/or1k-custom.vmem";
+		end
+		else begin
+			$display("ERROR: unkown program index (time: %t)", $time);
+			$finish;
+		end
+
+		// 0-out memory on processor reset
+		for(k = 0; k < orpsoc_testbench.dut.ram_wb0.ram_wb_b3_0.mem_words; k++) begin
+			orpsoc_testbench.dut.ram_wb0.ram_wb_b3_0.mem[k] = 1'b0;
+		end
+
+		// Load program into memory
+		$readmemh(memory_file, orpsoc_testbench.dut.ram_wb0.ram_wb_b3_0.mem);
+
+		// print memory stats
+		$display("Memory Address Width (Bits): %12d", orpsoc_testbench.dut.ram_wb0.ram_wb_b3_0.mem_adr_width);
+		$display("Memory Size (Num Words):     %12d", orpsoc_testbench.dut.ram_wb0.ram_wb_b3_0.mem_words);
+		$display("Memory Size (Num Bytes):     %12d", orpsoc_testbench.dut.ram_wb0.ram_wb_b3_0.mem_size_bytes);
+		$display();
+		
+		// Clear Program Exit Flag
+		monitor.program_exit = 0;
+			
+		// Complete DUT Reset
+		repeat (32) @(negedge clk)
+			rst_n <= 1;
+		$display("DUT Reset Complete (time: %t).", $time);
+		$display();
+
+		// Increment Test Case Counter
+		test_num++;
+
+		// // Check if simulation done
+		// if (test_num == num_tests) begin
+		// 	$display("Simulation Complete (time: %t)", $time);
+		// 	$finish;
+		// end
+		// else begin
+
+		// 	// Reset DUT
+		// 	$display("Putting DUT into Reset (time: %t)...", $time);
+		// 	repeat (32) @(negedge clk)
+		// 		rst_n <= 1;
+		// 	repeat (32) @(negedge clk)
+		// 		rst_n <= 0;
+		// 	$display();
+
+		// 	if (program_index == 0) begin
+		// 		$display("Loading simulation program (time: %t): helloworld.vmem", $time);
+		// 		memory_file = "simulation/vmem/helloworld.vmem";
+		// 	end
+		// 	else if (program_index == 1) begin
+		// 		$display("Loading simulation program (time: %t): or1k-alignillegalinsn.vmem", $time);
+		// 		memory_file = "simulation/vmem/or1k-alignillegalinsn.vmem";
+		// 	end
+		// 	else if (program_index == 2) begin
+		// 		$display("Loading simulation program (time: %t): or1k-backtoback_jmp.vmem", $time);
+		// 		memory_file = "simulation/vmem/or1k-backtoback_jmp.vmem";
+		// 	end
+		// 	else if (program_index == 3) begin
+		// 		$display("Loading simulation program (time: %t): or1k-basic.vmem", $time);
+		// 		memory_file = "simulation/vmem/or1k-basic.vmem";
+		// 	end
+		// 	else if (program_index == 4) begin
+		// 		$display("Loading simulation program (time: %t): or1k-cmov.vmem", $time);
+		// 		memory_file = "simulation/vmem/or1k-cmov.vmem";
+		// 	end
+		// 	else if (program_index == 5) begin
+		// 		$display("Loading simulation program (time: %t): or1k-cy.vmem", $time);
+		// 		memory_file = "simulation/vmem/or1k-cy.vmem";
+		// 	end
+		// 	else if (program_index == 6) begin
+		// 		$display("Loading simulation program (time: %t): or1k-dsxinsn.vmem", $time);
+		// 		memory_file = "simulation/vmem/or1k-dsxinsn.vmem";
+		// 	end
+		// 	else if (program_index == 7) begin
+		// 		$display("Loading simulation program (time: %t): or1k-dsx.vmem", $time);
+		// 		memory_file = "simulation/vmem/or1k-dsx.vmem";
+		// 	end
+		// 	else if (program_index == 8) begin
+		// 		$display("Loading simulation program (time: %t): or1k-ext.vmem", $time);
+		// 		memory_file = "simulation/vmem/or1k-ext.vmem";
+		// 	end
+		// 	else if (program_index == 9) begin
+		// 		$display("Loading simulation program (time: %t): or1k-ffl1.vmem", $time);
+		// 		memory_file = "simulation/vmem/or1k-ffl1.vmem";
+		// 	end
+		// 	else if (program_index == 10) begin
+		// 		$display("Loading simulation program (time: %t): or1k-icache.vmem", $time);
+		// 		memory_file = "simulation/vmem/or1k-icache.vmem";
+		// 	end
+		// 	else if (program_index == 11) begin
+		// 		$display("Loading simulation program (time: %t): or1k-illegalinsndelayslot.vmem", $time);
+		// 		memory_file = "simulation/vmem/or1k-illegalinsndelayslot.vmem";
+		// 	end
+		// 	else if (program_index == 12) begin
+		// 		$display("Loading simulation program (time: %t): or1k-illegalinsn.vmem", $time);
+		// 		memory_file = "simulation/vmem/or1k-illegalinsn.vmem";
+		// 	end
+		// 	else if (program_index == 13) begin
+		// 		$display("Loading simulation program (time: %t): or1k-insnfetchalign.vmem", $time);
+		// 		memory_file = "simulation/vmem/or1k-insnfetchalign.vmem";
+		// 	end
+		// 	else if (program_index == 14) begin
+		// 		$display("Loading simulation program (time: %t): or1k-insnfetcherror.vmem", $time);
+		// 		memory_file = "simulation/vmem/or1k-insnfetcherror.vmem";
+		// 	end
+		// 	else if (program_index == 15) begin
+		// 		$display("Loading simulation program (time: %t): or1k-intloop.vmem", $time);
+		// 		memory_file = "simulation/vmem/or1k-intloop.vmem";
+		// 	end
+		// 	else if (program_index == 16) begin
+		// 		$display("Loading simulation program (time: %t): or1k-intmulticycle.vmem", $time);
+		// 		memory_file = "simulation/vmem/or1k-intmulticycle.vmem";
+		// 	end
+		// 	else if (program_index == 17) begin
+		// 		$display("Loading simulation program (time: %t): or1k-intsyscall.vmem", $time);
+		// 		memory_file = "simulation/vmem/or1k-intsyscall.vmem";
+		// 	end
+		// 	else if (program_index == 18) begin
+		// 		$display("Loading simulation program (time: %t): or1k-inttickloop.vmem", $time);
+		// 		memory_file = "simulation/vmem/or1k-inttickloop.vmem";
+		// 	end
+		// 	else if (program_index == 19) begin
+		// 		$display("Loading simulation program (time: %t): or1k-jmp.vmem", $time);
+		// 		memory_file = "simulation/vmem/or1k-jmp.vmem";
+		// 	end
+		// 	else if (program_index == 20) begin
+		// 		$display("Loading simulation program (time: %t): or1k-jr.vmem", $time);
+		// 		memory_file = "simulation/vmem/or1k-jr.vmem";
+		// 	end
+		// 	else if (program_index == 21) begin
+		// 		$display("Loading simulation program (time: %t): or1k-lsualigndelayslot.vmem", $time);
+		// 		memory_file = "simulation/vmem/or1k-lsualigndelayslot.vmem";
+		// 	end
+		// 	else if (program_index == 22) begin
+		// 		$display("Loading simulation program (time: %t): or1k-lsualign.vmem", $time);
+		// 		memory_file = "simulation/vmem/or1k-lsualign.vmem";
+		// 	end
+		// 	else if (program_index == 23) begin
+		// 		$display("Loading simulation program (time: %t): or1k-lsuerrordelayslot.vmem", $time);
+		// 		memory_file = "simulation/vmem/or1k-lsuerrordelayslot.vmem";
+		// 	end
+		// 	else if (program_index == 24) begin
+		// 		$display("Loading simulation program (time: %t): or1k-lsuerror.vmem", $time);
+		// 		memory_file = "simulation/vmem/or1k-lsuerror.vmem";
+		// 	end
+		// 	else if (program_index == 25) begin
+		// 		$display("Loading simulation program (time: %t): or1k-lsu.vmem", $time);
+		// 		memory_file = "simulation/vmem/or1k-lsu.vmem";
+		// 	end
+		// 	else if (program_index == 26) begin
+		// 		$display("Loading simulation program (time: %t): or1k-lwjr.vmem", $time);
+		// 		memory_file = "simulation/vmem/or1k-lwjr.vmem";
+		// 	end
+		// 	else if (program_index == 27) begin
+		// 		$display("Loading simulation program (time: %t): or1k-mmu.vmem", $time);
+		// 		memory_file = "simulation/vmem/or1k-mmu.vmem";
+		// 	end
+		// 	else if (program_index == 28) begin
+		// 		$display("Loading simulation program (time: %t): or1k-mul.vmem", $time);
+		// 		memory_file = "simulation/vmem/or1k-mul.vmem";
+		// 	end
+		// 	else if (program_index == 29) begin
+		// 		$display("Loading simulation program (time: %t): or1k-mul-basic.vmem", $time);
+		// 		memory_file = "simulation/vmem/or1k-mul-basic.vmem";
+		// 	end
+		// 	else if (program_index == 30) begin
+		// 		$display("Loading simulation program (time: %t): or1k-msync.vmem", $time);
+		// 		memory_file = "simulation/vmem/or1k-msync.vmem";
+		// 	end
+		// 	else if (program_index == 31) begin
+		// 		$display("Loading simulation program (time: %t): or1k-newlibirq.vmem", $time);
+		// 		memory_file = "simulation/vmem/or1k-newlibirq.vmem";
+		// 	end
+		// 	else if (program_index == 32) begin
+		// 		$display("Loading simulation program (time: %t): or1k-ovcy.vmem", $time);
+		// 		memory_file = "simulation/vmem/or1k-ovcy.vmem";
+		// 	end
+		// 	else if (program_index == 33) begin
+		// 		$display("Loading simulation program (time: %t): or1k-ov.vmem", $time);
+		// 		memory_file = "simulation/vmem/or1k-ov.vmem";
+		// 	end
+		// 	else if (program_index == 34) begin
+		// 		$display("Loading simulation program (time: %t): or1k-regjmp.vmem", $time);
+		// 		memory_file = "simulation/vmem/or1k-regjmp.vmem";
+		// 	end
+		// 	else if (program_index == 35) begin
+		// 		$display("Loading simulation program (time: %t): or1k-rfe.vmem", $time);
+		// 		memory_file = "simulation/vmem/or1k-rfe.vmem";
+		// 	end
+		// 	else if (program_index == 36) begin
+		// 		$display("Loading simulation program (time: %t): or1k-sfbf.vmem", $time);
+		// 		memory_file = "simulation/vmem/or1k-sfbf.vmem";
+		// 	end
+		// 	else if (program_index == 37) begin
+		// 		$display("Loading simulation program (time: %t): or1k-sf.vmem", $time);
+		// 		memory_file = "simulation/vmem/or1k-sf.vmem";
+		// 	end
+		// 	else if (program_index == 38) begin
+		// 		$display("Loading simulation program (time: %t): or1k-shiftopts.vmem", $time);
+		// 		memory_file = "simulation/vmem/or1k-shiftopts.vmem";
+		// 	end
+		// 	else if (program_index == 39) begin
+		// 		$display("Loading simulation program (time: %t): or1k-shortbranch.vmem", $time);
+		// 		memory_file = "simulation/vmem/or1k-shortbranch.vmem";
+		// 	end
+		// 	else if (program_index == 40) begin
+		// 		$display("Loading simulation program (time: %t): or1k-shortjump.vmem", $time);
+		// 		memory_file = "simulation/vmem/or1k-shortjump.vmem";
+		// 	end
+		// 	else if (program_index == 41) begin
+		// 		$display("Loading simulation program (time: %t): or1k-simple.vmem", $time);
+		// 		memory_file = "simulation/vmem/or1k-simple.vmem";
+		// 	end
+		// 	else if (program_index == 42) begin
+		// 		$display("Loading simulation program (time: %t): or1k-systemcall.vmem", $time);
+		// 		memory_file = "simulation/vmem/or1k-systemcall.vmem";
+		// 	end
+		// 	else if (program_index == 43) begin
+		// 		$display("Loading simulation program (time: %t): or1k-tickloop.vmem", $time);
+		// 		memory_file = "simulation/vmem/or1k-tickloop.vmem";
+		// 	end
+		// 	else if (program_index == 44) begin
+		// 		$display("Loading simulation program (time: %t): or1k-tickrfforward.vmem", $time);
+		// 		memory_file = "simulation/vmem/or1k-tickrfforward.vmem";
+		// 	end
+		// 	else if (program_index == 45) begin
+		// 		$display("Loading simulation program (time: %t): or1k-ticksyscall.vmem", $time);
+		// 		memory_file = "simulation/vmem/or1k-ticksyscall.vmem";
+		// 	end
+		// 	else if (program_index == 46) begin
+		// 		$display("Loading simulation program (time: %t): or1k-timer.vmem", $time);
+		// 		memory_file = "simulation/vmem/or1k-timer.vmem";
+		// 	end
+		// 	else if (program_index == 47) begin
+		// 		$display("Loading simulation program (time: %t): or1k-trapdelayslot.vmem", $time);
+		// 		memory_file = "simulation/vmem/or1k-trapdelayslot.vmem";
+		// 	end
+		// 	else if (program_index == 48) begin
+		// 		$display("Loading simulation program (time: %t): or1k-trap.vmem", $time);
+		// 		memory_file = "simulation/vmem/or1k-trap.vmem";
+		// 	end
+		// 	else begin
+		// 		$display("ERROR: unkown program index (time: %t)", $time);
+		// 		$finish;
+		// 	end
+
+		// 	// // Set simulation program filename
+		// 	// if (program_index == 0) begin
+		// 	// 	$display("Loading simulation program (time: %t): helloworld.vmem", $time);
+		// 	// 	memory_file = "simulation/vmem/helloworld.vmem";
+		// 	// end
+		// 	// else if (program_index == 1) begin
+		// 	// 	$display("Loading simulation program (time: %t): aes.vmem", $time);
+		// 	// 	memory_file = "simulation/vmem/aes.vmem";
+		// 	// end
+		// 	// else if (program_index == 2) begin
+		// 	// 	$display("Loading simulation program (time: %t): basicmath.vmem", $time);
+		// 	// 	memory_file = "simulation/vmem/basicmath.vmem";
+		// 	// end
+		// 	// else if (program_index == 3) begin
+		// 	// 	$display("Loading simulation program (time: %t): blowfish.vmem", $time);
+		// 	// 	memory_file = "simulation/vmem/blowfish.vmem";
+		// 	// end
+		// 	// else if (program_index == 4) begin
+		// 	// 	$display("Loading simulation program (time: %t): crc.vmem", $time);
+		// 	// 	memory_file = "simulation/vmem/crc.vmem";
+		// 	// end
+		// 	// else if (program_index == 5) begin
+		// 	// 	$display("Loading simulation program (time: %t): dijkstra.vmem", $time);
+		// 	// 	memory_file = "simulation/vmem/dijkstra.vmem";
+		// 	// end
+		// 	// else if (program_index == 6) begin
+		// 	// 	$display("Loading simulation program (time: %t): fft.vmem", $time);
+		// 	// 	memory_file = "simulation/vmem/fft.vmem";
+		// 	// end
+		// 	// else if (program_index == 7) begin
+		// 	// 	$display("Loading simulation program (time: %t): limits.vmem", $time);
+		// 	// 	memory_file = "simulation/vmem/limits.vmem";
+		// 	// end
+		// 	// else if (program_index == 8) begin
+		// 	// 	$display("Loading simulation program (time: %t): lzfx.vmem", $time);
+		// 	// 	memory_file = "simulation/vmem/lzfx.vmem";
+		// 	// end
+		// 	// else if (program_index == 9) begin
+		// 	// 	$display("Loading simulation program (time: %t): qsort.vmem", $time);
+		// 	// 	memory_file = "simulation/vmem/qsort.vmem";
+		// 	// end
+		// 	// else if (program_index == 10) begin
+		// 	// 	$display("Loading simulation program (time: %t): randmath.vmem", $time);
+		// 	// 	memory_file = "simulation/vmem/randmath.vmem";
+		// 	// end
+		// 	// else if (program_index == 11) begin
+		// 	// 	$display("Loading simulation program (time: %t): rc4.vmem", $time);
+		// 	// 	memory_file = "simulation/vmem/rc4.vmem";
+		// 	// end
+		// 	// else if (program_index == 12) begin
+		// 	// 	$display("Loading simulation program (time: %t): rsa.vmem", $time);
+		// 	// 	memory_file = "simulation/vmem/rsa.vmem";
+		// 	// end
+		// 	// else if (program_index == 13) begin
+		// 	// 	$display("Loading simulation program (time: %t): sha.vmem", $time);
+		// 	// 	memory_file = "simulation/vmem/sha.vmem";
+		// 	// end
+		// 	// else if (program_index == 14) begin
+		// 	// 	$display("Loading simulation program (time: %t): stringsearch.vmem", $time);
+		// 	// 	memory_file = "simulation/vmem/stringsearch.vmem";
+		// 	// end
+		// 	// else if (program_index == 15) begin
+		// 	// 	$display("Loading simulation program (time: %t): susan.vmem", $time);
+		// 	// 	memory_file = "simulation/vmem/susan.vmem";
+		// 	// end
+		// 	// else if (program_index == 16) begin
+		// 	// 	// $display("Loading simulation program (time: %t): syscall.vmem", $time);
+		// 	// 	// memory_file = "simulation/vmem/syscall.vmem";
+		// 	// 	$display("Loading simulation program (time: %t): or1k-systemcall.vmem", $time);
+		// 	// 	memory_file = "simulation/vmem/or1k-systemcall.vmem";
+		// 	// end
+		// 	// else begin
+		// 	// 	$display("ERROR: unkown program index (time: %t)", $time);
+		// 	// 	$finish;
+		// 	// end
+
+		// 	// 0-out memory on processor reset
+		// 	for(k = 0; k < orpsoc_testbench.dut.ram_wb0.ram_wb_b3_0.mem_words; k++) begin
+		// 		orpsoc_testbench.dut.ram_wb0.ram_wb_b3_0.mem[k] = 1'b0;
+		// 	end
+
+		// 	// Load program into memory
+		// 	$readmemh(memory_file, orpsoc_testbench.dut.ram_wb0.ram_wb_b3_0.mem);
+
+		// 	// print memory stats
+		// 	$display("Memory Address Width (Bits): %12d", orpsoc_testbench.dut.ram_wb0.ram_wb_b3_0.mem_adr_width);
+		// 	$display("Memory Size (Num Words):     %12d", orpsoc_testbench.dut.ram_wb0.ram_wb_b3_0.mem_words);
+		// 	$display("Memory Size (Num Bytes):     %12d", orpsoc_testbench.dut.ram_wb0.ram_wb_b3_0.mem_size_bytes);
+		// 	$display();
+			
+		// 	// Clear Program Exit Flag
+		// 	monitor.program_exit = 0;
+			
+		// 	// Complete DUT Reset
+		// 	repeat (32) @(negedge clk)
+		// 		rst_n <= 1;
+		// 	$display("DUT Reset Complete (time: %t).", $time);
+		// 	$display();
+
+		// 	// Increment Test Case Counter
+		// 	test_num++;
+		// end
 	end
 
 	// 
