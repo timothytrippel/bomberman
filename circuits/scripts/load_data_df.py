@@ -17,8 +17,8 @@ def load_data_df_wf(data_dir):
 	    'Design'       : [],
 	    'Time'         : [],
 	    
-	    'Total Coalesced Cntrs'          : [],
-	    'Total Malicious Coalesced Cntrs': [],
+	    'Total Coalesced TTTs'          : [],
+	    'Total Malicious Coalesced TTTs': [],
 	    'Coalesced Not Simd'             : [],
 	    'Coalesced Constants'            : [],
 	    'Coalesced Malicious'            : [],
@@ -28,8 +28,8 @@ def load_data_df_wf(data_dir):
 	    'Design'       : [],
 	    'Time'         : [],
 
-	    'Total Distributed Cntrs': [],
-	    'Total Malicious Distributed Cntrs': [],
+	    'Total Distributed TTTs': [],
+	    'Total Malicious Distributed TTTs': [],
 	    'Distributed Not Simd'   : [],
 	    'Distributed Constants'  : [],
 	    'Distributed Malicious'  : [],
@@ -57,21 +57,21 @@ def load_data_df_wf(data_dir):
 	                if counter_type == 'coal':
 	                	coal_counter_data['Design'].append(design_name)
 	            		coal_counter_data['Time'].append(time_limit)
-	                	coal_counter_data['Total Coalesced Cntrs'].append(int(json_dict['total']))
+	                	coal_counter_data['Total Coalesced TTTs'].append(int(json_dict['total']))
 	                	coal_counter_data['Coalesced Not Simd'].append(int(json_dict['not_simd']))
 	                	coal_counter_data['Coalesced Constants'].append(int(json_dict['constants']))
 	                	coal_counter_data['Coalesced Malicious'].append(int(json_dict['malicious']))
-	                	coal_counter_data['Total Malicious Coalesced Cntrs'].append(int(json_dict['malicious']) + int(json_dict['constants']))
+	                	coal_counter_data['Total Malicious Coalesced TTTs'].append(int(json_dict['malicious']) + int(json_dict['constants']))
 
 	                # Get Distributed Counter Data
 	            	elif counter_type == 'dist':
 	            		dist_counter_data['Design'].append(design_name)
 	            		dist_counter_data['Time'].append(time_limit)
-	                	dist_counter_data['Total Distributed Cntrs'].append(int(json_dict['total']))
+	                	dist_counter_data['Total Distributed TTTs'].append(int(json_dict['total']))
 	                	dist_counter_data['Distributed Not Simd'].append(int(json_dict['not_simd']))
 	                	dist_counter_data['Distributed Constants'].append(int(json_dict['constants']))
 	                	dist_counter_data['Distributed Malicious'].append(int(json_dict['malicious']))
-	                	dist_counter_data['Total Malicious Distributed Cntrs'].append(int(json_dict['malicious']) + int(json_dict['constants']))
+	                	dist_counter_data['Total Malicious Distributed TTTs'].append(int(json_dict['malicious']) + int(json_dict['constants']))
 
 	                else:
 	                	print "ERROR: unknown counter type for file:", filename
@@ -81,11 +81,11 @@ def load_data_df_wf(data_dir):
 
 	# print "Design:       ", len(counter_data['Design'])
 	# print "Time:         ", len(counter_data['Time'])
-	# print "Total Coal:   ", len(counter_data['Total Coalesced Cntrs'])
+	# print "Total Coal:   ", len(counter_data['Total Coalesced TTTs'])
 	# print "Coal Not Simd:", len(counter_data['Coalesced Not Simd'])
 	# print "Coal Consts:  ", len(counter_data['Coalesced Constants'])
 	# print "Coal Mal:     ", len(counter_data['Coalesced Malicious'])
-	# print "Total Dist:   ", len(counter_data['Total Distributed Cntrs'])
+	# print "Total Dist:   ", len(counter_data['Total Distributed TTTs'])
 	# print "Dist Not Simd:", len(counter_data['Distributed Not Simd'])
 	# print "Dist Consts:  ", len(counter_data['Distributed Constants'])
 	# print "Dist Mal:     ", len(counter_data['Distributed Malicious'])

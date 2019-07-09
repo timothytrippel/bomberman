@@ -591,7 +591,7 @@ module orpsoc_testbench;
 		end
 
 		// Check if all simulations complete
-		if (program_index == 10) begin
+		if (program_index == 8) begin
 			#1;
 			orpsoc_testbench.dut.or1200_dbg_stb_i_reg = 1;
 			#100;
@@ -641,14 +641,6 @@ module orpsoc_testbench;
 			memory_file = "simulation/vmem/or1k-ticksyscall.vmem";
 		end
 		else if (program_index == 7) begin
-			$display("Loading simulation program (time: %t): or1k-trap.vmem", $time);
-			memory_file = "simulation/vmem/or1k-trap.vmem";
-		end
-		else if (program_index == 8) begin
-			$display("Loading simulation program (time: %t): or1k-trapdelayslot.vmem", $time);
-			memory_file = "simulation/vmem/or1k-trapdelayslot.vmem";
-		end
-		else if (program_index == 9) begin
 			$display("Loading simulation program (time: %t): or1k-custom.vmem", $time);
 			memory_file = "simulation/vmem/or1k-custom.vmem";
 		end
