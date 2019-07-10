@@ -12,7 +12,7 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-def load_data_df_wf(data_dir):
+def load_data_df_wf(data_dir, clk_period):
 	coal_counter_data = {
 	    'Design'       : [],
 	    'Time'         : [],
@@ -56,7 +56,7 @@ def load_data_df_wf(data_dir):
 	                # Get Coalesced Counter Data	
 	                if counter_type == 'coal':
 	                	coal_counter_data['Design'].append(design_name)
-	            		coal_counter_data['Time'].append(time_limit)
+	            		coal_counter_data['Time'].append(float(time_limit) / float(clk_period))
 	                	coal_counter_data['Total Coalesced TTTs'].append(int(json_dict['total']))
 	                	coal_counter_data['Coalesced Not Simd'].append(int(json_dict['not_simd']))
 	                	coal_counter_data['Coalesced Constants'].append(int(json_dict['constants']))
@@ -66,7 +66,7 @@ def load_data_df_wf(data_dir):
 	                # Get Distributed Counter Data
 	            	elif counter_type == 'dist':
 	            		dist_counter_data['Design'].append(design_name)
-	            		dist_counter_data['Time'].append(time_limit)
+	            		dist_counter_data['Time'].append(float(time_limit) / float(clk_period))
 	                	dist_counter_data['Total Distributed TTTs'].append(int(json_dict['total']))
 	                	dist_counter_data['Distributed Not Simd'].append(int(json_dict['not_simd']))
 	                	dist_counter_data['Distributed Constants'].append(int(json_dict['constants']))

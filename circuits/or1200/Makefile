@@ -22,6 +22,7 @@ INCLUDEDIRS := -I$(ORPSOC_RTL) -I$(DBG_IF_RTL) -I$(UART_RTL)  -I$(DBG_IF_RTL) -I
 # Simulation Confingurations
 DUT_TOP_MODULE      := orpsoc_testbench.dut.or1200_top0.or1200_cpu
 # DUT_TOP_MODULE      := orpsoc_testbench.dut.or1200_top0
+# DUT_TOP_MODULE      := orpsoc_testbench.dut
 NUM_TESTS           := 2
 START_TIME          := 0
 TIME_LIMIT          := -1
