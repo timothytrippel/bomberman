@@ -45,12 +45,14 @@ module ttb_test_aes_128;
     // AES Inputs
     reg aes_enable;
     wire [`AES_KEY_SIZE - 1:0] aes_state;
-    wire [`AES_KEY_SIZE - 1:0] aes_key; 
+    wire [`AES_KEY_SIZE - 1:0] aes_key;
 
     // AES Outputs
     wire [`AES_KEY_SIZE - 1:0] out;
 
     // LSFR Outputs/AES Inputs
+    reg  [`AES_KEY_SIZE - 1:0] seed_state;
+    reg  [`AES_KEY_SIZE - 1:0] seed_key; 
     wire [`AES_KEY_SIZE - 1:0] random_state;
     wire [`AES_KEY_SIZE - 1:0] random_key; 
 
@@ -65,7 +67,7 @@ module ttb_test_aes_128;
     wire lfsr_key_done;
 
     // IMG encryption test variables
-    // reg [7:0] img_bytes [`IMG_SIZE - 1: 0];
+    reg [7:0] img_bytes [`IMG_SIZE - 1: 0];
     reg [`AES_KEY_SIZE - 1:0] img_state;
     integer file_id;
     integer file_read_status;
@@ -88,7 +90,7 @@ module ttb_test_aes_128;
         .i_Clk(lfsr_clk),
         .i_Enable(lfsr_state_enable),
         .i_Seed_DV(load_state_seed),
-        .i_Seed_Data(`STATE_LFSR_SEED),
+        .i_Seed_Data(seed_state),
         .o_LFSR_Data(random_state),
         .o_LFSR_Done(lfsr_state_done)
     );
@@ -98,7 +100,7 @@ module ttb_test_aes_128;
         .i_Clk(lfsr_clk),
         .i_Enable(lfsr_key_enable),
         .i_Seed_DV(load_key_seed),
-        .i_Seed_Data(`KEY_LFSR_SEED),
+        .i_Seed_Data(seed_key),
         .o_LFSR_Data(random_key),
         .o_LFSR_Done(lfsr_key_done)
     );
@@ -114,6 +116,18 @@ module ttb_test_aes_128;
         if (! $value$plusargs("num_tests=%d", num_tests)) begin
             $display("ERROR: please specify +num_tests=<value> to start.");
             $finish;
+        end
+
+        // Get arg for key LFSR seed
+        if (! $value$plusargs("seed_key=%h", seed_key)) begin
+            $display("INFO: +seed_key=<value> not specified... using default.");
+            seed_key = `KEY_LFSR_SEED;
+        end
+
+        // Get arg for state LFSR seed
+        if (! $value$plusargs("seed_state=%h", seed_state)) begin
+            $display("INFO: +seed_state=<value> not specified... using default.");
+            seed_state = `STATE_LFSR_SEED;
         end
 
         // Open VCD file
@@ -138,6 +152,10 @@ module ttb_test_aes_128;
 
             // Start random encryptions
             $display("Starting %4d random encryptions (time: %t)...", num_tests, $time);
+
+            // Seed LFSRs
+            $display("Seeding state LFSR with value: %32h", seed_state);
+            $display("Seeding key   LFSR with value: %32h", seed_key);
 
             // Enable LFSRs and Load Seeds
             lfsr_state_enable = 1'b1;

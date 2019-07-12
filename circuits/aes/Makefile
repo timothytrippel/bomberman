@@ -7,8 +7,18 @@ NUM_TESTS           := 75
 START_TIME          := 0
 TIME_LIMIT          := -1
 TIME_RESOLUTION     := 100
-NUM_MALICIOUS_CNTRS := 1
+NUM_MALICIOUS_CNTRS := 0
 D_SIGNAL_BASENAME   := clk
 N_SIGNAL_BASENAME   := state
+
+# Check if AES_KEY_SEED parameter set
+ifndef AES_KEY_SEED
+	AES_KEY_SEED := CAFEFEEDCAFEFEEDCAFEFEEDCAFEFEED
+endif
+
+# Check if AES_STATE_SEED parameter set
+ifndef AES_STATE_SEED
+	AES_STATE_SEED := DEADBEEFDEADBEEFDEADBEEFDEADBEEF
+endif
 
 include ../common.mk

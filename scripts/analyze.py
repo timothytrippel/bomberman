@@ -55,6 +55,9 @@ def classify_counters(counter_type, signals, vcd, counters, start_time, time_lim
 	malicious = {}
 	benign    = {}
 
+	# Flags
+	no_malicious = False
+
 	# Mark all counters as malicious
 	for counter_name, counter in counters.items():
 
@@ -141,7 +144,7 @@ def classify_counters(counter_type, signals, vcd, counters, start_time, time_lim
 					print "Values Seen/Possible: %d/%d" % (len(malicious[mal_counter_name]), max_possible_values)
 
 				# Classify counter as a constant
-				if len(malicious[mal_counter_name]) == 1:
+				if len(malicious[mal_counter_name]) <= 1:
 					if sws.VERBOSE > 1:
 						print "Constant: " + mal_counter_name
 
@@ -181,6 +184,11 @@ def classify_counters(counter_type, signals, vcd, counters, start_time, time_lim
 		# Save counter stats to JSON file
 		json_filename = json_base_filename + "." + counter_type + "." + str(curr_time_limit) + ".json"
 		export_stats_json(len(counters), len(skipped), len(constants), len(malicious) - len(constants), json_filename)
+		
+		# Check if hit 0 malicious counters
+		if not no_malicious and len(malicious) == 0:
+			no_malicious = True
+			print "\nNo more malicious counters detected at: %d" % (curr_time_limit)
 
 	# Print remaining malicious signals/constants
 	print

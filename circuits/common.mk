@@ -70,11 +70,15 @@ $(OUT_FILE_BASENAME).vcd: $(OUT_FILE_BASENAME).vvp
 	if [ $(LOG) == 0 ]; then \
 		vvp $< -DVCD_FILENAME=\"$@\" \
 			+num_tests=$(NUM_TESTS) \
-			+program_index=${PROGRAM_NUM}; \
+			+program_index=${PROGRAM_NUM} \
+			+seed_key=${AES_KEY_SEED} \
+			+seed_state=${AES_STATE_SEED}; \
 	else \
 		vvp $< -DVCD_FILENAME=\"$@\" \
 			+num_tests=$(NUM_TESTS) \
-			+program_index=${PROGRAM_NUM} 2>&1 | tee $(OUT_FILE_BASENAME).vcd.log; \
+			+program_index=${PROGRAM_NUM} \
+			+seed_key=${AES_KEY_SEED} \
+			+seed_state=${AES_STATE_SEED} 2>&1 | tee $(OUT_FILE_BASENAME).vcd.log; \
 	fi;
 
 # IVL Simulation (Step 1: Executable Generation)

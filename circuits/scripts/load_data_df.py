@@ -12,7 +12,7 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-def load_data_df_wf(data_dir, clk_period):
+def load_data_df_wf(data_dir, clk_period, design_name):
 	coal_counter_data = {
 	    'Design'       : [],
 	    'Time'         : [],
@@ -40,7 +40,6 @@ def load_data_df_wf(data_dir, clk_period):
 	    for filename in f:
 	        if '.json' in filename and 'sizes' not in filename:
 	            design_info  = filename.split('.')
-	            design_name  = design_info[0]
 	            time_limit   = int(design_info[2])
 	            counter_type = design_info[1]
 	            # print "Design:      ", design_name
@@ -93,7 +92,7 @@ def load_data_df_wf(data_dir, clk_period):
 	# Convert data to a data frames and merge them           
 	coal_counter_df = pd.DataFrame(coal_counter_data)
 	dist_counter_df = pd.DataFrame(dist_counter_data)
-	counter_df      = pd.merge(coal_counter_df, dist_counter_df, how='left', on='Time')
+	counter_df      = pd.merge(coal_counter_df, dist_counter_df, how='left', on=['Time', 'Design'])
 	return counter_df
 
 def load_data_df_lf(data_dir):
