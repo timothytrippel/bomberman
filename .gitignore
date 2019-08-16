@@ -12,7 +12,6 @@
 # Ignore TTB Generated Files
 *.dot
 !tests/ivl_ttb/golden_dot/*.dot
-*.pdf
 *.vvp
 
 # Ignore Compiled Files
@@ -28,6 +27,9 @@
 *.json
 *.csv
 *.png
+*.pdf
+!figures/*.pdf
+!figures/*.png
 
 # Ignore OR1200 binary translation tools
 *bin2c
