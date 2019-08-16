@@ -27,7 +27,12 @@ The **Simulation Analysis** stage parses simulation results, in the Value Change
 # Directory Structure
 
 ### Circuits
+
+The `circuits/` directory contains three example hardware designs to try out the Bomberman toolchain on. These designs are: an 128-bit AES accelerator (CNTR mode only), a UART core, and an OR1200 processor. For information on how to run the Bomberman toolchain on each hardware design, see the README.md file in the the `circuits/` directory.
+
 ### Scripts
+
+The `scripts/` directory 
 ### Tests
 
 # Installation
