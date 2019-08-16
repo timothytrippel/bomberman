@@ -6,7 +6,7 @@ Bomberman is a *ticking timebomb* (TTB) Trojan specific verification tool. It in
 <figure>
     <p align="center">
         <img src="/figures/bomberman.png" data-canonical-src="/figures/bomberman.png" width="75%"/>
-        <figcaption>Figure 1: Bomberman Architecture</figcaption>
+        <figcaption align="center">Figure 1: Bomberman Architecture</figcaption>
     </p>
     
 </figure>
