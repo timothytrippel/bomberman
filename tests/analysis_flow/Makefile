@@ -5,7 +5,7 @@ SCRIPTS     := ../../scripts
 # Configurations
 CLK_BASENAME := clk
 
-all: counter d_ff split
+all: counter d_ff split alu
 
 # Design Targets
 counter:

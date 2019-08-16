@@ -92,6 +92,7 @@ module uart_test ();
     integer num_tests;
     reg     uart2_initialized;
     reg     debug;
+    reg [7:0] data_seed;
 
     //--------------------------------------------------------------------------------
     // DUT Module Instantiations
@@ -214,7 +215,7 @@ module uart_test ();
         .i_Clk(clk),
         .i_Enable(lfsr_enable_i),
         .i_Seed_DV(lfsr_load_seed_i),
-        .i_Seed_Data(`LFSR_SEED),
+        .i_Seed_Data(data_seed),
         .o_LFSR_Data(random_byte_o),
         .o_LFSR_Done(lfsr_done_o)
     );
@@ -224,7 +225,7 @@ module uart_test ();
         .i_Clk(clk),
         .i_Enable(comp_lfsr_enable_i),
         .i_Seed_DV(comp_lfsr_load_seed_i),
-        .i_Seed_Data(`LFSR_SEED),
+        .i_Seed_Data(data_seed),
         .o_LFSR_Data(comp_random_byte_o),
         .o_LFSR_Done(comp_lfsr_done_o)
     );
@@ -243,14 +244,24 @@ module uart_test ();
     //--------------------------------------------------------------------------------
     // Load Command Line Arg(s)
     //--------------------------------------------------------------------------------
-
-    // Get arg for number of tests to run
     initial begin
+
+        // Get arg for number of tests to run
+        $display("Loading number of tests to run...");
         if (! $value$plusargs("num_tests=%d", num_tests)) begin
             $display("ERROR: please specify +num_tests=<value> to start.");
             $finish;
         end
+        
+
+        // Get arg for key LFSR seed
+        $display("Loading LFSR seed...");
+        if (! $value$plusargs("data_seed=%h", data_seed)) begin
+            $display("INFO: +data_seed=<value> not specified... using default.");
+            data_seed = `LFSR_SEED;
+        end
         $display("Starting %4d test(s)...", num_tests);
+
     end
 
     //--------------------------------------------------------------------------------

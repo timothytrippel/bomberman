@@ -245,32 +245,32 @@ def add_malicious_dist_counters(signals, vcd, dist_counters, num_cntrs, dut_top_
 	ddn.increment_lsb         = 0
 	dist_counters[ddn.fullname], vcd = generate_malicious_counter(signals, vcd, ddn)
 
-	# DND
-	if sws.VERBOSE:
-		print "Generating Malicious (DND) Counter..."
-	dnd = MaliciousCounter()
-	dnd.fullname              = dut_top_module + '.mal_dnd'
-	dnd.width                 = 16
-	dnd.event_signal_fullname = dut_top_module + '.' + d_sig_basename
-	dnd.event_signal_bit      = 0
-	dnd.initial_count         = 0
-	dnd.increment             = dut_top_module + '.' + n_sig_basename
-	dnd.increment_msb         = 2
-	dnd.increment_lsb         = 1
-	dist_counters[dnd.fullname], vcd = generate_malicious_counter(signals, vcd, dnd)
+	# # DND
+	# if sws.VERBOSE:
+	# 	print "Generating Malicious (DND) Counter..."
+	# dnd = MaliciousCounter()
+	# dnd.fullname              = dut_top_module + '.mal_dnd'
+	# dnd.width                 = 16
+	# dnd.event_signal_fullname = dut_top_module + '.' + d_sig_basename
+	# dnd.event_signal_bit      = 0
+	# dnd.initial_count         = 0
+	# dnd.increment             = dut_top_module + '.' + n_sig_basename
+	# dnd.increment_msb         = 2
+	# dnd.increment_lsb         = 1
+	# dist_counters[dnd.fullname], vcd = generate_malicious_counter(signals, vcd, dnd)
 
-	# DNN
-	if sws.VERBOSE:
-		print "Generating Malicious (DNN) Counter..."
-	dnn = MaliciousCounter()
-	dnn.fullname              = dut_top_module + '.mal_dnn'
-	dnn.width                 = 16
-	dnn.event_signal_fullname = dut_top_module + '.' + n_sig_basename
-	dnn.event_signal_bit      = 3
-	dnn.initial_count         = 0
-	dnn.increment             = dut_top_module + '.' + n_sig_basename
-	dnn.increment_msb         = 2
-	dnn.increment_lsb         = 1
-	dist_counters[dnn.fullname], vcd = generate_malicious_counter(signals, vcd, dnn)
+	# # DNN
+	# if sws.VERBOSE:
+	# 	print "Generating Malicious (DNN) Counter..."
+	# dnn = MaliciousCounter()
+	# dnn.fullname              = dut_top_module + '.mal_dnn'
+	# dnn.width                 = 16
+	# dnn.event_signal_fullname = dut_top_module + '.' + n_sig_basename
+	# dnn.event_signal_bit      = 3
+	# dnn.initial_count         = 0
+	# dnn.increment             = dut_top_module + '.' + n_sig_basename
+	# dnn.increment_msb         = 2
+	# dnn.increment_lsb         = 1
+	# dist_counters[dnn.fullname], vcd = generate_malicious_counter(signals, vcd, dnn)
 
 	return dist_counters

@@ -7,8 +7,13 @@ NUM_TESTS           := 1
 START_TIME          := 0
 TIME_LIMIT          := -1
 TIME_RESOLUTION     := 1000
-NUM_MALICIOUS_CNTRS := 1
+NUM_MALICIOUS_CNTRS := 0
 D_SIGNAL_BASENAME   := wb_clk_i
 N_SIGNAL_BASENAME   := rf_count
+
+# Check if UART_DATA_SEED parameter set
+ifndef UART_DATA_SEED
+	UART_DATA_SEED := 0
+endif
 
 include ../common.mk
