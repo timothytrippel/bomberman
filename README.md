@@ -1,7 +1,15 @@
 # Bomberman
 
-Bomberman is a *ticking timebomb* (TTB) Trojan specific verification tool. It indentifies suspicious state-saving components (SSCs) in a hardware design that could potentially be part of a TTB Trojan. Bomberman starts by assuming *all* SSCs are suspicious, and subsequently classifies each SSC as non-suspicious if it expresses values that violate a set of invariants during verification simulations. Bomberman consists of two main stages as shown in Figure 
+Bomberman is a **ticking timebomb** (TTB) Trojan specific verification tool. It indentifies suspicious state-saving components (SSCs) in a hardware design that could *potentially* be part of a TTB Trojan. Bomberman starts by assuming *all* SSCs are suspicious, and subsequently classifies each SSC as benign if it expresses values that violate a set of invariants during verification simulations. 
 
+As detailed in our technical report **LINK TO PAPER**, TTBs are comprised of SSCs that incrementally approach a triggering value. The set of invariants that define TTB SSC behavior are as follows:
+1. values must never be repeated without a system reset, and 
+2. all possible values must never be expressed without triggering the Trojan.
+Bomberman leverages these two invariants while anlayzing simulation results of a hardware design to classify whether or not an SSC is part of a TTB Trojan.
+
+Bomberman consists of two main stages as shown in Figure 1:
+1. SSC Indentification
+2. Simulation Analysis
 <figure>
     <p align="center">
         <img src="/figures/bomberman.png" data-canonical-src="/figures/bomberman.png" width="75%"/>
@@ -10,8 +18,34 @@ Bomberman is a *ticking timebomb* (TTB) Trojan specific verification tool. It in
     </p>
 </figure>
 
-1. SSC Indentification
-2. SSC Analysis
+
+The **SSC Identification** stage locates all SSCs in a hardware design described in Verilog. It does so by first generating a data-flow graph from the HDL using a custom the Icarus Verilog compiler back-end. The data-flow graph is encoded in the Graphviz `.dot` format. Next, a python script parses the `.dot` file and locates all SSCs. All SSCs are initially marked as *suspicious* There are two types of SSCs that are identified: *coalesced* and *distributed*. For detailed information on the differences between the two types of SSCs, please refer to the technical research paper **LINK TO PAPER**.
+
+The **Simulation Analysis** stage parses simulation results, in the Value Change Dump (`.vcd`) format, and analyzes the values expressed by each SSC over the course of the simulation timeline. SSCs that violate either of the two invariants listed above are marked as *benign*
+
+## Directory Structure
+
+## Installation
+
+### 1. Repository Cloning
+
+### 2. Initialize Git Submodules
+
+### 3. Building Icarus Verilog (IVL)
+
+### 4. Building Data-Flow Graph Generator (tgt-ttb)
+
+## Testing
+
+### 1. Data-Flow Graph Generation
+### 2. Bomberman E2E Analysis
+
+## Usage
+
+### 1. Generating Data-Flow Graphs
+### 2. Running IVL Simulations
+### 3. Analyzing Simulations
+### 4. Bomberman E2E Analysis
 
 <!-- 
 
