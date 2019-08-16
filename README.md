@@ -5,11 +5,17 @@ Bomberman is a *ticking timebomb* (TTB) Trojan specific verification tool. It in
 <!-- [image]: https://llcad-github.llan.ll.mit.edu/HSS/ttb/figures/bomberman.pdf "Bomberman Architecture"  -->
 <!-- ![alt text](https://llcad-github.llan.ll.mit.edu/HSS/ttb/blob/master/figures/bomberman.pdf "Bomberman Architecture") -->
 
-[image]: https://llcad-github.llan.ll.mit.edu/HSS/ttb/blob/master/figures/bomberman.pdf "Image Title"
+<!-- [image]: https://llcad-github.llan.ll.mit.edu/HSS/ttb/blob/master/figures/bomberman.pdf "Image Title"
 
 ![Alt text][image]
 
-A reference to the [image](#image).
+A reference to the [image](#image). -->
+
+<object data="https://llcad-github.llan.ll.mit.edu/HSS/ttb/blob/master/figures/bomberman.pdf" type="application/pdf" width="700px" height="700px">
+    <embed src="https://llcad-github.llan.ll.mit.edu/HSS/ttb/blob/master/figures/bomberman.pdf">
+        <p>This browser does not support PDFs. Please download the PDF to view it: <a href="https://llcad-github.llan.ll.mit.edu/HSS/ttb/blob/master/figures/bomberman.pdf">Download PDF</a>.</p>
+    </embed>
+</object>
 
 1. SSC Indentification
 2. SSC Analysis
