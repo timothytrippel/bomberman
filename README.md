@@ -4,6 +4,8 @@ Bomberman is a *ticking timebomb* (TTB) Trojan specific verification tool. It in
 
 ![](/figures/bomberman.png | with=100)
 
+<img src="/figures/bomberman.png" data-canonical-src="/figures/bomberman.png" width="200" height="400" />
+
 1. SSC Indentification
 2. SSC Analysis
 
