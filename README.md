@@ -5,6 +5,7 @@ Bomberman is a **ticking timebomb** (TTB) Trojan specific verification tool. It 
 As detailed in our technical report **LINK TO PAPER**, TTBs are comprised of SSCs that incrementally approach a triggering value. The set of invariants that define TTB SSC behavior are as follows:
 1. values must never be repeated without a system reset, and 
 2. all possible values must never be expressed without triggering the Trojan.
+
 Bomberman leverages these two invariants while anlayzing simulation results of a hardware design to classify whether or not an SSC is part of a TTB Trojan.
 
 Bomberman consists of two main stages as shown in Figure 1:
