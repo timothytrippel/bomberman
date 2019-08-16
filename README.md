@@ -1,5 +1,20 @@
-# Icarus Verilog
+# Bomberman
 
+Bomberman is a *ticking timebomb* (TTB) Trojan specific verification tool. It indentifies suspicious state-saving components (SSCs) in a hardware design that could potentially be part of a TTB Trojan. Bomberman starts by assuming *all* SSCs are suspicious, and subsequently classifies each SSC as non-suspicious if it expresses values that violate a set of invariants during verification simulations. Bomberman consists of two main stages as shown in Figure [image]: image.png "Image Title" 
+
+1. SSC Indentification
+2. SSC Analysis
+
+<!-- 
+
+
+
+
+![Alt text][image] 
+A reference to the [image](#image).
+
+ that cause 
+enumerates all state-saving components, i.e., registers, in hardware designs bproduces a data-flow graph
 To make detecting distributed counter-registers practical, we use
 connection information from the circuit in question to limit the
 register combinations checked by our existing analysis flow. We
@@ -94,3 +109,4 @@ and works in the following steps
    possible counter-based trigger registers.
    
    $ python scripts/VCD_parse.py [vcd output file from step 5]
+ -->
