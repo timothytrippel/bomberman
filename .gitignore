@@ -23,9 +23,11 @@
 *.tgt
 *.conf
 
-# Ignore Log and JSON (Data) Files
+# Ignore Data Files
 *.log
 *.json
+*.csv
+*.png
 
 # Ignore OR1200 binary translation tools
 *bin2c
