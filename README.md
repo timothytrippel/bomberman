@@ -2,7 +2,7 @@
 
 Bomberman is a **ticking timebomb** (TTB) Trojan specific verification tool. It indentifies suspicious state-saving components (SSCs) in a hardware design that could *potentially* be part of a TTB Trojan. Bomberman starts by assuming *all* SSCs are suspicious, and subsequently classifies each SSC as benign if it expresses values that violate a set of invariants during verification simulations. 
 
-As detailed in our technical report **LINK TO PAPER**, TTBs are comprised of SSCs that incrementally approach a triggering value. The set of invariants that define TTB SSC behavior are as follows:
+As detailed in our [technical report](technical_report.pdf), TTBs are comprised of SSCs that incrementally approach a triggering value. The set of invariants that define TTB SSC behavior are as follows:
 1. values must never be repeated without a system reset, and 
 2. all possible values must never be expressed without triggering the Trojan.
 
@@ -32,7 +32,8 @@ The `circuits/` directory contains three example hardware designs to try out the
 
 ### Scripts
 
-The `scripts/` directory 
+The `scripts/` directory contain the Python scripts that implement the *SSC Enumeration* component of the **SSC Identification** stage (Figure 1), and the **Simulation Analysis** stages. Both *SSC Enumeration* and *Simulation Analysis* are contained within the same scripmain script and the 
+
 ### Tests
 
 # Installation

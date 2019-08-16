@@ -29,6 +29,7 @@
 *.png
 *.pdf
 !figures/*.pdf
+!technical_report.pdf
 !figures/*.png
 
 # Ignore OR1200 binary translation tools
