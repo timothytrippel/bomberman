@@ -2,23 +2,8 @@
 
 Bomberman is a *ticking timebomb* (TTB) Trojan specific verification tool. It indentifies suspicious state-saving components (SSCs) in a hardware design that could potentially be part of a TTB Trojan. Bomberman starts by assuming *all* SSCs are suspicious, and subsequently classifies each SSC as non-suspicious if it expresses values that violate a set of invariants during verification simulations. Bomberman consists of two main stages as shown in Figure 
 
-<!-- [image]: https://llcad-github.llan.ll.mit.edu/HSS/ttb/figures/bomberman.pdf "Bomberman Architecture"  -->
-<!-- ![alt text](https://llcad-github.llan.ll.mit.edu/HSS/ttb/blob/master/figures/bomberman.pdf "Bomberman Architecture") -->
-
-<!-- [image]: https://llcad-github.llan.ll.mit.edu/HSS/ttb/blob/master/figures/bomberman.pdf "Image Title"
-
-![Alt text][image]
-
-A reference to the [image](#image). -->
-
-<!-- <object data="https://llcad-github.llan.ll.mit.edu/HSS/ttb/blob/master/figures/bomberman.pdf" type="application/pdf" width="700px" height="700px">
-    <embed src="https://llcad-github.llan.ll.mit.edu/HSS/ttb/blob/master/figures/bomberman.pdf">
-        <p>This browser does not support PDFs. Please download the PDF to view it: <a href="https://llcad-github.llan.ll.mit.edu/HSS/ttb/blob/master/figures/bomberman.pdf">Download PDF</a>.</p>
-    </embed>
-</object> -->
-
-![GitHub Logo](/figures/bomberman.png)
-Format: ![Alt Text](url)
+![alt text][bomberman_architecture]
+[bomberman_architecture]: /figures/bomberman.png "Bomberman Architecture"
 
 1. SSC Indentification
 2. SSC Analysis
