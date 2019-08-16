@@ -24,9 +24,13 @@ The **SSC Identification** stage locates all SSCs in a hardware design described
 
 The **Simulation Analysis** stage parses simulation results, in the Value Change Dump (`.vcd`) format, and analyzes the values expressed by each SSC over the course of the simulation timeline. SSCs that violate either of the two invariants listed above are marked as *benign*
 
-## Directory Structure
+# Directory Structure
 
-## Installation
+### Circuits
+### Scripts
+### Tests
+
+# Installation
 
 ### 1. Repository Cloning
 
@@ -36,12 +40,12 @@ The **Simulation Analysis** stage parses simulation results, in the Value Change
 
 ### 4. Building Data-Flow Graph Generator (tgt-ttb)
 
-## Testing
+# Testing
 
 ### 1. Data-Flow Graph Generation
 ### 2. Bomberman E2E Analysis
 
-## Usage
+# Usage
 
 ### 1. Generating Data-Flow Graphs
 ### 2. Running IVL Simulations

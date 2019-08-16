@@ -1,2 +1,0 @@
-Report # of suspects for each sim time
-Include initial values if they don't include X's
