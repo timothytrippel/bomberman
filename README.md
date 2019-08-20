@@ -70,9 +70,7 @@ git submodule update --init --recursive
 ### 3. Disabling optimization functions of IVL
 
 Disabling the optimization functions of IVL is important for preserving the
-input netlists structure as-is for analysis by Nemo. To do so, you must simply
-comment out two blocks of code in the `nemo/iverilog/main.cc` file in the top-level IVL
-source code (lines 1179, and 1182-1188) submodule directory as follows:
+input netlists structure as-is for analysis by Bomberman. To do so, you must comment out two blocks of code in the `ttb/iverilog/main.cc` file in the top-level IVL source code (lines 1179, and 1182-1188) submodule directory as follows:
 
 Line 1244:
 
@@ -91,11 +89,36 @@ while (!net_func_queue.empty()) {
 
 ### 4. Building IVL
 
+1. `cd iverilog`
+2. comment out IVL optimization functions (see above)
+3. `sh autoconf.sh`
+4. `./configure --prefix=$(pwd)` 
+5. `make install` 
+6. `cd ..`
+
 ### 5. Building Data-Flow Graph Generator (tgt-ttb)
+
+To compile and install into IVl for the first time:
+
+1. `cd tgt-ttb`
+2. `make all`
+3. `cd ..`
+
+To re-compile and re-install into IVl after modifications:
+
+1. `cd tgt-ttb`
+2. `make cleanall all`
+3. `cd ..`
 
 # Testing
 
 ### 1. Data-Flow Graph Generation
+
+1. `cd tgt-ttb`
+2. `make all`
+3. `cd ..`
+
+
 ### 2. Bomberman E2E Analysis
 
 # Usage
