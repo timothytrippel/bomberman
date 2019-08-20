@@ -98,13 +98,13 @@ while (!net_func_queue.empty()) {
 
 ### 5. Building Data-Flow Graph Generator (tgt-ttb)
 
-To compile and install into IVl for the first time:
+To compile and install into IVL for the first time:
 
 1. `cd tgt-ttb`
 2. `make all`
 3. `cd ..`
 
-To re-compile and re-install into IVl after modifications:
+To re-compile and re-install into IVL after modifications:
 
 1. `cd tgt-ttb`
 2. `make cleanall all`
