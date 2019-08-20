@@ -1,5 +1,9 @@
 # Bomberman
 
+**Author:**         Timothy Trippel <br>
+**Email:**          timothy.trippel@ll.mit.edu <br>
+**Last Updated:**   8/20/2019 <br>
+
 Bomberman is a **ticking timebomb** (TTB) Trojan specific verification tool. It indentifies suspicious state-saving components (SSCs) in a hardware design that could *potentially* be part of a TTB Trojan. Bomberman starts by assuming *all* SSCs are suspicious, and subsequently classifies each SSC as benign if it expresses values that violate a set of invariants during verification simulations. 
 
 As detailed in our [technical report](technical_report.pdf), TTBs are comprised of SSCs that incrementally approach a triggering value. The set of invariants that define TTB SSC behavior are as follows:
@@ -36,7 +40,11 @@ The `scripts/` directory contains the Python scripts that implement the **Simula
 
 ### Tests
 
-The `tests/` directory contains regression tests for: 1) the entire Bomberman analysis flow, contained in the `analysis_flow` sub-directory, and 2) the IVL back-end HDL data-flow graph generator.
+The `tests/` directory contains regression tests for: 1) the entire Bomberman analysis flow, contained in the `analysis_flow` sub-directory, and 2) the IVL back-end HDL data-flow graph generator, contained in the `ivl_ttb` sub-directory. 
+
+The `analysis_flow` sub-directory contains three hardware designs and corresponding test benches to exercise the Bomberman toolchain. See the *Testing* section below for how to test bomberman on these designs.
+
+The `ivl_ttb` sub-directory contains 62 regression tests (i.e., hardware designs) to exercise the IVL compiler back-end data-flow graph generator and verify its correctness. See the *Testing* section below for how to execute these tests.
 
 ### TGT-TTB
 
@@ -46,9 +54,40 @@ The `tgt-ttb/` directory contains the IVL compiler back-end data-flow graph gene
 
 ### 1. Repository Cloning
 
+You can clone the repository using:
+
+`git clone https://llcad-github.llan.ll.mit.edu/HSS/ttb.git`
+
 ### 2. Initialize Git Submodules
 
+Bomberman utilizes [Icarus Verilog](https://github.com/steveicarus/iverilog) as a submodule. Thus, the initialization of the Icarus Verilog submodule must also be done as follows:
+
+```
+cd ttb/
+git submodule update --init --recursive
+```
+
 ### 3. Disabling optimization functions of IVL
+
+Disabling the optimization functions of IVL is important for preserving the
+input netlists structure as-is for analysis by Nemo. To do so, you must simply
+comment out two blocks of code in the `nemo/iverilog/main.cc` file in the top-level IVL
+source code (lines 1179, and 1182-1188) submodule directory as follows:
+
+Line 1244:
+
+```cout << "RUNNING FUNCTORS" << endl;```
+
+Line 1247--1253:
+```
+while (!net_func_queue.empty()) {
+    net_func func = net_func_queue.front();
+    net_func_queue.pop();
+    if (verbose_flag)
+        cerr<<" -F "<<net_func_to_name(func)<< " ..." <<endl;
+    func(des);
+}
+```
 
 ### 4. Building IVL
 
@@ -65,6 +104,9 @@ The `tgt-ttb/` directory contains the IVL compiler back-end data-flow graph gene
 ### 2. Running IVL Simulations
 ### 3. Analyzing Simulations
 ### 4. Bomberman E2E Analysis
+
+
+
 
 <!-- 
 
