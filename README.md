@@ -70,7 +70,7 @@ git submodule update --init --recursive
 ### 3. Disabling optimization functions of IVL
 
 Disabling the optimization functions of IVL is important for preserving the
-input netlists structure as-is for analysis by Bomberman. To do so, you must comment out two blocks of code in the `ttb/iverilog/main.cc` file in the top-level IVL source code (lines 1179, and 1182-1188) submodule directory as follows:
+input netlists structure as-is for analysis by Bomberman. To do so, you must **comment out** two blocks of code in the `ttb/iverilog/main.cc` file in the top-level IVL source code (lines 1179, and 1182-1188) submodule directory as follows:
 
 Line 1244:
 
@@ -88,6 +88,8 @@ while (!net_func_queue.empty()) {
 ```
 
 ### 4. Building IVL
+
+To build IVL from source requires `autoconf` as a dependency. On MacOS this can be installed with homebrew using: `brew install autoconf`. After installing this dependency, proceed to build IVL as follows: 
 
 1. `cd iverilog`
 2. comment out IVL optimization functions (see above)
