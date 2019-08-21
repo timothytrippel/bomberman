@@ -112,15 +112,28 @@ To re-compile and re-install into IVL after modifications, replace step 2 (above
 
 ### 1. Data-Flow Graph Generator
 
-There are 62 regression tests to verify the correctness of the data-flow graph generator contained in the `tgt-ttb` IVL back-end target module. 
+There are 62 regression tests to verify the correctness of the data-flow graph generator contained in the `tgt-ttb` IVL back-end target module. Each regression test consists of a small circuit, described in Verilog, that exercises the data-flow graph generator's ability to handle various Verilog syntax and expressions. All 62 regression tests should run, but only 61 tests should pass. This is due to a minor (known) error in the way the graph-generator handles duplicate signals in a concatenation will be fixed in a future release.
 
-1. `cd tgt-ttb`
-2. `make all`
+To run all 62 regression tests use:
+
+1. `cd tests/ivl_ttb`
+2. `make test`
 3. `cd ..`
-
+4. `cd ..`
 
 ### 2. Bomberman E2E Analysis
 
+There are 3 regression tests to verify the correctness of the entire Bomberman toolchain, from the data-flow graph generator to the simulation analysis scripts (Figure 1). Each regression tests is comprised of a small circuit desing and associated test bench that excerises the design. The three circuits are a simple counter (`counter/`), a D flip-flop (`d_ff/`), and a simple combinational circuit (`split/`).
+
+To run all 3 regression tests use:
+
+1. `cd tests/analysis_flow`
+2. `make all`
+3. `cd ..`
+4. `cd ..`
+
+To run only a single regression test use: `make <design>`, where `<design>` is either `counter`, `d_ff`, or `split`.
+    
 # Usage
 
 ### 1. Generating Data-Flow Graphs
