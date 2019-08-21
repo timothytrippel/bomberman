@@ -106,15 +106,13 @@ To compile and install into IVL for the first time:
 2. `make all`
 3. `cd ..`
 
-To re-compile and re-install into IVL after modifications:
-
-1. `cd tgt-ttb`
-2. `make cleanall all`
-3. `cd ..`
+To re-compile and re-install into IVL after modifications, replace step 2 (above) with: `make cleanall all`.
 
 # Testing
 
-### 1. Data-Flow Graph Generation
+### 1. Data-Flow Graph Generator
+
+There are 62 regression tests to verify the correctness of the data-flow graph generator contained in the `tgt-ttb` IVL back-end target module. 
 
 1. `cd tgt-ttb`
 2. `make all`
