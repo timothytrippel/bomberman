@@ -282,6 +282,8 @@ def main():
 		print "	<time resolution>"
 		print "	<DUT top module>"
 		print "	<num. malicious cntrs>"
+		print "	<deterministic signal basename (for malicious simulation)>"
+		print "	<non-deterministic signal basename (for malicious simulation)>"
 		print "	<input dot file>"
 		print "	<input vcd file>"
 		print "	<output json file (basename)>"
