@@ -151,6 +151,6 @@ There are three real-world circuit designs provided within this repository to ex
 
 The master Makefile (`circuits/common.mk`) that is invoked by running the above commands in each design sub-directory does three things. First, it invokes the *data-flow graph generator*, which generates a `.dot` file encoding the data-flow graph for the given hardware design. Second, *IVL* is invoked to simulate the hardware design and generate a `.vcd` file encoding the simulation trace. Third, the *simulation analysis* script is invoked to analyze the design for suspicious SSCs. The number of suspicious SSCs computed at different points throughout the simulation are output into several `.json` files.
 
-There are several Jupyter Notebooks for plotting the results encoded in each `.json` file in the `circuits/plots` directory. Additionally, there are several scripts for running the Bomberman analysis of each design on a SLURM managed cluster, if more compute power is needed for the analysis of each design.
+There are several Jupyter Notebooks for plotting the results encoded in each `.json` file in the `circuits/plots` directory. Additionally, there are several scripts for running the Bomberman analysis of each design on a SLURM managed cluster, if more compute power is needed for the analysis of each design. However, each of the 3 provided designs has been tested on a 15in Macbook Pro with a 3.1 GHz Intel Core i7 processor and 16GB of DDR3 RAM, and each Bomberman analysis took less then a couple minutes to run.
 
 
