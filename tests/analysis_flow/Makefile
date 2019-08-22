@@ -19,7 +19,16 @@ split:
 
 # VCD/Dot Analysis Script
 script: tgt-ttb $(TGT)/$(TGT).vcd $(TGT)/$(TGT).dot
-	pypy $(SCRIPTS)/analyze.py $(TGT)/$(TGT).dot $(TGT)/$(TGT).vcd $(TGT)/$(TGT).json 
+	python2 \
+		$(SCRIPTS)/analyze.py \
+		0 \
+		-1 \
+		100 \
+		$(TGT) \
+		0 \
+		$(TGT)/$(TGT).dot \
+		$(TGT)/$(TGT).vcd \
+		$(TGT)/$(TGT).json 
 
 # IVL Simulation (Step 2: VCD Generation)
 $(TGT)/$(TGT).vcd: $(TGT)/$(TGT).vvp $(TGT)/$(TGT).dot

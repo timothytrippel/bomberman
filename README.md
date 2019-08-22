@@ -133,15 +133,13 @@ To run all 3 regression tests use:
 4. `cd ..`
 
 To run only a single regression test use: `make <design>`, where `<design>` is either `counter`, `d_ff`, or `split`.
-    
+
 # Usage
 
 ### 1. Generating Data-Flow Graphs
 ### 2. Running IVL Simulations
 ### 3. Analyzing Simulations
 ### 4. Bomberman E2E Analysis
-
-
 
 
 <!-- 
