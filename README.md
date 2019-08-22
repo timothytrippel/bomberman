@@ -2,7 +2,7 @@
 
 **Author:**         Timothy Trippel <br>
 **Email:**          timothy.trippel@ll.mit.edu <br>
-**Last Updated:**   8/20/2019 <br>
+**Last Updated:**   8/22/2019 <br>
 
 Bomberman is a **ticking timebomb** (TTB) Trojan specific verification tool. It indentifies suspicious state-saving components (SSCs) in a hardware design that could *potentially* be part of a TTB Trojan. Bomberman starts by assuming *all* SSCs are suspicious, and subsequently classifies each SSC as benign if it expresses values that violate a set of invariants during verification simulations. 
 
@@ -32,7 +32,7 @@ The **Simulation Analysis** stage parses: 1) the `.dot` file encoding the circui
 
 ### Circuits
 
-The `circuits/` directory contains three example hardware designs to try out the Bomberman toolchain on. These designs are: an 128-bit AES accelerator (CNTR mode only), a UART core, and an OR1200 processor. For information on how to run the Bomberman toolchain on each hardware design, see the README.md file in the the `circuits/` directory.
+The `circuits/` directory contains three example hardware designs to try out the Bomberman toolchain on. These designs are: an 128-bit AES accelerator (CNTR mode only), a UART core, and an OR1200 processor. For information on how to run the Bomberman toolchain on each hardware design, see the **E2E Bomberman Analysis of Real Circuits** section below.
 
 ### Scripts
 
@@ -134,116 +134,23 @@ To run all 3 regression tests use:
 
 To run only a single regression test use: `make <design>`, where `<design>` is either `counter`, `d_ff`, or `split`.
 
-# Usage
+# E2E Bomberman Analysis of Real Circuits
 
-### 1. Generating Data-Flow Graphs
-### 2. Running IVL Simulations
-### 3. Analyzing Simulations
-### 4. Bomberman E2E Analysis
+There are three real-world circuit designs provided within this repository to experiment with. These designs include: a 128-bit AES accelerator ([TrustHub](https://trust-hub.org/home)), an 8-bit UART module ([OpenCores](https://opencores.org/projects/uart16550)), and an OR1200 processor CPU ([OpenCores](https://opencores.org/projects/uart16550)). To experiment analyzing each design with Bomberman, follow the steps below:
+
+1.  `cd circuits`
+2.  `cd aes`
+3.  `make all`
+4.  `cd ..`
+5.  `cd uart`
+6.  `make all`
+7.  `cd ..`
+8.  `cd or1200`
+9.  `make all`
+10. `cd ..`
+
+The master Makefile (`circuits/common.mk`) that is invoked by running the above commands in each design sub-directory does three things. First, it invokes the *data-flow graph generator*, which generates a `.dot` file encoding the data-flow graph for the given hardware design. Second, *IVL* is invoked to simulate the hardware design and generate a `.vcd` file encoding the simulation trace. Third, the *simulation analysis* script is invoked to analyze the design for suspicious SSCs. The number of suspicious SSCs computed at different points throughout the simulation are output into several `.json` files.
+
+There are several Jupyter Notebooks for plotting the results encoded in each `.json` file in the `circuits/plots` directory. Additionally, there are several scripts for running the Bomberman analysis of each design on a SLURM managed cluster, if more compute power is needed for the analysis of each design.
 
 
-<!-- 
-
-
-
-
-![Alt text][image] 
-A reference to the [image](#image).
-
- that cause 
-enumerates all state-saving components, i.e., registers, in hardware designs bproduces a data-flow graph
-To make detecting distributed counter-registers practical, we use
-connection information from the circuit in question to limit the
-register combinations checked by our existing analysis flow. We
-represent connection information as a dataflow graph. Creating a
-dataflow graph for a circuit requires parsing the textual description
-of the circuit and connecting the individual assignments to form a
-graph. To maximize compatibility and reduce engineering effort, we use
-Icarus Verilog to parse circuits described in Verilog. Once parsed we
-walk the parse tree to build a dataflow graph for the
-circuit. Finally, we use the dataflow graph to determine all possible
-combinations of registers in a design. The resulting combinations feed
-directly into our existing flow for detecting coalesced counter
-registers.
-
-Icarus Verilog supports adding functionality via modules called
-backends. Backends interact with Icarus Verilog via the backend dll
-API. Using the API means that we should be able to build our backend
-(tgt-ttb) independently from Icarus Verilog, but for now we need to
-compile our backend and Icarus Verilog together.
-
-# Checkout
-
-Icarus Verilog is a submodule in our project repository. This makes it
-easy for us to track with the main Icarus Verilog repository. Using
-submodules requires that after cloning the project repository, we
-must checkout Icarus Verilog using,
-
-git submodule init
-git submodule update
-
-After that, every time you pull, you must run the command below to
-update the Icarus Verilog submodule.
-
-git submodule update
-
-Building
-========
-As mentioned above, we build our dll backend (tgt-ttb) with iverilog currently.
-Though tgt-ttb is a dll, we still have to recompile all of Icarus Verilog
-since I have not been able to decouple the backend build from the rest of 
-Icarus Verilog.
-
-To do this, in the iverilog folder run
-
-./autoconf.sh
-./configure
-make
-sudo make install
-
-Running C Code
-==============
-Compile:
-or1k-elf-gcc -Wall -mnewlib -mboard=ml509 -o <output> <input ...>
-
-Turn to Bin:
-or1k-elf-objcopy -O binary <input (output from compile)> <output.bin>
-
-Turn to vmem
-~/spqr/or1200toolchain/utils/bin2vmem <input.bin> > output.vmem
-
-Workflow (an example is given in the examples folder)
-========
-This project consists of a couple little tools. They all have a certain job 
-and works in the following steps
-
-1. Use the tgt-ttb Icarus Verilog backend to create a dependency graph of the 
-   signals in the verilog file(s). This graph will be in the form of a dot
-   file.
-   $ iverilog -t ttb [verilog input file(s)] -o [output file]
-
-2. To make it easy for our existing analysis flow to track the results
-   of distributed counter analysis, we create explicit registers in
-   the circuit. To automatically generate the Verilog describing the
-   distributed registers, use scripts/parse_dot.py to convert the dot
-   file into verilog code.
-
-   $ python scripts/parse_dot.py [file.dot] > output.slice
-
-3. Manually add those assign statments to your top level module.
-
-4. To find coalesced counter registers, we first simulate a circuit. Use 
-   Icarus Verilog to create a simulator for your code
-
-   $ iverilog -t vvp -o <output file> <verilog input file(s)>
-
-5. We then run the simulated circuit to create the VCD file.
-
-   $ vvp [output file from step 4]
-
-6. Using the values in the VCD file, we apply our rule-set, cycle-by-cycle 
-   against the VCD file. We report what registers remain after analysis as
-   possible counter-based trigger registers.
-   
-   $ python scripts/VCD_parse.py [vcd output file from step 5]
- -->
