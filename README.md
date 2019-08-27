@@ -134,6 +134,20 @@ To run all 3 regression tests use:
 
 To run only a single regression test use: `make <design>`, where `<design>` is either `counter`, `d_ff`, or `split`.
 
+# HDL Data-flow Graph Generation
+
+Bomberman's data-flow graph generator (DFGG) can be utilized independently of Bomberman for performing various static analyses of a circuit's HDL. The DFGG is simply an Icarus Verilog (IVL) compiler back-end that generates data-flow graphs in the [Graphviz](https://www.graphviz.org/) `.dot` format. The DFGG takes the following as input:
+
+|     | Input                  | Type             | Default    |
+| --- | ---------------------- | ---------------- | ---------- |
+|  1  | Clock Signal Basename  | string           | n/a        |
+|  2  | Verilog Source Files   | file name(s)     | n/a        |
+|  3  | Dot Output File Name   | string           | n/a        |
+
+The DFGG can be invoked from the root repository directory (ttb/) using:
+
+`iverilog/iverilog -o <dot output file name> -pclk=<clock basename> -t ttb <verilog source file> ...`
+
 # E2E Bomberman Analysis of Real Circuits
 
 There are three real-world circuit designs provided within this repository to experiment with. These designs include: a 128-bit AES accelerator ([TrustHub](https://trust-hub.org/home)), an 8-bit UART module ([OpenCores](https://opencores.org/projects/uart16550)), and an OR1200 processor CPU ([OpenCores](https://opencores.org/projects/uart16550)). To experiment analyzing each design with Bomberman, follow the steps below. Note, the Makefile invoked below utilize [PyPy](https://pypy.org/), instead of Python 2.7, to speed up computation. If you have not installed PyPy on your system, be sure to do so before running the following commands:
