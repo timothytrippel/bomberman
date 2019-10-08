@@ -338,7 +338,7 @@ module uart_test ();
         comp_lfsr_enable_i    <= 1'b1;
         lfsr_load_seed_i      <= 1'b1;
         comp_lfsr_load_seed_i <= 1'b1;
-        #(`CLOCK_PERIOD)
+        #(`CLOCK_PERIOD);
         lfsr_enable_i         <= 1'b0;
         comp_lfsr_enable_i    <= 1'b0;
         lfsr_load_seed_i      <= 1'b0;
@@ -362,13 +362,13 @@ module uart_test ();
         input [7:0] byte;
         
         begin
-            #(`CLOCK_PERIOD)
+            #(`CLOCK_PERIOD);
             lfsr_enable_i = 1'b0;
             $display("Time: %10t (ns): UART-1 sending : %h", $time, byte);
             wbm1.wb_wr1(0, 4'b1, {24'b0, byte});
             @(posedge clk);
             @(posedge clk);
-            #(1)
+            #(1);
             lfsr_enable_i = 1'b1;
         end
     endtask
