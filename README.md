@@ -1,7 +1,7 @@
 # Bomberman
 
 **Author:**         Timothy Trippel <br>
-**Email:**          timothy.trippel@ll.mit.edu <br>
+**Affiliation:**    MIT Lincoln Laboratory <br>
 **Last Updated:**   10/08/2019 <br>
 
 Bomberman is a **ticking timebomb** (TTB) Trojan specific verification tool. It identifies suspicious state-saving components (SSCs) in a hardware design that could *potentially* be part of a TTB Trojan. Bomberman starts by assuming *all* SSCs are suspicious, and subsequently classifies each SSC as benign if it expresses values that violate a set of invariants during verification simulations. 
