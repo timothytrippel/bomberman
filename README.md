@@ -70,13 +70,13 @@ git submodule update --init --recursive
 ### 3. Disabling optimization functions of IVL
 
 Disabling the optimization functions of IVL is important for preserving the
-input netlists structure as-is for analysis by Bomberman. To do so, you must **comment out** two blocks of code in the `ttb/iverilog/main.cc` file in the top-level IVL source code (lines 1179, and 1182-1188) submodule directory as follows:
+input netlists structure as-is for analysis by Bomberman. To do so, you must **comment out** two blocks of code in the `ttb/iverilog/main.cc` file in the top-level IVL source code (lines 1251 and 1254-1260) submodule directory as follows:
 
-Line 1244:
+Line 1251:
 
 ```cout << "RUNNING FUNCTORS" << endl;```
 
-Line 1247--1253:
+Line 1254--1260:
 ```
 while (!net_func_queue.empty()) {
     net_func func = net_func_queue.front();
@@ -86,6 +86,8 @@ while (!net_func_queue.empty()) {
     func(des);
 }
 ```
+
+***NOTE:** make sure to cross-reference the line numbers with the code snippets above since the IVL code base is actively managed and the exact line numbers are subject to change.*
 
 ### 4. Building IVL
 
