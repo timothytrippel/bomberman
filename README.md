@@ -91,7 +91,14 @@ while (!net_func_queue.empty()) {
 
 ### 4. Building IVL
 
-To build IVL from source requires `autoconf` as a dependency. On MacOS this can be installed with homebrew using: `brew install autoconf`. After installing this dependency, proceed to build IVL as follows: 
+To build IVL from source requires the following dependencies:
+
+`autoconf`
+`gperf`
+`flex`
+`bison`
+
+On MacOS these can be installed with homebrew using: `brew install <package>`. After installing the dependencies, proceed to build IVL as follows: 
 
 1. `cd iverilog`
 2. comment out IVL optimization functions (see above)
