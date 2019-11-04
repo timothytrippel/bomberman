@@ -436,7 +436,7 @@ vector<unsigned int> Tracker::process_array_index_expression(
 
         // Get signal width
         source_slice   = index_signal->get_source_slice(index_signal);
-        num_array_inds = pow(2, source_slice.msb - source_slice.lsb + 1);
+        num_array_inds = pow(2, source_slice.msb - source_slice.lsb + 1) - 1;
 
         // Check that number of array indexi is possible
         DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, "%snum indicies (%d) / num possible indicies (%d)\n", 

@@ -1,6 +1,7 @@
 # Directory Structure
 TGT_TTB_DIR :=../../tgt-ttb
 SCRIPTS     :=../../scripts
+IVL_DIR     := ../../iverilog/bin
 
 # Configurations
 CLK_BASENAME := clk
@@ -87,11 +88,11 @@ $(OUT_FILE_BASENAME).vcd: $(OUT_FILE_BASENAME).vvp
 $(OUT_FILE_BASENAME).vvp: $(SOURCES) $(TESTBENCH)
 	@echo "Generating simulation binary..."; \
 	if [ $(LOG) == 0 ]; then \
-		iverilog -t vvp -o $@ \
+		$(IVL_DIR)/iverilog -t vvp -o $@ \
 			-DVCD_FILENAME=\"$(OUT_FILE_BASENAME).vcd\" \
 			$(INCLUDEDIRS) $^; \
 	else \
-		(iverilog -t vvp -o $@ \
+		($(IVL_DIR)/iverilog -t vvp -o $@ \
 			-DVCD_FILENAME=\"$(OUT_FILE_BASENAME).vcd\" \
 			$(INCLUDEDIRS) $^) &> $(OUT_FILE_BASENAME).vvp.log; \
 	fi;
@@ -100,13 +101,13 @@ $(OUT_FILE_BASENAME).vvp: $(SOURCES) $(TESTBENCH)
 $(OUT_FILE_BASENAME).dot: $(SOURCES) $(TESTBENCH)
 	@echo "Generating DOT graph..."; \
 	if [ $(LOG) == 0 ]; then \
-		time iverilog -o $@ \
+		time $(IVL_DIR)/iverilog -o $@ \
 			-pclk=$(CLK_BASENAME) \
 			-DVCD_FILENAME=\"$(TARGET).vcd\" \
 			-t ttb \
 			$(INCLUDEDIRS) $^; \
 	else \
-		(time iverilog -o $@ \
+		(time $(IVL_DIR)/iverilog -o $@ \
 			-pclk=$(CLK_BASENAME) \
 			-DVCD_FILENAME=\"$(TARGET).vcd\" \
 			-t ttb \
