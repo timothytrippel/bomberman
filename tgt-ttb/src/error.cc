@@ -372,3 +372,9 @@ void Error::string_expression_type_warning(ivl_statement_t stmt) {
         \n(File: %s -- Line: %d).\n", 
         ivl_stmt_file(stmt), ivl_stmt_lineno(stmt));
 }
+
+void Error::sfunc_expression_type_warning(ivl_statement_t stmt) {
+    fprintf(stderr, "WARNING: IVL_EX_SFUNC not supported... skipping. \
+        \n(File: %s -- Line: %d).\n", 
+        ivl_stmt_file(stmt), ivl_stmt_lineno(stmt));
+}

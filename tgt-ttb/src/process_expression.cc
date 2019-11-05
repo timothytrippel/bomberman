@@ -137,10 +137,6 @@ unsigned int Tracker::process_expression_number(
     // Get expression signal
     Signal* source_signal = new Signal(expression);
 
-    // if (source_signal->get_fullname().find(string("const.3886.00010101000000000000000000000011")) != string::npos) {
-    //     exit(1);
-    // }
-
     // Push source node to source nodes queue
     push_source_signal(source_signal, 0, ws + WS_TAB);
 
@@ -191,11 +187,6 @@ unsigned int Tracker::process_expression_select(
                 DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, "%sbase signal identified:   %s\n", 
                     ws.c_str(), base->get_fullname().c_str());)
 
-            } else {
-
-                // NOT SUPPORTED
-                assert(false &&
-                    "ERROR-Tracker::process_expression_select: more than one possible base expr. processed.\n");
             }
         }
     }
@@ -213,23 +204,19 @@ unsigned int Tracker::process_expression_select(
             potential_base = NULL;
             num_consts_popped++;
 
-        } else if (potential_base != base) {
-
-            // ERROR if there is more than one potential base signal
-            assert(false && "ERROR-Tracker::process_expression_select: more than one possible base expr. to pop.\n");
         }
-    }
-    
-    // Check that the base signal is NOT arrayed
-    if (!base->is_arrayed()) {
 
-        // Re-push base signal to source signals queue
-        push_source_signal(base, 0, ws);
+        // Check that the base signal is NOT arrayed
+        if (!base->is_arrayed()) {
 
-    } else {
+            // Re-push base signal to source signals queue
+            push_source_signal(base, 0, ws);
 
-        // ERROR on nested array selects (i.e. a base signal that is arrayed)
-        assert(false && "ERROR-Tracker::process_expression_select: nested array selects not supported.\n");
+        } else {
+
+            // ERROR on nested array selects (i.e. a base signal that is arrayed)
+            assert(false && "ERROR-Tracker::process_expression_select: nested array selects not supported.\n");
+        }
     }
 
     // Update number of base expressions (signals) processed
@@ -439,15 +426,21 @@ vector<unsigned int> Tracker::process_array_index_expression(
         num_array_inds = pow(2, source_slice.msb - source_slice.lsb + 1) - 1;
 
         // Check that number of array indexi is possible
-        DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, "%snum indicies (%d) / num possible indicies (%d)\n", 
+        DEBUG_PRINT(fprintf(DEBUG_PRINTS_FILE_PTR, 
+            "%snum indicies (%s-%d) / num possible indicies (%s-%d)\n", 
             ws.c_str(), 
-            num_array_inds, 
+            index_signal->get_fullname().c_str(),
+            num_array_inds,
+            Signal::get_fullname(base_ivl_signal).c_str(),
             ivl_signal_array_count(base_ivl_signal));)
-        assert(num_array_inds <= ivl_signal_array_count(base_ivl_signal) && 
-            "ERROR-Tracker::process_array_index_expression: some array indices not possible.\n");
+        if (num_array_inds <= ivl_signal_array_count(base_ivl_signal)) {
+            printf("WARNING: some array indices not possible. \
+            \n(File: %s -- Line: %d).\n", 
+            ivl_stmt_file(statement), ivl_stmt_lineno(statement));
+        }
 
         // Push all possible array indexi to vector
-        for (unsigned int i = 0; i < num_array_inds; i++) {
+        for (unsigned int i = 0; i < ivl_signal_array_count(base_ivl_signal); i++) {
             indexi.push_back(i);
         }
 
@@ -574,7 +567,7 @@ unsigned int Tracker::process_expression(
         case IVL_EX_SELECT:
             return process_expression_select(expression, statement, ws);
         case IVL_EX_SFUNC:
-            Error::not_supported("expression type (IVL_EX_SFUNC).");
+            Error::sfunc_expression_type_warning(statement);
             break;
         case IVL_EX_SHALLOWCOPY:
             Error::not_supported("expression type (IVL_EX_SHALLOWCOPY).");

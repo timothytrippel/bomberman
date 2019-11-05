@@ -1,5 +1,7 @@
 # Directory Structure
-TGT_TTB_DIR=../../tgt-ttb
+TGT_TTB_DIR  := ../../tgt-ttb
+IVL_DIR      := ../../iverilog/bin
+# IVL_DIR      := /Users/ti27457/Repos/iverilog/bin
 SRC_DIR      := verilog
 # SRC_DIR      := verilog_continuous
 DOT_DIR      := dot
@@ -67,7 +69,7 @@ tgt-ttb:
 $(DOT_DIR)/%.dot: $(SRC_DIR)/%.v tgt-ttb
 	mkdir -p dot
 	mkdir -p pdf
-	iverilog -o $@ -pclk=$(CLK_BASENAME) -t ttb $<
+	$(IVL_DIR)/iverilog -o $@ -pclk=$(CLK_BASENAME) -t ttb $<
 # 	iverilog -o $@ -pclk=$(CLK_BASENAME) -pignore_filepath=$(patsubst $(SRC_DIR)/%,$(IGNORES_DIR)/%,$(<:.v=.txt)) -t ttb $<
 	dot $@ -Tpdf -o $(patsubst $(SRC_DIR)/%,$(PDF_DIR)/%,$(<:.v=.pdf))
 

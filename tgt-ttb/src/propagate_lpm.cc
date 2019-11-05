@@ -321,6 +321,7 @@ void Tracker::propagate_lpm(
         case IVL_LPM_SHIFTL:
         case IVL_LPM_SHIFTR:
         case IVL_LPM_SUB:
+        case IVL_LPM_SIGN_EXT:
             process_lpm_basic(lpm, sink_signal, ws);
             break;
         case IVL_LPM_ABS:
@@ -349,9 +350,6 @@ void Tracker::propagate_lpm(
             break;
         case IVL_LPM_SFUNC:
             Error::not_supported("LPM device type (IVL_LPM_SFUNC)");
-            break;
-        case IVL_LPM_SIGN_EXT:
-            Error::not_supported("LPM device type (IVL_LPM_SIGN_EXT)");
             break;
         case IVL_LPM_SUBSTITUTE:
             Error::not_supported("LPM device type (IVL_LPM_SUBSTITUTE)");
