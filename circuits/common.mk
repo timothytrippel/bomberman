@@ -2,7 +2,6 @@
 TGT_TTB_DIR :=../../tgt-ttb
 SCRIPTS     :=../../scripts
 IVL_DIR     := ../../iverilog/bin
-# IVL_DIR     := /Users/ti27457/Repos/iverilog/bin
 
 # Configurations
 CLK_BASENAME := clk

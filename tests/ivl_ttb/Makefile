@@ -1,9 +1,7 @@
 # Directory Structure
 TGT_TTB_DIR  := ../../tgt-ttb
 IVL_DIR      := ../../iverilog/bin
-# IVL_DIR      := /Users/ti27457/Repos/iverilog/bin
 SRC_DIR      := verilog
-# SRC_DIR      := verilog_continuous
 DOT_DIR      := dot
 GOLD_DOT_DIR := golden_dot
 PDF_DIR      := pdf

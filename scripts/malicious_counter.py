@@ -62,7 +62,6 @@ def generate_malicious_time_values(signals, vcd, mal_counter):
 		before_value = sorted_tvs[time_index-1][1][::-1][mal_counter.event_signal_bit : mal_counter.event_signal_bit + 1][::-1]
 		curr_time    = sorted_tvs[time_index][0]
 		curr_value   = sorted_tvs[time_index][1][::-1][mal_counter.event_signal_bit : mal_counter.event_signal_bit + 1][::-1]
-
 		if 'x' not in before_value and 'x' not in curr_value:
 			if sws.VERBOSE == 3:
 				print "Before  Time/Value:", before_time, "/", before_value, sorted_tvs[ time_index - 1 ]
