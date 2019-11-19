@@ -56,7 +56,7 @@ The `tgt-ttb/` directory contains the IVL compiler back-end data-flow graph gene
 
 You can clone the repository using:
 
-`git clone https://llcad-github.llan.ll.mit.edu/HSS/ttb.git`
+`git clone https://github.com/mit-ll/ttb.git`
 
 ### 2. Initialize Git Submodules
 
@@ -72,11 +72,11 @@ git submodule update --init --recursive
 Disabling the optimization functions of IVL is important for preserving the
 input netlists structure as-is for analysis by Bomberman. To do so, you must **comment out** two blocks of code in the `ttb/iverilog/main.cc` file in the top-level IVL source code (lines 1251 and 1254-1260) submodule directory as follows:
 
-Line 1251:
+Line 1244:
 
 ```cout << "RUNNING FUNCTORS" << endl;```
 
-Line 1254--1260:
+Line 1247--1253:
 ```
 while (!net_func_queue.empty()) {
     net_func func = net_func_queue.front();
@@ -123,8 +123,11 @@ To re-compile and re-install into IVL after modifications, replace step 2 (above
 
 There are 62 regression tests to verify the correctness of the data-flow graph generator contained in the `tgt-ttb` IVL back-end target module. Each regression test consists of a small circuit, described in Verilog, that exercises the data-flow graph generator's ability to handle various Verilog syntax and expressions. All 62 regression tests should run, but only 61 tests should pass. This is due to a minor (known) error in the way the graph-generator handles duplicate signals in a concatenation, and will be fixed in a future release.
 
+Each regression test generates a .dot file describing a data-flow graph from a simple test circuit. The resulting graph is automatically checked for correctness against provided *gold* examples. Additionally a PDF respresentation is generated for manual inspection of correctness, but this *requires Graphviz to be installed.*
+
 To run all 62 regression tests use:
 
+1. Install Graphviz: `brew install graphviz`
 1. `cd tests/ivl_ttb`
 2. `make test`
 3. `cd ..`
@@ -133,6 +136,8 @@ To run all 62 regression tests use:
 ### 2. Bomberman E2E Analysis
 
 There are 3 regression tests to verify the correctness of the entire Bomberman toolchain, from the data-flow graph generator to the simulation analysis scripts (Figure 1). Each regression tests is comprised of a small circuit design, and an associated test bench that excerises the design. The three circuits are: a simple counter (`counter/`), a D flip-flop (`d_ff/`), and a simple combinational circuit (`split/`).
+
+***Note:*** *Bomberman's simulation analysis requires Python 2.7. You may have to modify the makefile (tests/analysis_flow/Makefile) to invoke Python 2.7, if the **python** alias on your system is mapped to Python 3.*
 
 To run all 3 regression tests use:
 
@@ -159,17 +164,19 @@ The DFGG can be invoked from the root repository directory (ttb/) using:
 
 # E2E Bomberman Analysis of Real Circuits
 
-There are three real-world circuit designs provided within this repository to experiment with. These designs include: a 128-bit AES accelerator ([TrustHub](https://trust-hub.org/home)), an 8-bit UART module ([OpenCores](https://opencores.org/projects/uart16550)), and an OR1200 processor CPU ([OpenCores](https://opencores.org/projects/uart16550)). To experiment analyzing each design with Bomberman, follow the steps below. Note, the Makefile invoked below utilize [PyPy](https://pypy.org/), instead of Python 2.7, to speed up computation. If you have not installed PyPy on your system, be sure to do so before running the following commands:
+There are three real-world circuit designs provided within this repository to experiment with. These designs include: a 128-bit AES accelerator ([TrustHub](https://trust-hub.org/home)), an 8-bit UART module ([OpenCores](https://opencores.org/projects/uart16550)), and an OR1200 processor CPU ([OpenCores](https://opencores.org/projects/uart16550)). To experiment analyzing each design with Bomberman, follow the steps below. 
+
+***Note:*** *Bomberman's simulation analysis requires Python 2.7. You may have to modify the makefile (circuits/common.mk) to invoke Python 2.7, if the **python** alias on your system is mapped to Python 3. Alternatively, the makefile can be altered to invoke [PyPy](https://pypy.org/), instead of Python 2.7, to speed up computation. If you go this route, be sure to install PyPy on your system before proceeding.*
 
 1.  `cd circuits`
 2.  `cd aes`
-3.  `make all`
+3.  `make all LOG=1 OUT_DIR=tjfree`
 4.  `cd ..`
 5.  `cd uart`
-6.  `make all`
+6.  `make all LOG=1 OUT_DIR=tjfree`
 7.  `cd ..`
 8.  `cd or1200`
-9.  `make all`
+9.  `make all LOG=1 OUT_DIR=tjfree`
 10. `cd ..`
 
 The master Makefile (`circuits/common.mk`) that is invoked by running the above commands in each design sub-directory does three things. First, it invokes the *data-flow graph generator*, which generates a `.dot` file encoding the data-flow graph for the given hardware design. Second, *IVL* is invoked to simulate the hardware design and generate a `.vcd` file encoding the simulation trace. Third, the *simulation analysis* script is invoked to analyze the design for suspicious SSCs. The number of suspicious SSCs computed at different points throughout the simulation are output into several `.json` files.

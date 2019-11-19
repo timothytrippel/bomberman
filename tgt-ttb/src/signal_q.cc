@@ -126,10 +126,7 @@ void SignalQ::push_signal(Signal* signal, unsigned int id) {
 // ------------------------------------------------------------
 
 void SignalQ::print() const {
-
-	fprintf(DEBUG_PRINTS_FILE_PTR, "Signals\n");
-
 	for (unsigned int i = 0; i < signal_q_.size(); i++) {
-		fprintf(DEBUG_PRINTS_FILE_PTR, "%s%s\n", WS_TAB, get_signal(i)->get_fullname().c_str());
+		fprintf(stdout, "%s%s\n", WS_TAB, get_signal(i)->get_fullname().c_str());
 	}
 }

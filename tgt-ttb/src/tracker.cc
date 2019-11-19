@@ -64,8 +64,10 @@ Tracker::~Tracker() {
 		"ERROR-Tracker::~Tracker: nexi left unprocessed.\n");
 
 	// 3. Check that all source signals processed
-	assert(source_signals_.get_num_signals() == 0 &&
-		"ERROR-Tracker::~Tracker: source signals left unprocessed.\n");
+	if (source_signals_.get_num_signals() != 0) {
+		fprintf(stdout, "WARNING: signals left unprocessed:\n");
+		source_signals_.print();
+	}
 }
 
 // ------------------------------------------------------------

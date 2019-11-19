@@ -1,6 +1,7 @@
 # Directory Structure
 TGT_TTB_DIR :=../../tgt-ttb
 SCRIPTS     := ../../scripts
+IVL_DIR     := ../../iverilog/bin
 
 # Configurations
 CLK_BASENAME := clk
@@ -19,19 +20,19 @@ split:
 
 # VCD/Dot Analysis Script
 script: tgt-ttb $(TGT)/$(TGT).vcd $(TGT)/$(TGT).dot
-	python2 $(SCRIPTS)/analyze.py 0 -1 1 $(TGT) 0 "none" "none" $(TGT)/$(TGT).dot $(TGT)/$(TGT).vcd $(TGT)/$(TGT).json 
+	python $(SCRIPTS)/analyze.py 0 -1 1 $(TGT) 0 "none" "none" $(TGT)/$(TGT).dot $(TGT)/$(TGT).vcd $(TGT)/$(TGT).json 
 
 # IVL Simulation (Step 2: VCD Generation)
 $(TGT)/$(TGT).vcd: $(TGT)/$(TGT).vvp $(TGT)/$(TGT).dot
-	vvp $< && mv $(TGT).vcd $@
+	$(IVL_DIR)/vvp $< && mv $(TGT).vcd $@
 
 # IVL Simulation (Step 1: Executable Generation)
 $(TGT)/$(TGT).vvp: $(TGT)/$(TGT).v $(TGT)/$(TGT)_tb.v
-	iverilog -o $@ -t vvp $^
+	$(IVL_DIR)/iverilog -o $@ -t vvp $^
 
 # IVL Target TTB Module Analysis
 $(TGT)/$(TGT).dot: $(TGT)/$(TGT).v $(TGT)/$(TGT)_tb.v
-	iverilog -o $@ -pclk=$(CLK_BASENAME) -t ttb $^
+	$(IVL_DIR)/iverilog -o $@ -pclk=$(CLK_BASENAME) -t ttb $^
 	dot $@ -Tpdf -o $(TGT)/$(TGT).pdf
 
 # Building the IVL Target Module
