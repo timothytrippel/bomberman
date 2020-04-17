@@ -69,19 +69,19 @@ script: $(OUT_FILE_BASENAME).dot $(OUT_FILE_BASENAME).vcd
 $(OUT_FILE_BASENAME).vcd: $(OUT_FILE_BASENAME).vvp
 	@echo "Starting simulation with ${NUM_TESTS} tests ..."; \
 	if [ $(LOG) == 0 ]; then \
-		vvp $< -DVCD_FILENAME=\"$@\" \
+		time vvp $< -DVCD_FILENAME=\"$@\" \
 			+num_tests=$(NUM_TESTS) \
 			+program_index=${PROGRAM_NUM} \
 			+seed_key=${AES_KEY_SEED} \
 			+seed_state=${AES_STATE_SEED} \
 			+data_seed=${UART_DATA_SEED}; \
 	else \
-		vvp $< -DVCD_FILENAME=\"$@\" \
+		(time vvp $< -DVCD_FILENAME=\"$@\" \
 			+num_tests=$(NUM_TESTS) \
 			+program_index=${PROGRAM_NUM} \
 			+seed_key=${AES_KEY_SEED} \
 			+seed_state=${AES_STATE_SEED} \
-			+data_seed=${UART_DATA_SEED} 2>&1 | tee $(OUT_FILE_BASENAME).vcd.log; \
+			+data_seed=${UART_DATA_SEED}) &> $(OUT_FILE_BASENAME).vcd.log; \
 	fi;
 
 # IVL Simulation (Step 1: Executable Generation)

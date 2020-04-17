@@ -15,6 +15,7 @@ from   parse_dot           import parse_file
 from   Verilog_VCD         import parse_vcd, get_timescale, get_endtime
 from   distributed_counter import generate_distributed_counters
 from   coalesced_counter   import generate_coalesced_counters
+from   compute_graph_stats import compute_max_fanin, compute_max_reg2reg_path
 
 def calculate_and_print_time(start_time, end_time):
 	hours, rem       = divmod(end_time - start_time, 3600)
@@ -28,7 +29,7 @@ def export_stats_json(num_total, num_skipped, num_constants, num_malicious, file
 		"constants" : num_constants,
 		"malicious" : num_malicious,
 	}
-	with open(filename, 'w') as jf:  
+	with open(filename, 'w') as jf:
 		json.dump(stats, jf)
 	jf.close()
 
@@ -85,7 +86,7 @@ def classify_counters(counter_type, signals, vcd, counters, start_time, time_lim
 	else:
 		time_analysis_range = range(start_time, time_limit, time_resolution)
 		time_analysis_range.append(time_limit)
-		
+
 	for curr_time_limit in time_analysis_range:
 
 		if sws.VERBOSE > 1:
@@ -106,7 +107,7 @@ def classify_counters(counter_type, signals, vcd, counters, start_time, time_lim
 
 			# Get next time value
 			time, value = counter.get_time_value(vcd, curr_time_limit)
-	
+
 			# Iterate over time simulation time indices in range of interest
 			while (time != None and value != None):
 
@@ -122,7 +123,7 @@ def classify_counters(counter_type, signals, vcd, counters, start_time, time_lim
 						if sws.VERBOSE > 2:
 							print "Repeated Value (%s) --> Not Malicious" % (value)
 							print
-						
+
 						# Mark counter as benign
 						benign[mal_counter_name] = True
 						break
@@ -184,7 +185,7 @@ def classify_counters(counter_type, signals, vcd, counters, start_time, time_lim
 		# Save counter stats to JSON file
 		json_filename = json_base_filename + "." + counter_type + "." + str(curr_time_limit) + ".json"
 		export_stats_json(len(counters), len(skipped), len(constants), len(malicious) - len(constants), json_filename)
-		
+
 		# Check if hit 0 malicious counters
 		if not no_malicious and len(malicious) == 0:
 			no_malicious = True
@@ -259,7 +260,6 @@ def check_simulation_coverage(signals, dut_top_module):
 	print
 
 def main():
-	
 	##
 	# Set Global Program Switches
 	##
@@ -333,6 +333,17 @@ def main():
 	calculate_and_print_time(task_start_time, task_end_time)
 
 	##
+	# Compute Graph Stats
+	##
+	print "--------------------------------------------------------------------------------"
+	print "Computing Fan-in Stats..."
+        compute_max_fanin(signals, dut_top_module, json_base_filename + ".fanin.json")
+
+	print "--------------------------------------------------------------------------------"
+	print "Computing Reg2Reg Path Length Stats..."
+        compute_max_reg2reg_path(signals, dut_top_module, json_base_filename + ".reg2reg.json")
+
+	##
 	# Load VCD file
 	##
 	print "--------------------------------------------------------------------------------"
@@ -369,7 +380,7 @@ def main():
 	print "Checking time limits..."
 	if time_limit == -1:
 		time_limit = sim_end_time
-	elif time_limit < -1:  
+	elif time_limit < -1:
 		print "ERROR: time limit cannot be negative."
 		print "Exception is -1, which indicates entire simulation time."
 		sys.exit(1)

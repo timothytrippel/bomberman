@@ -20,6 +20,7 @@ class HDL_Signal:
 		self.conn           = []
 		self.vcd_symbol     = None
 		self.tv_index       = 0
+		self.visited        = False
 
 	def width(self):
 		return (self.msb - self.lsb + 1)
