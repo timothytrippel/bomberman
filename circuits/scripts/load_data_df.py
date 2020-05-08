@@ -196,7 +196,7 @@ def load_data_df_lf(data_dir):
     # print "Class:         ", len(counter_data['Class'])
     # print "Num. Counters: ", len(counter_data['Num. Counters'])
 
-    # Convert data to a data frames and merge them           
+    # Convert data to a data frames and merge them
     counter_df = pd.DataFrame(counter_data)
     return counter_df
 
@@ -209,13 +209,13 @@ def load_counter_sizes(data_dir):
             if '.json' in filename and 'sizes' in filename:
                 design_info = filename.split('.')
                 counter_sizes_data['Design']       = design_info[0]
-            
+
                 # Open JSON file
                 with open(data_dir + '/' + filename, 'r') as f:
 
                     # Read JSON file
                     json_dict = json.load(f)
-                    
+
                     # Get counter sizes
                     counter_sizes_data['Coalesced Sizes']   = json_dict['coal_sizes']
                     counter_sizes_data['Distributed Sizes'] = json_dict['dist_sizes']
