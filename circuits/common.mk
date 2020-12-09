@@ -4,7 +4,8 @@ SCRIPTS     :=../../scripts
 IVL_DIR     := ../../iverilog/bin
 
 # Configurations
-CLK_BASENAME := clk
+#CLK_BASENAME := clk
+CLK_BASENAME := CLK
 
 # Check if NUM_TESTS parameter set, default is 1
 ifndef NUM_TESTS
