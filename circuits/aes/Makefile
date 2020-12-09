@@ -10,6 +10,7 @@ TIME_RESOLUTION     := 100
 NUM_MALICIOUS_CNTRS := 1
 D_SIGNAL_BASENAME   := clk
 N_SIGNAL_BASENAME   := state
+OUT_DIR             := .
 
 # Check if AES_KEY_SEED parameter set
 ifndef AES_KEY_SEED

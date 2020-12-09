@@ -1,10 +1,12 @@
+SHELL := /bin/bash
+
 # Directory Structure
 TGT_TTB_DIR :=../../tgt-ttb
 SCRIPTS     :=../../scripts
-IVL_DIR     := ../../iverilog/bin
 
 # Configurations
-CLK_BASENAME := clk
+CLK_BASENAME      := clk
+OUT_FILE_BASENAME := $(OUT_DIR)/$(TARGET)
 
 # Check if NUM_TESTS parameter set, default is 1
 ifndef NUM_TESTS
@@ -14,14 +16,6 @@ endif
 # Check if log parameter set
 ifndef LOG
 	LOG := 0
-endif
-
-# Check output directory
-ifndef OUT_DIR
-	OUT_DIR := .
-	OUT_FILE_BASENAME := $(TARGET)
-else
-	OUT_FILE_BASENAME := $(OUT_DIR)/$(TARGET)
 endif
 
 # Check program number
@@ -65,7 +59,7 @@ script: $(OUT_FILE_BASENAME).dot $(OUT_FILE_BASENAME).vcd
 	fi; \
 	echo "Done."
 
-# IVL Simulation (Step 2: VCD Generation)
+# IVL Simulation
 $(OUT_FILE_BASENAME).vcd: $(OUT_FILE_BASENAME).vvp
 	@echo "Starting simulation with ${NUM_TESTS} tests ..."; \
 	if [ $(LOG) == 0 ]; then \
@@ -84,15 +78,15 @@ $(OUT_FILE_BASENAME).vcd: $(OUT_FILE_BASENAME).vvp
 			+data_seed=${UART_DATA_SEED}) &> $(OUT_FILE_BASENAME).vcd.log; \
 	fi;
 
-# IVL Simulation (Step 1: Executable Generation)
+# IVL Simulation Binary
 $(OUT_FILE_BASENAME).vvp: $(SOURCES) $(TESTBENCH)
 	@echo "Generating simulation binary..."; \
 	if [ $(LOG) == 0 ]; then \
-		$(IVL_DIR)/iverilog -t vvp -o $@ \
+		iverilog -t vvp -o $@ \
 			-DVCD_FILENAME=\"$(OUT_FILE_BASENAME).vcd\" \
 			$(INCLUDEDIRS) $^; \
 	else \
-		($(IVL_DIR)/iverilog -t vvp -o $@ \
+		(iverilog -t vvp -o $@ \
 			-DVCD_FILENAME=\"$(OUT_FILE_BASENAME).vcd\" \
 			$(INCLUDEDIRS) $^) &> $(OUT_FILE_BASENAME).vvp.log; \
 	fi;
@@ -101,13 +95,13 @@ $(OUT_FILE_BASENAME).vvp: $(SOURCES) $(TESTBENCH)
 $(OUT_FILE_BASENAME).dot: $(SOURCES) $(TESTBENCH)
 	@echo "Generating DOT graph..."; \
 	if [ $(LOG) == 0 ]; then \
-		time $(IVL_DIR)/iverilog -o $@ \
+		time iverilog -o $@ \
 			-pclk=$(CLK_BASENAME) \
 			-DVCD_FILENAME=\"$(TARGET).vcd\" \
 			-t ttb \
 			$(INCLUDEDIRS) $^; \
 	else \
-		(time $(IVL_DIR)/iverilog -o $@ \
+		(time iverilog -o $@ \
 			-pclk=$(CLK_BASENAME) \
 			-DVCD_FILENAME=\"$(TARGET).vcd\" \
 			-t ttb \

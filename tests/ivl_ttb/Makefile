@@ -1,6 +1,5 @@
 # Directory Structure
 TGT_TTB_DIR  := ../../tgt-ttb
-IVL_DIR      := ../../iverilog/bin
 SRC_DIR      := verilog
 DOT_DIR      := dot
 GOLD_DOT_DIR := golden_dot
@@ -67,8 +66,7 @@ tgt-ttb:
 $(DOT_DIR)/%.dot: $(SRC_DIR)/%.v tgt-ttb
 	mkdir -p dot
 	mkdir -p pdf
-	$(IVL_DIR)/iverilog -o $@ -pclk=$(CLK_BASENAME) -t ttb $<
-# 	iverilog -o $@ -pclk=$(CLK_BASENAME) -pignore_filepath=$(patsubst $(SRC_DIR)/%,$(IGNORES_DIR)/%,$(<:.v=.txt)) -t ttb $<
+	iverilog -o $@ -pclk=$(CLK_BASENAME) -t ttb $<
 	dot $@ -Tpdf -o $(patsubst $(SRC_DIR)/%,$(PDF_DIR)/%,$(<:.v=.pdf))
 
 .PHONY: build cleanall clean
