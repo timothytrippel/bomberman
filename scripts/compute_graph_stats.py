@@ -22,6 +22,8 @@ def compute_max_fanin(signals, dut_top_module, filename):
             total_inputs += num_inputs
             total_sinks += 1
 
+    print "Total Inputs   =", total_inputs
+    print "Total Sinks    =", total_sinks
     print "Average Fan-in =", (float(total_inputs) / float(total_sinks))
     print "Max Fan-in     =", max_fanin
     json_dict = {"Fan-in": local_fanins}
@@ -59,7 +61,9 @@ def compute_max_bitwise_fanin(signals, dut_top_module, filename):
             total_num_input_bits += num_input_bits
             total_num_sink_bits += sink_signal_width
 
-    print "Average Fan-in =", (float(total_num_input_bits) / float(total_num_sink_bits))
+    print "Total Num Input Bits =", total_num_input_bits
+    print "Total Num Sink Bits  =", total_num_sink_bits
+    print "Average Fan-in       =", (float(total_num_input_bits) / float(total_num_sink_bits))
     print "Max Fan-in     =", max_fanin
     json_dict = {"Fan-in": local_fanins}
     with open(filename, 'w') as jf:
@@ -74,7 +78,6 @@ def compute_max_reg2reg_path(signals, dut_top_module, filename):
     lengths = []
     def dfs(curr_sig, length):
         if curr_sig.isinput or curr_sig.isff:
-            # print length
             lengths.append(copy.deepcopy(length))
             # total_length += length
             # total_paths  += 1
@@ -99,6 +102,8 @@ def compute_max_reg2reg_path(signals, dut_top_module, filename):
 
     for sig in signals:
         signals[sig].visited = False
+    print "Total Path Length           =", sum(lengths)
+    print "Total Paths                 =", len(lengths)
     print "Average Reg2Reg Path Length =", \
             (float(sum(lengths)) / float(len(lengths)))
     print "Max Reg2Reg Path Length     =", max(lengths)
