@@ -23,13 +23,15 @@ RUN apt-get install -y \
     graphviz \
     python \
     python3
-    #python3-pip \
 
-# Build/Install Icarus Verilog
-#TODO(ttrippel): checkout specific version of Icarus Verilog
+# Build/Install Icarus Verilog (version 10.3)
+COPY iverilog_main.patch $BOMBERMAN/
 RUN cd $BOMBERMAN && \
       git clone https://github.com/steveicarus/iverilog.git && \
       cd iverilog && \
+      git checkout 453c5465895eaca4a792d18b75e9ec14db6ea50e && \
+      mv ../iverilog_main.patch ./ && \
+      patch <iverilog_main.patch && \
       sh autoconf.sh && \
       ./configure --prefix=$(pwd) && \
       make -j$(nproc) install
@@ -62,4 +64,5 @@ RUN cd $SRC/riscv-gnu-toolchain-rv32i && mkdir build && cd build && \
 
 # Set entrypoint
 WORKDIR $BOMBERMAN
-CMD ["/bin/bash"]
+COPY run.sh $BOMBERMAN/
+CMD ["/bin/bash", "run.sh"]

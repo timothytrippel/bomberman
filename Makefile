@@ -2,6 +2,8 @@ SHELL := /bin/bash
 
 REPO_PATH := /Users/ttrippel/repos/bomberman
 
+.PHONY: build-infra clean-infra run clean
+
 build-infra:
 	docker build -t bomberman/sim . 
 
@@ -19,3 +21,12 @@ run:
 		-v $(REPO_PATH)/tgt-ttb:/src/bomberman/tgt-ttb \
 		-v $(REPO_PATH)/third_party:/src/bomberman/third_party \
 		-t bomberman/sim /bin/bash
+
+clean:
+	$(MAKE) -C circuits/aes clean
+	$(MAKE) -C circuits/uart clean
+	$(MAKE) -C circuits/or1200 clean
+	$(MAKE) -C circuits/picorv32 clean
+
+
+#TODO(ttrippel): create a master clean target
