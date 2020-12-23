@@ -30,14 +30,13 @@ CFLAGS := \
 	-Wextra \
 	-Wshadow \
 	-g \
-	-O2
+	-O3
 
-# Source/Target Files
+# Sources/Objects
 TGT = ttb
 SRCS := $(shell find $(SRC_DIR) -type f -name *.cc)
 OBJS := $(patsubst $(SRC_DIR)/%,$(BUILD_DIR)/%,$(SRCS:.cc=.o))
 
-# Make Targets
 all: 
 	$(MAKE) $(TGT) 
 	$(MAKE) confs 

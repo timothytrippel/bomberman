@@ -1,401 +1,417 @@
 # This is a manual translation, from perl to python, of :
-# http://cpansearch.perl.org/src/GSULLIVAN/Verilog-VCD-0.03/lib/Verilog/VCD.pm 
+# http://cpansearch.perl.org/src/GSULLIVAN/Verilog-VCD-0.03/lib/Verilog/VCD.pm
 
+import heapq
 import re
 import sys
-import heapq
 
 global timescale
 global endtime
 
+
 def croak(*args):
-	"""Function similar to Perl's Carp::croak, to simplify porting this code"""
-	a = "".join(args);
-	raise Exception(a)
-
-def list_sigs(file) :
-	"""Parse input VCD file into data structure, 
-	then return just a list of the signal names."""
-
-	vcd = parse_vcd(file, only_sigs=1)
-
-	sigs = []
-	for k,v in vcd:
-		nets = v['nets']
-		sigs.extend( n['hier']+n['name'] for n in net )
-	
-	return sigs
+  """Function similar to Perl's Carp::croak, to simplify porting this code"""
+  a = "".join(args)
+  raise Exception(a)
 
 
-def parse_vcd(file, signals, only_sigs=0, types={"reg", "wire"}, use_stdout=0, siglist=[], opt_timescale=''):
-	"""Parse input VCD file into data structure.
-	Also, print t-v pairs to STDOUT, if requested."""
-	global endtime
+def list_sigs(file):
+  """Parse input VCD file into data structure, 
+  then return just a list of the signal names."""
 
-	usigs = {}
-	for i in siglist:
-		usigs[i] = 1
+  vcd = parse_vcd(file, only_sigs=1)
 
-	if len(usigs):
-		all_sigs = 0
-	else :
-		all_sigs = 1
+  sigs = []
+  for k, v in vcd:
+    nets = v['nets']
+    sigs.extend(n['hier'] + n['name'] for n in nets)
 
-	data = {}
-	mult = 0
-	num_sigs = 0
-	hier = []
-	time = 0
-
-	re_time    = re.compile(r"^#(\d+)")
-	re_1b_val  = re.compile(r"^([01zx])(.+)")
-	re_Nb_val  = re.compile(r"^[br](\S+)\s+(.+)")
-
-	fh = open(file, 'r')
-	line_num = 1
-
-	while True:
-		line = fh.readline()
-		if line == '' : # EOF
-			break
-
-		# chomp
-		# s/ ^ \s+ //x
-		line = line.strip()
-
-		if "$enddefinitions" in line:
-			num_sigs = len(data)
-			if (num_sigs == 0) :
-				if (all_sigs) :
-					croak("Error: No signals were found in the VCD file file.",
-						  'Check the VCD file for proper var syntax.')
-				
-				else :
-					croak("Error: No matching signals were found in the VCD file file.",
-						  ' Use list_sigs to view all signals in the VCD file.')
-				
-			
-			if ((num_sigs>1) and use_stdout) :
-				croak("Error: There are too many signals (num_sigs) for output ",
-					  'to STDOUT.  Use list_sigs to select a single signal.')
-			
-			if only_sigs:
-				break
+  return sigs
 
 
-		elif "$timescale" in line:
-			statement = line
-			if not "$end" in line:
-				while fh :
-					line = fh.readline()
-					statement += line
-					if "$end" in line:
-						break
-			
-			mult = calc_mult(statement, opt_timescale)
-		
+def parse_vcd(file,
+              signals,
+              only_sigs=0,
+              types={"reg", "wire"},
+              use_stdout=0,
+              siglist=[],
+              opt_timescale=''):
+  """Parse input VCD file into data structure.
+  Also, print t-v pairs to STDOUT, if requested."""
+  global endtime
 
-		elif "$scope" in line:
-			# assumes all on one line
-			#   $scope module dff end
-			hier.append( line.split()[2] ) # just keep scope name
-		
-		elif "$upscope" in line:
-			hier.pop()
-		
-		elif "$var" in line:
-			# assumes all on one line:
-			#   $var reg 1 *@ data $end
-			#   $var wire 4 ) addr [3:0] $end
-			ls = line.split()
-			type = ls[1]
-			if type in types:
-				size = ls[2]
-				code = ls[3]
-				name = "".join(ls[4:-1])
-				path = '.'.join(hier)
-				full_name = path + "." + name
-				if (full_name in usigs) or all_sigs:
-					if code not in data:
-						data[code] = {}
+  usigs = {}
+  for i in siglist:
+    usigs[i] = 1
 
-					if 'nets' not in data[code]:
-						data[code]['nets'] = []
+  if len(usigs):
+    all_sigs = 0
+  else:
+    all_sigs = 1
 
-					var_struct = {
-						'type' : type,
-						'name' : name,
-						'size' : size,
-						'hier' : path,
-					}
+  data = {}
+  mult = 0
+  num_sigs = 0
+  hier = []
+  time = 0
 
-					if var_struct not in data[code]['nets']:
-						data[code]['nets'].append( var_struct )
-			else:
-				print "WARNING: invalid signal type (%s) encountered in var dump on line: %d" % (type, line_num)
+  re_time = re.compile(r"^#(\d+)")
+  re_1b_val = re.compile(r"^([01zx])(.+)")
+  re_Nb_val = re.compile(r"^[br](\S+)\s+(.+)")
 
-		elif line.startswith('#'):
-			re_time_match   = re_time.match(line)
-			time = mult * int(re_time_match.group(1))
-			endtime = time
-		
-		elif line.startswith(('0', '1', 'x', 'z', 'b', 'r')):
-			re_1b_val_match = re_1b_val.match(line)
-			re_Nb_val_match = re_Nb_val.match(line)
-			if re_Nb_val_match :
-				value = re_Nb_val_match.group(1)
-				code  = re_Nb_val_match.group(2)
-			elif re_1b_val_match :
-				value = re_1b_val_match.group(1)
-				code  = re_1b_val_match.group(2)
-			if (code in data) :
-				if (use_stdout) :
-					print time, value
-				else :
-					if 'tv' not in data[code]:
-						data[code]['tv'] = []
-					data[code]['tv'].append((time, list(value)))
-			else:
-				print "ERROR: invalid signal code (%s) encountered in var dump on line: %d" % (code, line_num)
-				sys.exit(1)
-		
-		# Increment line number
-		line_num += 1
-		
-	fh.close()
+  fh = open(file, 'r')
+  line_num = 1
 
-	# Swap signal names for symbols
-	signals = update_symbol_ref(data, signals)
+  while True:
+    line = fh.readline()
+    if line == '':  # EOF
+      break
 
-	# Pad signal time values if vectored
-	data = zero_pad_vectored_signal_tvs(data)
-	
-	return data, signals
+    # chomp
+    # s/ ^ \s+ //x
+    line = line.strip()
 
-def calc_mult (statement, opt_timescale=''):
-	""" 
-	Calculate a new multiplier for time values.
-	Input statement is complete timescale, for example:
-	  timescale 10ns end
-	Input new_units is one of s|ms|us|ns|ps|fs.
-	Return numeric multiplier.
-	Also sets the package timescale variable.
-	""" 
-	global timescale
+    if "$enddefinitions" in line:
+      num_sigs = len(data)
+      if (num_sigs == 0):
+        if (all_sigs):
+          croak("Error: No signals were found in the VCD file file.",
+                'Check the VCD file for proper var syntax.')
+
+        else:
+          croak("Error: No matching signals were found in the VCD file file.",
+                ' Use list_sigs to view all signals in the VCD file.')
+
+      if ((num_sigs > 1) and use_stdout):
+        croak("Error: There are too many signals (num_sigs) for output ",
+              'to STDOUT.  Use list_sigs to select a single signal.')
+
+      if only_sigs:
+        break
+
+    elif "$timescale" in line:
+      statement = line
+      if "$end" not in line:
+        while fh:
+          line = fh.readline()
+          statement += line
+          if "$end" in line:
+            break
+
+      mult = calc_mult(statement, opt_timescale)
+
+    elif "$scope" in line:
+      # assumes all on one line
+      #   $scope module dff end
+      hier.append(line.split()[2])  # just keep scope name
+
+    elif "$upscope" in line:
+      hier.pop()
+
+    elif "$var" in line:
+      # assumes all on one line:
+      #   $var reg 1 *@ data $end
+      #   $var wire 4 ) addr [3:0] $end
+      ls = line.split()
+      type = ls[1]
+      if type in types:
+        size = ls[2]
+        code = ls[3]
+        name = "".join(ls[4:-1])
+        path = '.'.join(hier)
+        full_name = path + "." + name
+        if (full_name in usigs) or all_sigs:
+          if code not in data:
+            data[code] = {}
+
+          if 'nets' not in data[code]:
+            data[code]['nets'] = []
+
+          var_struct = {
+              'type': type,
+              'name': name,
+              'size': size,
+              'hier': path,
+          }
+
+          if var_struct not in data[code]['nets']:
+            data[code]['nets'].append(var_struct)
+      else:
+        print(
+            "WARNING: invalid signal type (%s) encountered in var dump on line: %d"
+            % (type, line_num))
+
+    elif line.startswith('#'):
+      re_time_match = re_time.match(line)
+      time = mult * int(re_time_match.group(1))
+      endtime = time
+
+    elif line.startswith(('0', '1', 'x', 'z', 'b', 'r')):
+      re_1b_val_match = re_1b_val.match(line)
+      re_Nb_val_match = re_Nb_val.match(line)
+      if re_Nb_val_match:
+        value = re_Nb_val_match.group(1)
+        code = re_Nb_val_match.group(2)
+      elif re_1b_val_match:
+        value = re_1b_val_match.group(1)
+        code = re_1b_val_match.group(2)
+      if (code in data):
+        if (use_stdout):
+          print(time, value)
+        else:
+          if 'tv' not in data[code]:
+            data[code]['tv'] = []
+          data[code]['tv'].append((time, list(value)))
+      else:
+        print(
+            "ERROR: invalid signal code (%s) encountered in var dump on line: %d"
+            % (code, line_num))
+        sys.exit(1)
+
+    # Increment line number
+    line_num += 1
+
+  fh.close()
+
+  # Swap signal names for symbols
+  signals = update_symbol_ref(data, signals)
+
+  # Pad signal time values if vectored
+  data = zero_pad_vectored_signal_tvs(data)
+
+  return data, signals
 
 
-	fields = statement.split()
-	fields.pop()   # delete end from array
-	fields.pop(0)  # delete timescale from array
-	tscale = ''.join(fields)
+def calc_mult(statement, opt_timescale=''):
+  """Calculate a new multiplier for time values.
 
-	new_units = ''
-	if (opt_timescale != ''):
-		new_units = opt_timescale.lower()
-		new_units = re.sub(r"\s", '', new_units)
-		timescale = "1"+new_units
-	
-	else :
-		timescale = tscale
-		return 1
-	
+  Input statement is complete timescale, for example:
+    timescale 10ns end
+  Input new_units is one of s|ms|us|ns|ps|fs.
+  Return numeric multiplier.
+  Also sets the package timescale variable.
+  """
+  global timescale
 
-	mult  = 0
-	units = 0
-	ts_match = re.compile(r"(\d+)([a-z]+)")
-	if ts_match.match(tscale):
-		mult  = ts_match.group(1)
-		units = ts_match.group(2).lower()
-	
-	else :
-		croak("Error: Unsupported timescale found in VCD file: tscale.  ",
-			  'Refer to the Verilog LRM.')
-	
+  fields = statement.split()
+  fields.pop()  # delete end from array
+  fields.pop(0)  # delete timescale from array
+  tscale = ''.join(fields)
 
-	mults = {
-		'fs' : 1e-15,
-		'ps' : 1e-12,
-		'ns' : 1e-09,
-		'us' : 1e-06,
-		'ms' : 1e-03,
-		 's' : 1e-00,
-	}
-	mults_keys = keys(mults)
-	mults_keys.sort(key=lambda x : mults[x])
-	usage = '|'.join(mults_keys)
+  new_units = ''
+  if (opt_timescale != ''):
+    new_units = opt_timescale.lower()
+    new_units = re.sub(r"\s", '', new_units)
+    timescale = "1" + new_units
 
-	scale = 0
-	if units in mults :
-		scale = mults[units]
-	
-	else :
-		croak("Error: Unsupported timescale units found in VCD file: "+units+".  ",
-			  "Supported values are: "+usage)
-	
+  else:
+    timescale = tscale
+    return 1
 
-	new_scale = 0
-	if new_units in mults :
-		new_scale = mults[new_units]
-	
-	else :
-		croak("Error: Illegal user-supplied timescale: "+new_units+".  ",
-			  "Legal values are: "+usage)
-	
+  mult = 0
+  units = 0
+  ts_match = re.compile(r"(\d+)([a-z]+)")
+  if ts_match.match(tscale):
+    mult = ts_match.group(1)
+    units = ts_match.group(2).lower()
 
-	return ((mult * scale) / new_scale)
+  else:
+    croak("Error: Unsupported timescale found in VCD file: tscale.  ",
+          'Refer to the Verilog LRM.')
+
+  mults = {
+      'fs': 1e-15,
+      'ps': 1e-12,
+      'ns': 1e-09,
+      'us': 1e-06,
+      'ms': 1e-03,
+      's': 1e-00,
+  }
+  mults_keys = mults.keys()
+  mults_keys.sort(key=lambda x: mults[x])
+  usage = '|'.join(mults_keys)
+
+  scale = 0
+  if units in mults:
+    scale = mults[units]
+
+  else:
+    croak(
+        "Error: Unsupported timescale units found in VCD file: " + units +
+        ".  ", "Supported values are: " + usage)
+
+  new_scale = 0
+  if new_units in mults:
+    new_scale = mults[new_units]
+
+  else:
+    croak("Error: Illegal user-supplied timescale: " + new_units + ".  ",
+          "Legal values are: " + usage)
+
+  return ((mult * scale) / new_scale)
+
 
 def get_timescale():
-	return timescale
+  return timescale
+
 
 def get_endtime():
-	return endtime
+  return endtime
+
 
 def is_signal_vectored(signal):
-	if (signal['msb'] - signal['lsb'] + 1) > 1:
-		return True
-	return False
+  if (signal['msb'] - signal['lsb'] + 1) > 1:
+    return True
+  return False
+
 
 def is_signal_name_vectored(signal_base_name):
-	if len(signal_base_name.split("[")) != 1:
-		return True
-	return False
+  if len(signal_base_name.split("[")) != 1:
+    return True
+  return False
+
 
 def get_signal_lsb(signal_base_name):
-	if is_signal_name_vectored(signal_base_name):
-		return int(signal_base_name.split("[")[-1].split(":")[-1].split("]")[0])
-	return 0
+  if is_signal_name_vectored(signal_base_name):
+    return int(signal_base_name.split("[")[-1].split(":")[-1].split("]")[0])
+  return 0
+
 
 def update_symbol_ref(vcd, signals):
 
-	# Iterate through symbol and signal info key-value pairs
-	for symbol, signal in vcd.items():
+  # Iterate through symbol and signal info key-value pairs
+  for symbol, signal in vcd.items():
 
-		# And VCD symbol references for each signal object in signals dict
-		for net in signal['nets']:
-			
-			# Only process regs and wires (i.e. synthesizable constructs)
-			if net['type'] == 'reg' or net['type'] == 'wire':
+    # And VCD symbol references for each signal object in signals dict
+    for net in signal['nets']:
 
-				# Extract bit offset signal info
-				signal_lsb  = get_signal_lsb(net['name'])
-				signal_msb  = signal_lsb + int(net['size']) - 1
-				msb_lsb_str = "[%d:%d]" % (signal_msb, signal_lsb)
+      # Only process regs and wires (i.e. synthesizable constructs)
+      if net['type'] == 'reg' or net['type'] == 'wire':
 
-				# Get local signal name (i.e. w/o bit offsets)
-				if '[' in net['name'] and ']' in net['name']:
-					local_signal_name = net['name'][0:-len(msb_lsb_str)] # remove MSB/LSB indices
-				else:
-					local_signal_name = net['name']
-				# print net['name'], '-->', net['name'][0:-len(msb_lsb_str)], '-->', local_signal_name
+        # Extract bit offset signal info
+        signal_lsb = get_signal_lsb(net['name'])
+        signal_msb = signal_lsb + int(net['size']) - 1
+        msb_lsb_str = "[%d:%d]" % (signal_msb, signal_lsb)
 
-				# Check if net name was escaped (Icarus Verilog does 
-				# this for memories that are explicitly dumped)
-				if local_signal_name.startswith('\\'):
-					local_signal_name = local_signal_name[1:]
+        # Get local signal name (i.e. w/o bit offsets)
+        if '[' in net['name'] and ']' in net['name']:
+          local_signal_name = net['name'][
+              0:-len(msb_lsb_str)]  # remove MSB/LSB indices
+        else:
+          local_signal_name = net['name']
 
-				# Get signal hierachy name
-				hierarchy_signal_name = net['hier']
+        # Check if net name was escaped (Icarus Verilog does
+        # this for memories that are explicitly dumped)
+        if local_signal_name.startswith('\\'):
+          local_signal_name = local_signal_name[1:]
 
-				# Construct signal full name (without MSB/LSB info)
-				full_signal_name = hierarchy_signal_name + '.' + local_signal_name
+        # Get signal hierachy name
+        hierarchy_signal_name = net['hier']
 
-				# Check that VCD signal name in signals dict
-				# print full_name
-				assert full_signal_name in signals and "ERROR: VCD signal not in dot graph."
+        # Construct signal full name (without MSB/LSB info)
+        full_signal_name = hierarchy_signal_name + '.' + local_signal_name
 
-				# Add symbol reference to signal object
-				signals[full_signal_name].vcd_symbol = symbol
+        # Check that VCD signal name in signals dict
+        # print full_name
+        assert (full_signal_name in signals and
+                "ERROR: VCD signal not in dot graph.")
 
-	return signals
+        # Add symbol reference to signal object
+        signals[full_signal_name].vcd_symbol = symbol
+
+  return signals
+
 
 def zero_pad_vectored_signal_tvs(vcd):
 
-	# Iterate through name and signal info key-value pairs
-	for symbol, signal in vcd.items():
+  # Iterate through name and signal info key-value pairs
+  for symbol, signal in vcd.items():
 
-		# Get first signal in the net
-		net  = signal['nets'][0]
-		size = int(signal['nets'][0]['size'])
+    # Get first signal in the net
+    net = signal['nets'][0]
+    size = int(signal['nets'][0]['size'])
 
-		# # Check if signal is vectored
-		# if (size > 1):
-			
-		for index, time_value in enumerate(signal['tv']):
-			time  = time_value[0]
-			value = time_value[1]
+    # # Check if signal is vectored
+    # if (size > 1):
 
-			# Check if padding is necessary
-			if len(value) != size:
-				# Check if value is unkown
-				if value[0] == 'x':
-					value = ['x'] * (size - len(value)) + value
-				else:
-					value = ['0'] * (size - len(value)) + value
-			
-			# Check value is correct width
-			assert len(value) == size
+    for index, time_value in enumerate(signal['tv']):
+      time = time_value[0]
+      value = time_value[1]
 
-			# Update time value
-			signal['tv'][index] = (time, ''.join(value))
-	
-	return vcd
+      # Check if padding is necessary
+      if len(value) != size:
+        # Check if value is unkown
+        if value[0] == 'x':
+          value = ['x'] * (size - len(value)) + value
+        else:
+          value = ['0'] * (size - len(value)) + value
+
+      # Check value is correct width
+      assert len(value) == size
+
+      # Update time value
+      signal['tv'][index] = (time, ''.join(value))
+
+  return vcd
+
 
 def debug_print_vcd(vcd):
-	for signal in vcd.keys():
-		print "Signal: %s" % (signal)
-		print "	LSB:   %s" % (vcd[signal]['lsb'])
-		print "	Nets:  %s" % (vcd[signal]['nets'])
-		print "		Hier: %s" % (vcd[signal]['nets'][0]['hier'])
-		print "		Name: %s" % (vcd[signal]['nets'][0]['name'])
-		print "		Type: %s" % (vcd[signal]['nets'][0]['type'])
-		print "		Size: %d" % (int(vcd[signal]['nets'][0]['size']))
-		print "	Time-Values:"
-		for tv in vcd[signal]['tv']:
-			print "		%3d -- %s" % (tv[0], tv[1])
+  for signal in vcd.keys():
+    print("Signal: %s" % (signal))
+    print("\tLSB:  %s" % (vcd[signal]['lsb']))
+    print("\tNets: %s" % (vcd[signal]['nets']))
+    print("\tHier: %s" % (vcd[signal]['nets'][0]['hier']))
+    print("\tName: %s" % (vcd[signal]['nets'][0]['name']))
+    print("\tType: %s" % (vcd[signal]['nets'][0]['type']))
+    print("\tSize: %d" % (int(vcd[signal]['nets'][0]['size'])))
+    print("\tTime-Values:")
+    for tv in vcd[signal]['tv']:
+      print("\t\t%3d -- %s" % (tv[0], tv[1]))
+
 
 # =head1 NAME
-# 
+#
 # Verilog_VCD - Parse a Verilog VCD text file
-# 
+#
 # =head1 VERSION
-# 
+#
 # This document refers to Verilog::VCD version 0.03.
-# 
+#
 # =head1 SYNOPSIS
-# 
+#
 #     from Verilog_VCD import parse_vcd
 #     vcd = parse_vcd('/path/to/some.vcd')
-# 
+#
 # =head1 DESCRIPTION
-# 
+#
 # Verilog is a Hardware Description Language (HDL) used to model digital logic.
 # While simulating logic circuits, the values of signals can be written out to
 # a Value Change Dump (VCD) file.  This module can be used to parse a VCD file
 # so that further analysis can be performed on the simulation data.  The entire
 # VCD file can be stored in a python data structure and manipulated using
 # standard hash and array operations.
-# 
+#
 # =head2 Input File Syntax
-# 
+#
 # The syntax of the VCD text file is described in the documentation of
 # the IEEE standard for Verilog.  Only the four-state VCD format is supported.
 # The extended VCD format (with strength information) is not supported.
 # Since the input file is assumed to be legal VCD syntax, only minimal
 # validation is performed.
-# 
+#
 # =head1 SUBROUTINES
-# 
-# 
+#
+#
 # =head2 parse_vcd(file, $opt_ref)
-# 
+#
 # Parse a VCD file and return a reference to a data structure which
 # includes hierarchical signal definitions and time-value data for all
 # the specified signals.  A file name is required.  By default, all
 # signals in the VCD file are included, and times are in units
 # specified by the C<$timescale> VCD keyword.
-# 
+#
 #     vcd = parse_vcd('/path/to/some.vcd')
-# 
+#
 # It returns a reference to a nested data structure.  The top of the
 # structure is a Hash-of-Hashes.  The keys to the top hash are the VCD
 # identifier codes for each signal.  The following is an example
@@ -404,7 +420,7 @@ def debug_print_vcd(vcd):
 # are stored as an Array-of-Tuples, referenced by the C<tv> key.  The
 # time is always the first number in the pair, and the times are stored in
 # increasing order in the array.
-# 
+#
 #     {
 #       '+' : {
 #                'tv' : [
@@ -427,138 +443,138 @@ def debug_print_vcd(vcd):
 #                          ]
 #              }
 #     }
-# 
+#
 # Since each code could have multiple hierarchical signal names, the names are
 # stored as an Array-of-Hashes, referenced by the C<nets> key.  The example above
 # only shows one signal name for the code.
-# 
-# 
+#
+#
 # =head3 OPTIONS
-# 
+#
 # Options to C<parse_vcd> should be passed as a hash reference.
-# 
+#
 # =over 4
-# 
+#
 # =item timescale
-# 
+#
 # It is possible to scale all times in the VCD file to a desired timescale.
 # To specify a certain timescale, such as nanoseconds:
-# 
+#
 #     vcd = parse_vcd(file, opt_timescale='ns'})
-# 
+#
 # Valid timescales are:
-# 
+#
 #     s ms us ns ps fs
-# 
+#
 # =item siglist
-# 
+#
 # If only a subset of the signals included in the VCD file are needed,
 # they can be specified by a signal list passed as an array reference.
 # The signals should be full hierarchical paths separated by the dot
 # character.  For example:
-# 
+#
 #     signals = [
 #         'top.chip.clk',
 #         'top.chip.cpu.alu.status',
 #         'top.chip.cpu.alu.sum[15:0]',
 #     ]
 #     vcd = parse_vcd(file, siglist=signals)
-# 
+#
 # Limiting the number of signals can substantially reduce memory usage of the
 # returned data structure because only the time-value data for the selected
 # signals is loaded into the data structure.
-# 
+#
 # =item use_stdout
-# 
+#
 # It is possible to print time-value pairs directly to STDOUT for a
 # single signal using the C<use_stdout> option.  If the VCD file has
 # more than one signal, the C<siglist> option must also be used, and there
 # must only be one signal specified.  For example:
-# 
-#     vcd = parse_vcd(file, 
+#
+#     vcd = parse_vcd(file,
 #                     use_stdout=1,
 #                     siglist=['top.clk']
 #                 )
-# 
+#
 # The time-value pairs are output as space-separated tokens, one per line.
 # For example:
-# 
+#
 #     0 x
 #     15 0
 #     277 1
 #     500 0
-# 
+#
 # Times are listed in the first column.
 # Times units can be controlled by the C<timescale> option.
-# 
+#
 # =item only_sigs
-# 
+#
 # Parse a VCD file and return a reference to a data structure which
 # includes only the hierarchical signal definitions.  Parsing stops once
 # all signals have been found.  Therefore, no time-value data are
 # included in the returned data structure.  This is useful for
 # analyzing signals and hierarchies.
-# 
+#
 #     vcd = parse_vcd(file, only_sigs=1)
-# 
+#
 # =back
-# 
-# 
+#
+#
 # =head2 list_sigs(file)
-# 
+#
 # Parse a VCD file and return a list of all signals in the VCD file.
 # Parsing stops once all signals have been found.  This is
 # helpful for deciding how to limit what signals are parsed.
-# 
+#
 # Here is an example:
-# 
+#
 #     signals = list_sigs('input.vcd')
-# 
+#
 # The signals are full hierarchical paths separated by the dot character
-# 
+#
 #     top.chip.cpu.alu.status
 #     top.chip.cpu.alu.sum[15:0]
-# 
+#
 # =head2 get_timescale( )
-# 
+#
 # This returns a string corresponding to the timescale as specified
 # by the C<$timescale> VCD keyword.  It returns the timescale for
 # the last VCD file parsed.  If called before a file is parsed, it
 # returns an undefined value.  If the C<parse_vcd> C<timescale> option
 # was used to specify a timescale, the specified value will be returned
 # instead of what is in the VCD file.
-# 
+#
 #     vcd = parse_vcd(file); # Parse a file first
 #     ts  = get_timescale();  # Then query the timescale
-# 
+#
 # =head2 get_endtime( )
-# 
+#
 # This returns the last time found in the VCD file, scaled
 # appropriately.  It returns the last time for the last VCD file parsed.
 # If called before a file is parsed, it returns an undefined value.
-# 
+#
 #     vcd = parse_vcd(file); # Parse a file first
 #     et  = get_endtime();    # Then query the endtime
-# 
+#
 # =head1 EXPORT
-# 
+#
 # Nothing is exported by default.  Functions may be exported individually, or
 # all functions may be exported at once, using the special tag C<:all>.
-# 
+#
 # =head1 DIAGNOSTICS
-# 
+#
 # Error conditions cause the program to raise an Exception.
-# 
+#
 # =head1 LIMITATIONS
-# 
+#
 # Only the following VCD keywords are parsed:
-# 
+#
 #     $end                $scope
 #     $enddefinitions     $upscope
 #     $timescale          $var
-# 
+#
 # The extended VCD format (with strength information) is not supported.
-# 
+#
 # The default mode of C<parse_vcd> is to load the entire VCD file into the
 # data structure.  This could be a problem for huge VCD files.  The best solution
 # to any memory problem is to plan ahead and keep VCD files as small as possible.
@@ -569,30 +585,29 @@ def debug_print_vcd(vcd):
 # file line-by-line, instead of loading it into the data structure, and directly
 # prints time-value data to STDOUT.  The drawback is that this only applies to
 # one signal.
-# 
+#
 # =head1 BUGS
-# 
+#
 # There are no known bugs in this module.
-# 
+#
 # =head1 SEE ALSO
-# 
+#
 # Refer to the following Verilog documentation:
-# 
+#
 #     IEEE Standard for Verilog (c) Hardware Description Language
 #     IEEE Std 1364-2005
 #     Section 18.2, "Format of four-state VCD file"
-# 
+#
 # =head1 AUTHOR
-# 
+#
 # Originally written in Perl by Gene Sullivan (gsullivan@cpan.org)
 # Translated into Python by Sameer Gauria (sgauria+python@gmail.com)
-# 
+#
 # =head1 COPYRIGHT AND LICENSE
-# 
+#
 # Copyright (c) 2012 Gene Sullivan, Sameer Gauria.  All rights reserved.
-# 
+#
 # This module is free software; you can redistribute it and/or modify
 # it under the same terms as Perl itself.  See L<perlartistic|perlartistic>.
-# 
+#
 # =cut
-

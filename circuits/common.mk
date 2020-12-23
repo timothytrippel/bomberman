@@ -35,7 +35,7 @@ output_dir:
 script: $(OUT_FILE_BASENAME).dot $(OUT_FILE_BASENAME).vcd
 	@echo "Analyzing design for counters with time limit: ${TIME_LIMIT} ps ..."; \
 	if [ $(LOG) == 0 ]; then \
-		time python2 $(SCRIPTS)/analyze.py \
+		time python3 $(SCRIPTS)/analyze.py \
 			$(START_TIME) \
 			$(TIME_LIMIT) \
 			$(TIME_RESOLUTION) \
@@ -46,7 +46,7 @@ script: $(OUT_FILE_BASENAME).dot $(OUT_FILE_BASENAME).vcd
 			$^ \
 			$(OUT_FILE_BASENAME); \
 	else \
-		(time python2 $(SCRIPTS)/analyze.py \
+		(time python3 $(SCRIPTS)/analyze.py \
 			$(START_TIME) \
 			$(TIME_LIMIT) \
 			$(TIME_RESOLUTION) \
