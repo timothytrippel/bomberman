@@ -32,11 +32,11 @@ RUN apt-get update && apt-get upgrade -y && apt-get autoremove -y
 # Setup directory structure
 ENV SRC=/src
 ENV BOMBERMAN=$SRC/bomberman
-ENV PATH="$PATH:/scripts"
+ENV PATH="$PATH:$BOMBERMAN"
 RUN mkdir -p $SRC $BOMBERMAN && chmod a+rwx $SRC $BOMBERMAN
 
 # Install packages
-# TODO(ttrippel): install specific versions of tools
+# TODO(timothytrippel): install specific versions of tools
 RUN apt-get install -y \
     git \
     build-essential \
@@ -87,5 +87,6 @@ RUN cd $SRC/riscv-gnu-toolchain-rv32i && mkdir build && cd build && \
       make -j$(nproc)
 
 # Set entrypoint
+COPY analyze_all.sh $BOMBERMAN/
 WORKDIR $BOMBERMAN
 CMD ["/bin/bash"]
