@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 
 # Directory Structure
-SCRIPTS :=../../scripts
+BOMBERMAN := ../../bomberman
 
 # Configurations
 CLK_BASENAME      := clk
@@ -22,7 +22,7 @@ ifndef PROGRAM_NUM
 	PROGRAM_NUM := 0
 endif
 
-all: output_dir script
+all: output_dir bomberman
 
 output_dir:
 	@if [ $(OUT_DIR) != "." ]; then \
@@ -30,11 +30,11 @@ output_dir:
 		mkdir -p $(OUT_DIR); \
 	fi;
 
-# VCD/Dot Analysis Script
-script: $(OUT_FILE_BASENAME).dot $(OUT_FILE_BASENAME).vcd
+# Bomberman analysis
+bomberman: $(OUT_FILE_BASENAME).dot $(OUT_FILE_BASENAME).vcd
 	@echo "Analyzing design for counters with time limit: ${TIME_LIMIT} ps ..."; \
 	if [ $(LOG) == 0 ]; then \
-		time python3 $(SCRIPTS)/analyze.py \
+		time python3 $(BOMBERMAN)/bomberman.py \
 			$(START_TIME) \
 			$(TIME_LIMIT) \
 			$(TIME_RESOLUTION) \
@@ -45,7 +45,7 @@ script: $(OUT_FILE_BASENAME).dot $(OUT_FILE_BASENAME).vcd
 			$^ \
 			$(OUT_FILE_BASENAME); \
 	else \
-		(time python3 $(SCRIPTS)/analyze.py \
+		(time python3 $(BOMBERMAN)/bomberman.py \
 			$(START_TIME) \
 			$(TIME_LIMIT) \
 			$(TIME_RESOLUTION) \
