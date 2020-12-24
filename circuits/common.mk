@@ -1,8 +1,7 @@
 SHELL := /bin/bash
 
 # Directory Structure
-TGT_TTB_DIR :=../../tgt-ttb
-SCRIPTS     :=../../scripts
+SCRIPTS :=../../scripts
 
 # Configurations
 CLK_BASENAME      := clk
@@ -98,13 +97,13 @@ $(OUT_FILE_BASENAME).dot: $(SOURCES) $(TESTBENCH)
 		time iverilog -o $@ \
 			-pclk=$(CLK_BASENAME) \
 			-DVCD_FILENAME=\"$(TARGET).vcd\" \
-			-t ttb \
+			-t dfg \
 			$(INCLUDEDIRS) $^; \
 	else \
 		(time iverilog -o $@ \
 			-pclk=$(CLK_BASENAME) \
 			-DVCD_FILENAME=\"$(TARGET).vcd\" \
-			-t ttb \
+			-t dfg \
 			$(INCLUDEDIRS) $^) &> $(OUT_FILE_BASENAME).dot.log; \
 	fi;
 

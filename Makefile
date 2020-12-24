@@ -18,7 +18,7 @@ run:
 		-v $(REPO_PATH)/circuits:/src/bomberman/circuits \
 		-v $(REPO_PATH)/scripts:/src/bomberman/scripts \
 		-v $(REPO_PATH)/tests:/src/bomberman/tests \
-		-v $(REPO_PATH)/tgt-ttb:/src/bomberman/tgt-ttb \
+		-v $(REPO_PATH)/tgt-dfg:/src/bomberman/tgt-dfg \
 		-v $(REPO_PATH)/third_party:/src/bomberman/third_party \
 		-t bomberman/sim /bin/bash
 

@@ -61,10 +61,6 @@ RUN cd $SRC/riscv-gnu-toolchain-rv32i && mkdir build && cd build && \
       ../configure --with-arch=rv32i --prefix=/opt/riscv32i && \
       make -j$(nproc)
 
-# Build/Install DFG Generator
-RUN cd $BOMBERMAN/tgt-ttb && make
-
 # Set entrypoint
 WORKDIR $BOMBERMAN
-COPY run.sh $BOMBERMAN/
 CMD ["/bin/bash"]
