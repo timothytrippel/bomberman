@@ -115,9 +115,13 @@ def compute_max_reg2reg_path(signals, dut_top_module, filename):
     signals[sig].visited = False
   print("Total Path Length           =", sum(lengths))
   print("Total Paths                 =", len(lengths))
-  print("Average Reg2Reg Path Length =",
-        (float(sum(lengths)) / float(len(lengths))))
-  print("Max Reg2Reg Path Length     =", max(lengths))
+  if len(lengths) > 0:
+    print("Average Reg2Reg Path Length =",
+          (float(sum(lengths)) / float(len(lengths))))
+    print("Max Reg2Reg Path Length     =", max(lengths))
+  else:
+    print("Average Reg2Reg Path Length =", 0.0)
+    print("Max Reg2Reg Path Length     =", 0)
   json_dict = {"Reg2Reg Path Length": lengths}
   with open(filename, 'w') as jf:
     json.dump(json_dict, jf)
