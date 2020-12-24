@@ -1,7 +1,0 @@
-digraph G {
-	"basic_compare_nee.a" -> "basic_compare_nee.o"[label="[1:0]->[0:0]"];
-	"basic_compare_nee.b" -> "basic_compare_nee.o"[label="[1:0]->[0:0]"];
-	"basic_compare_nee.a" [shape=rectangle, label="basic_compare_nee.a[1:0]"];
-	"basic_compare_nee.b" [shape=rectangle, label="basic_compare_nee.b[1:0]"];
-	"basic_compare_nee.o" [shape=ellipse, label="basic_compare_nee.o[0:0]"];
-}

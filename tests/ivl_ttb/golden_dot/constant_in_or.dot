@@ -1,7 +1,0 @@
-digraph G {
-	"constant_in_or.b" -> "constant_in_or.c"[label="[0:0]->[0:0]"];
-	"const.0.1" [shape=none, label="const.0.1[0:0]"];
-	"const.0.1" -> "constant_in_or.c"[label="[0:0]->[0:0]"];
-	"constant_in_or.b" [shape=rectangle, label="constant_in_or.b[0:0]"];
-	"constant_in_or.c" [shape=ellipse, label="constant_in_or.c[0:0]"];
-}

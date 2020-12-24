@@ -1,9 +1,0 @@
-digraph G {
-	"signed_ext_concat.a" -> "signed_ext_concat.c"[label="[1:0]->[3:2]"];
-	"signed_ext_concat.b" -> "signed_ext_concat.c"[label="[1:0]->[1:0]"];
-	"signed_ext_concat.clk" -> "signed_ext_concat.c"[label="[0:0]->[7:0]"];
-	"signed_ext_concat.a" [shape=rectangle, label="signed_ext_concat.a[1:0]"];
-	"signed_ext_concat.b" [shape=rectangle, label="signed_ext_concat.b[1:0]"];
-	"signed_ext_concat.c" [shape=square, label="signed_ext_concat.c[7:0]"];
-	"signed_ext_concat.clk" [shape=rectangle, label="signed_ext_concat.clk[0:0]"];
-}

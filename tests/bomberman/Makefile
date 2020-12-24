@@ -23,49 +23,58 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-THIRD_PARTY := ../../third_party
-TARGET      := or1200
-ROOT        := $(THIRD_PARTY)/$(TARGET)
-CORES       := $(ROOT)/cores
-ORPSOC_RTL  := $(CORES)/top
-CLKGEN_RTL  := $(CORES)/clkgen
-ARBITER_RTL := $(CORES)/arbiter
-DBG_IF_RTL  := $(CORES)/dbg_if
-OR1200_RTL  := $(CORES)/or1200
-UART_RTL    := $(CORES)/uart16550
-RAM_RTL     := $(CORES)/ram_wb
-TEST_BENCH  := $(CORES)/bench
+# Directory Structure
+TGT_DFG_DIR := ../../tgt-dfg
+BOMBERMAN   := ../../bomberman
+IVL_DIR     := ../../iverilog/bin
 
-SOURCES := \
-	$(wildcard $(ORPSOC_RTL)/*.v) \
-	$(wildcard $(CLKGEN_RTL)/*.v) \
-	$(wildcard $(ARBITER_RTL)/*.v) \
-	$(wildcard $(DBG_IF_RTL)/*.v) \
-	$(wildcard $(OR1200_RTL)/*.v) \
-	$(wildcard $(UART_RTL)/*.v) \
-	$(wildcard $(RAM_RTL)/*.v) 
-SOURCES := $(filter-out %-defines.v %-params.v %_defines.v, $(SOURCES))
+# Configurations
+CLK_BASENAME := clk
 
-TESTBENCH := $(wildcard $(TEST_BENCH)/*.v)
-TESTBENCH := $(filter-out %-defines.v %-params.v %_defines.v, $(TESTBENCH))
+all: counter d_ff split
 
-INCLUDEDIRS := \
-	-I$(ORPSOC_RTL) \
-	-I$(DBG_IF_RTL) \
-	-I$(UART_RTL)  \
-	-I$(DBG_IF_RTL) \
-	-I$(OR1200_RTL) \
-	-I$(TEST_BENCH)
+# Design Targets
+counter:
+	$(MAKE) bomberman TGT=counter
 
-# Simulation Confingurations
-DUT_TOP_MODULE      := orpsoc_testbench.dut.or1200_top0.or1200_cpu
-NUM_TESTS           := 2
-START_TIME          := 0
-TIME_LIMIT          := -1
-TIME_RESOLUTION     := 10000
-NUM_MALICIOUS_CNTRS := 0
-D_SIGNAL_BASENAME   := clk
-N_SIGNAL_BASENAME   := wb_pc
-OUT_DIR             := .
+d_ff:
+	$(MAKE) bomberman TGT=d_ff
 
-include ../common.mk
+split:
+	$(MAKE) bomberman TGT=split
+
+# VCD/Dot Analysis Script
+bomberman: tgt-dfg $(TGT)/$(TGT).vcd $(TGT)/$(TGT).dot
+	python3 $(BOMBERMAN)/bomberman.py 0 -1 1 $(TGT) 0 "none" "none" $(TGT)/$(TGT).dot $(TGT)/$(TGT).vcd $(TGT)/$(TGT).json 
+
+# IVL Simulation (Step 2: VCD Generation)
+$(TGT)/$(TGT).vcd: $(TGT)/$(TGT).vvp $(TGT)/$(TGT).dot
+	$(IVL_DIR)/vvp $< && mv $(TGT).vcd $@
+
+# IVL Simulation (Step 1: Executable Generation)
+$(TGT)/$(TGT).vvp: $(TGT)/$(TGT).v $(TGT)/$(TGT)_tb.v
+	$(IVL_DIR)/iverilog -o $@ -t vvp $^
+
+# IVL Target DFG Module Analysis
+$(TGT)/$(TGT).dot: $(TGT)/$(TGT).v $(TGT)/$(TGT)_tb.v
+	$(IVL_DIR)/iverilog -o $@ -pclk=$(CLK_BASENAME) -t dfg $^
+	dot $@ -Tpdf -o $(TGT)/$(TGT).pdf
+
+# Building the IVL Target Module
+tgt-dfg: 
+	$(MAKE) -C $(TGT_DFG_DIR)
+
+.PHONY: cleanall tgt-dfg counter d_ff split
+
+cleanall:
+	@$(MAKE) clean TGT=counter
+	@$(MAKE) clean TGT=d_ff
+	@$(MAKE) clean TGT=split
+
+clean:
+	@rm -f $(TGT)/$(TGT).vcd 
+	@rm -f $(TGT)/$(TGT).vvp 
+	@rm -f $(TGT)/$(TGT).dot 
+	@rm -f $(TGT)/$(TGT).pdf
+	@rm -f $(TGT)/$(TGT).*.json
+

@@ -23,49 +23,17 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-THIRD_PARTY := ../../third_party
-TARGET      := or1200
-ROOT        := $(THIRD_PARTY)/$(TARGET)
-CORES       := $(ROOT)/cores
-ORPSOC_RTL  := $(CORES)/top
-CLKGEN_RTL  := $(CORES)/clkgen
-ARBITER_RTL := $(CORES)/arbiter
-DBG_IF_RTL  := $(CORES)/dbg_if
-OR1200_RTL  := $(CORES)/or1200
-UART_RTL    := $(CORES)/uart16550
-RAM_RTL     := $(CORES)/ram_wb
-TEST_BENCH  := $(CORES)/bench
+import sys
 
-SOURCES := \
-	$(wildcard $(ORPSOC_RTL)/*.v) \
-	$(wildcard $(CLKGEN_RTL)/*.v) \
-	$(wildcard $(ARBITER_RTL)/*.v) \
-	$(wildcard $(DBG_IF_RTL)/*.v) \
-	$(wildcard $(OR1200_RTL)/*.v) \
-	$(wildcard $(UART_RTL)/*.v) \
-	$(wildcard $(RAM_RTL)/*.v) 
-SOURCES := $(filter-out %-defines.v %-params.v %_defines.v, $(SOURCES))
+ifname = "or1200_fpu_div.dot"
+ofname = "or1200_fpu_div.edited.dot"
 
-TESTBENCH := $(wildcard $(TEST_BENCH)/*.v)
-TESTBENCH := $(filter-out %-defines.v %-params.v %_defines.v, $(TESTBENCH))
+ifile = open(ifname, 'r')
+ofile = open(ofname, 'w')
 
-INCLUDEDIRS := \
-	-I$(ORPSOC_RTL) \
-	-I$(DBG_IF_RTL) \
-	-I$(UART_RTL)  \
-	-I$(DBG_IF_RTL) \
-	-I$(OR1200_RTL) \
-	-I$(TEST_BENCH)
+for line in ifile:
+  if "const." not in line:
+    ofile.write(line)
 
-# Simulation Confingurations
-DUT_TOP_MODULE      := orpsoc_testbench.dut.or1200_top0.or1200_cpu
-NUM_TESTS           := 2
-START_TIME          := 0
-TIME_LIMIT          := -1
-TIME_RESOLUTION     := 10000
-NUM_MALICIOUS_CNTRS := 0
-D_SIGNAL_BASENAME   := clk
-N_SIGNAL_BASENAME   := wb_pc
-OUT_DIR             := .
-
-include ../common.mk
+ifile.close()
+ofile.close()

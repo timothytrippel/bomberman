@@ -1,7 +1,0 @@
-digraph G {
-	"basic_and.a" -> "basic_and.c"[label="[0:0]->[0:0]"];
-	"basic_and.b" -> "basic_and.c"[label="[0:0]->[0:0]"];
-	"basic_and.a" [shape=rectangle, label="basic_and.a[0:0]"];
-	"basic_and.b" [shape=rectangle, label="basic_and.b[0:0]"];
-	"basic_and.c" [shape=ellipse, label="basic_and.c[0:0]"];
-}

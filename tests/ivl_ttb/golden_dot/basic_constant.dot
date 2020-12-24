@@ -1,5 +1,0 @@
-digraph G {
-	"const.0.1010" [shape=none, label="const.0.1010[3:0]"];
-	"const.0.1010" -> "basic_constant.o"[label="[3:0]->[3:0]"];
-	"basic_constant.o" [shape=ellipse, label="basic_constant.o[3:0]"];
-}

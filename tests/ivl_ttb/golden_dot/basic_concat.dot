@@ -1,9 +1,0 @@
-digraph G {
-	"basic_concat.a" -> "basic_concat.o"[label="[0:0]->[0:0]"];
-	"basic_concat.b" -> "basic_concat.o"[label="[0:0]->[1:1]"];
-	"basic_concat.c" -> "basic_concat.o"[label="[0:0]->[2:2]"];
-	"basic_concat.a" [shape=rectangle, label="basic_concat.a[0:0]"];
-	"basic_concat.b" [shape=rectangle, label="basic_concat.b[0:0]"];
-	"basic_concat.c" [shape=rectangle, label="basic_concat.c[0:0]"];
-	"basic_concat.o" [shape=ellipse, label="basic_concat.o[2:0]"];
-}

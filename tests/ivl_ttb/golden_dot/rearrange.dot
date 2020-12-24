@@ -1,8 +1,0 @@
-digraph G {
-	"rearrange.in" -> "rearrange.out"[label="[1:1]->[0:0]"];
-	"rearrange.in" -> "rearrange.out"[label="[0:0]->[1:1]"];
-	"rearrange.in" -> "rearrange.out"[label="[3:3]->[2:2]"];
-	"rearrange.in" -> "rearrange.out"[label="[2:2]->[3:3]"];
-	"rearrange.in" [shape=rectangle, label="rearrange.in[3:0]"];
-	"rearrange.out" [shape=ellipse, label="rearrange.out[3:0]"];
-}

@@ -1,7 +1,0 @@
-digraph G {
-	"basic_add.a" -> "basic_add.o"[label="[1:0]->[1:0]"];
-	"basic_add.b" -> "basic_add.o"[label="[1:0]->[1:0]"];
-	"basic_add.a" [shape=rectangle, label="basic_add.a[1:0]"];
-	"basic_add.b" [shape=rectangle, label="basic_add.b[1:0]"];
-	"basic_add.o" [shape=ellipse, label="basic_add.o[1:0]"];
-}

@@ -1,9 +1,0 @@
-digraph G {
-	"basic_mux.s" -> "basic_mux.o"[label="[0:0]->[1:0]"];
-	"basic_mux.b" -> "basic_mux.o"[label="[1:0]->[1:0]"];
-	"basic_mux.a" -> "basic_mux.o"[label="[1:0]->[1:0]"];
-	"basic_mux.a" [shape=rectangle, label="basic_mux.a[1:0]"];
-	"basic_mux.b" [shape=rectangle, label="basic_mux.b[1:0]"];
-	"basic_mux.o" [shape=ellipse, label="basic_mux.o[1:0]"];
-	"basic_mux.s" [shape=rectangle, label="basic_mux.s[0:0]"];
-}
