@@ -32,5 +32,5 @@ make clean && make
 # Analyze all circuits with Bomberman
 for DUT in aes uart or1200 picorv32; do
   cd $BOMBERMAN/circuits/$DUT
-  make
+  make LOG=1
 done
