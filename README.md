@@ -1,35 +1,25 @@
 # Bomberman
 
-**Author:**         Timothy Trippel <br>
-**Affiliation:**    University of Michigan <br>
-**Last Updated:**   05/08/2020 <br>
-
-Bomberman is a **ticking timebomb Trojan** (TTT) specific verification tool.
-It identifies suspicious state-saving components (SSCs) in a hardware design
+Bomberman is a **ticking timebomb Trojan** (TTT) specific verification tool that
+identifies suspicious state-saving components (SSCs) in a hardware design
 that could *potentially* be part of a TTT. Bomberman starts by assuming *all*
 SSCs are suspicious, and subsequently classifies each SSC as benign if it
-expresses values that violate a set of invariants during verification
-simulations.
-
-TTTs are comprised of SSCs that incrementally approach a triggering value. The
-set of invariants that define TTB SSC behavior are as follows:
+expresses values that violate a set of TTT-specific invariants (below) during
+verification simulations. Specifically, the set of invariants that define TTB
+SSC behavior are:
 1. values must never be repeated without a system reset, and
 2. all possible values must never be expressed without triggering the Trojan.
-
-Bomberman leverages these two invariants while analyzing simulation results of a
-hardware design to classify whether or not an SSC compromises a TTT.
 
 Bomberman consists of two main stages as shown in Figure 1:
 1. SSC Identification
 2. SSC Classification
 <figure>
-    <p align="center">
-        <img src="/figures/bomberman.png" data-canonical-src="/figures/bomberman.png" width="75%"/>
-        <br>
-        <b>Figure 1: Bomberman Architecture</b>
-    </p>
+  <p align="center">
+    <img src="/figures/bomberman.png" data-canonical-src="/figures/bomberman.png" width="75%"/>
+    <br>
+    <b>Figure 1: Bomberman Architecture</b>
+  </p>
 </figure>
-
 
 The **SSC Identification** stage locates all SSCs in a hardware design described
 in Verilog. It is broken into two stages: 1) *Data-Flow Graph (DFG) Generation*,
@@ -37,136 +27,116 @@ and 2) *SSC Enumeration*. During *DFG Generation*, a data-flow graph describing
 bit-level signal dependencies is generated from the HDL using a custom Icarus
 Verilog (IVL) compiler back-end. The DFG is encoded in the Graphviz `.dot`
 format, and passed to the *SSC Enumeration* stage. The *SSC Enumeration* stage
-analyzes the DFG and enumerates all signals that are the direct out of SSCs.
+analyzes the DFG and enumerates all signals that are the direct output of SSCs.
 There are two types of SSCs that are identified: *coalesced* and *distributed*.
 This list of SSCs is then passed to the *SSC Classification* for further
 processing.
 
 The **SSC Classification** stage analyzes verification simulations, in the
 *value change dump* (VCD) format, to check if any SSC violates either invariant
-(above) that indicates it is benign. SSCs that do not violate either invariants
+(above) that indicates it is benign. SSCs that do not violate either invariant
 are reported to the user (in the form of JSON files) to be further manually
 scrutinized.
+
+# Technical Paper
+
+A technical paper describing Bomberman has been accepted to appear at the **2021
+IEEE Symposium on Security and Privacy**. A link to the official paper will be
+added soon.
+
+# Quickstart
+
+We provide a Dockerfile and four example circuits to demonstrate Bomberman on.
+To use it, follow the steps below to build the Docker image 
+(containing all required tools and dependencies) and run Bomberman in a
+container. The four example circuits we provide to demonstrate Bomberman on are:
+a 128-bit AES accelerator ([TrustHub](https://trust-hub.org/home)), an 8-bit
+UART module ([OpenCores](https://opencores.org/projects/uart16550)), an
+OR1200 CPU ([OpenCores](https://opencores.org/projects/uart16550)),
+and a [PicoRV32](https://github.com/cliffordwolf/picorv32) CPU. 
+
+
+### 1. Clone Repository
+
+`git clone https://github.com/timothytrippel/bomberman.git`
+
+### 2. Build Docker Image
+
+1. `cd bomberman`
+2. [install Docker](https://docs.docker.com/get-docker/) 
+3. [add your user to the `docker` group](https://docs.docker.com/engine/install/linux-postinstall/)
+4. `make build-infra`
+5. grab a cup of coffee, step 4 could take a while :)
+
+*Note: if you would like to setup your own environment to use our toolchain,
+take a look at the Dockerfile for all required dependencies.*
+
+### 3. Run Bomberman on Four Circuits in a Docker Container
+
+`make all`
+
+The above command invokes the `analyze_all.sh` shell script within a container.
+This script navigates to each circuit directory (e.g., `circuits/<circuit>`),
+and invokes a master Makefile: `circuits/common.mk`. This Makefile does three
+things. First, it executes the *data-flow graph generator*, which generates a
+`.dot` file encoding the data-flow graph for the given hardware design. 
+Second, *IVL* is invoked to simulate the hardware design and generate a `.vcd`
+file encoding the simulation trace. Third, the *Bomberman* script is 
+invoked to: 1) *Enumerate* all SSCs in the target hardware design, and 
+2) *Classify* each SSC as suspicious or benign. 
+Lastly, the number of suspicious SSCs computed at different points
+throughout the simulation are output into several `.json` files.
 
 # Directory Structure
 
 ### Circuits
 
-The `circuits/` directory contains three example hardware designs to try out the
-Bomberman toolchain on. These designs are: a 128-bit AES accelerator (CNTR mode
-only), a UART core, and an OR1200 processor. For information on how to run the
-Bomberman toolchain on each hardware design, see the **E2E Bomberman Analysis of
-Real Circuits** section below.
+The `circuits/` directory contains test bench harnesses and Makefiles for
+four example hardware designs to test Bomberman on. These designs are: a 
+128-bit AES accelerator (CNTR mode only), a UART core, an OR1200 CPU, and the 
+PicoRV32 RISC-V CPU (see above).
 
-### Scripts
+### Bomberman
 
-The `scripts/` directory contains the Python scripts that implement the
-**Simulation Analysis** stage (Figure 1). The main script is contained in
-`analyze.py`.
+The `bomberman/` directory contains the Python scripts that implement the
+**SSC Enumeration** and **SSC Classification** stages (Figure 1). The main 
+script is contained in `bomberman.py`.
 
 ### Tests
-
-The `tests/` directory contains regression tests for: 1) the entire Bomberman
-analysis flow, contained in the `analysis_flow` sub-directory, and 2) the IVL
-back-end HDL data-flow graph generator, contained in the `ivl_ttb`
-sub-directory.
-
-The `analysis_flow` sub-directory contains three hardware designs and
+The `bomberman` sub-directory contains three hardware designs and
 corresponding test benches to exercise the Bomberman toolchain. See the
 *Testing* section below for how to test bomberman on these designs.
 
-The `ivl_ttb` sub-directory contains 62 regression tests (i.e., hardware
+The `tgt-dfg` sub-directory contains 62 regression tests (i.e., hardware
 designs) to exercise the IVL compiler back-end data-flow graph generator and
 verify its correctness. See the *Testing* section below for how to execute these
 tests.
 
-### TGT-TTB
+### TGT-DFG (Data-Flow Graph Generator)
 
-The `tgt-ttb/` directory contains the IVL compiler back-end data-flow graph
-generator that implements the *SSC Identification* stage.
+The `tgt-dfg/` directory contains the IVL compiler back-end data-flow graph
+generator that implements part of the *SSC Identification* stage.
 
-# Installation
+### Third Party
 
-### 1. Repository Cloning
+The `third_party` directory contains the RTL and supporting software for the 
+four example circuits we provide (above) to demonstrate Bomberman's utility.
 
-You can clone the repository using:
+# Development in the Container
 
-`git clone https://github.com/mit-ll/ttb.git`
+In our project-wide Makefile (in the root project directory) we include a target
+to launch a shell within a container and mount source directories into the
+container to jumpstart development. To use this target simply run (after the
+Docker image has been built):
 
-### 2. Initialize Git Submodules
+`make dev`
 
-Bomberman utilizes [Icarus Verilog](https://github.com/steveicarus/iverilog)
-(IVL) as a submodule. Thus, the initialization of the IVL submodule must also be
-done as follows:
-
-```
-cd ttb/
-git submodule update --init --recursive
-```
-
-### 3. Disabling optimization functions of IVL
-
-Disabling the optimization functions of IVL is important for preserving the
-input netlists structure as-is for analysis by Bomberman. To do so, you must
-**comment out** two blocks of code in the `ttb/iverilog/main.cc` file in the
-top-level IVL source code (lines 1251 and 1254-1260) submodule directory as
-follows:
-
-Line 1244:
-
-```cout << "RUNNING FUNCTORS" << endl;```
-
-Line 1247--1253:
-```
-while (!net_func_queue.empty()) {
-    net_func func = net_func_queue.front();
-    net_func_queue.pop();
-    if (verbose_flag)
-        cerr<<" -F "<<net_func_to_name(func)<< " ..." <<endl;
-    func(des);
-}
-```
-
-***NOTE:** make sure to cross-reference the line numbers with the code snippets
-above since the IVL code base is actively managed and the exact line numbers are
-subject to change.*
-
-### 4. Building IVL
-
-To build IVL from source requires the following dependencies:
-
-`autoconf`
-`gperf`
-`flex`
-`bison`
-
-On MacOS these can be installed with homebrew using: `brew install <package>`.
-After installing the dependencies, proceed to build IVL as follows:
-
-1. `cd iverilog`
-2. comment out IVL optimization functions (see above)
-3. `sh autoconf.sh`
-4. `./configure --prefix=$(pwd)`
-5. `make install`
-6. `cd ..`
-
-### 5. Building Data-Flow Graph Generator (tgt-ttb)
-
-To compile and install into IVL for the first time:
-
-1. `cd tgt-ttb`
-2. `make all`
-3. `cd ..`
-
-To re-compile and re-install into IVL after modifications, replace step 2
-(above) with: `make cleanall all`.
-
-# Testing
+# Testing 
 
 ### 1. Data-Flow Graph Generator
 
 There are 62 regression tests to verify the correctness of the data-flow graph
-generator contained in the `tgt-ttb` IVL back-end target module. Each regression
+generator contained in the `tgt-dfg` IVL back-end target module. Each regression
 test consists of a small circuit, described in Verilog, that exercises the
 data-flow graph generator's ability to handle various Verilog syntax and
 expressions. All 62 regression tests should run, but only 61 tests should pass.
@@ -177,35 +147,29 @@ Each regression test generates a .dot file describing a data-flow graph from a
 simple test circuit. The resulting graph is automatically checked for
 correctness against provided *gold* examples. Additionally a PDF respresentation
 is generated for manual inspection of correctness, but this *requires Graphviz
-to be installed.*
+to be installed.* If you run these tests within the provide Docker image, this
+dependency is already installed.
 
-To run all 62 regression tests use:
+To run all 62 regression tests run:
 
-1. Install Graphviz: `brew install graphviz`
-1. `cd tests/ivl_ttb`
-2. `make test`
-3. `cd ..`
-4. `cd ..`
+1. `make dev` (launch shell in container)
+2. `cd tgt-dfg && make && cd ..` (compile and install tgt-dfg)
+3. `cd tests/tgt-dfg && make test`
 
-### 2. Bomberman E2E Analysis
+### 2. Bomberman E2E Testing
 
-T here are 3 regression tests to verify the correctness of the entire Bomberman
+There are three test circuits to verify the correctness of the entire Bomberman
 toolchain, from the data-flow graph generator to the simulation analysis scripts
-(Figure 1). Each regression tests is comprised of a small circuit design, and an
+(Figure 1). Each test is comprised of a small circuit design, and an
 associated test bench that excerises the design. The three circuits are: a
 simple counter (`counter/`), a D flip-flop (`d_ff/`), and a simple combinational
 circuit (`split/`).
 
-***Note:*** *Bomberman's simulation analysis requires Python 2.7. You may have
-to modify the makefile (tests/analysis_flow/Makefile) to invoke Python 2.7, if
-the **python** alias on your system is mapped to Python 3.*
+To run all three tests run:
 
-To run all 3 regression tests use:
-
-1. `cd tests/analysis_flow`
-2. `make all`
-3. `cd ..`
-4. `cd ..`
+1. `make dev` (launch shell in container, if not launched already)
+2. `cd tests/bomberman`
+3. `make all`
 
 To run only a single regression test use: `make <design>`, where `<design>` is
 either `counter`, `d_ff`, or `split`.
@@ -215,90 +179,15 @@ either `counter`, `d_ff`, or `split`.
 Bomberman's data-flow graph generator (DFGG) can be utilized independently of
 Bomberman for performing various static analyses of a circuit's HDL. The DFGG is
 simply an Icarus Verilog (IVL) compiler back-end that generates data-flow graphs
-in the [Graphviz](https://www.graphviz.org/) `.dot` format. The DFGG takes the
-following as input:
+in the [Graphviz](https://www.graphviz.org/) `.dot` format. For an example of 
+how to invoke it, check out the `circuits/common.mk` Makefile.
 
-|     | Input                  | Type             | Default    |
-| --- | ---------------------- | ---------------- | ---------- |
-|  1  | Clock Signal Basename  | string           | n/a        |
-|  2  | Verilog Source Files   | file name(s)     | n/a        |
-|  3  | Dot Output File Name   | string           | n/a        |
+# Plotting Bomberman Results
 
-The DFGG can be invoked from the root repository directory (ttb/) using:
-
-`iverilog/iverilog -o <dot output file name> -pclk=<clock basename> -t ttb
-<verilog source file> ...`
-
-# E2E Bomberman Analysis of Real Circuits
-
-There are three real-world circuit designs provided within this repository to
-experiment with. These designs include: a 128-bit AES accelerator
-([TrustHub](https://trust-hub.org/home)), an 8-bit UART module
-([OpenCores](https://opencores.org/projects/uart16550)), and an OR1200 processor
-CPU ([OpenCores](https://opencores.org/projects/uart16550)). To experiment
-analyzing each design with Bomberman, follow the steps below.
-
-***Note:*** *Bomberman's simulation analysis requires Python 2.7. You may have
-to modify the makefile (circuits/common.mk) to invoke Python 2.7, if the
-**python** alias on your system is mapped to Python 3. Alternatively, the
-makefile can be altered to invoke [PyPy](https://pypy.org/), instead of Python
-2.7, to speed up computation. If you go this route, be sure to install PyPy on
-your system before proceeding.*
-
-1.  `cd circuits`
-2.  `cd aes`
-3.  `make all LOG=1 OUT_DIR=output`
-4.  `cd ..`
-5.  `cd uart`
-6.  `make all LOG=1 OUT_DIR=output`
-7.  `cd ..`
-8.  `cd or1200`
-9.  `make all LOG=1 OUT_DIR=output`
-10. `cd ..`
-
-The master Makefile (`circuits/common.mk`) that is invoked by running the above
-commands in each design sub-directory does three things. First, it invokes the
-*data-flow graph generator*, which generates a `.dot` file encoding the
-data-flow graph for the given hardware design. Second, *IVL* is invoked to
-simulate the hardware design and generate a `.vcd` file encoding the simulation
-trace. Third, the *simulation analysis* script is invoked to analyze the design
-for suspicious SSCs. The number of suspicious SSCs computed at different points
-throughout the simulation are output into several `.json` files.
-
-There are several Jupyter Notebooks for plotting the results encoded in each
-`.json` file in the `circuits/plots` directory. Additionally, there are several
-scripts for running the Bomberman analysis of each design on a SLURM managed
-cluster, if more compute power is needed. However, each of the 3 provided
-designs has been tested on a 15in Macbook Pro with a 3.1 GHz Intel Core i7
-processor and 16GB of DDR3 RAM, and each Bomberman analysis took less then a
-couple minutes to run (including simulation time).
-
-
-# License
-
-Copyright (c) 2019, Massachusetts Institute of Technology.
-
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-1. Redistributions of source code must retain the above copyright notice, this
-   list of conditions and the following disclaimer.
-2. Redistributions in binary form must reproduce the above copyright notice,
-   this list of conditions and the following disclaimer in the documentation
-   and/or other materials provided with the distribution.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
-ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+There are several Jupyter Notebooks for plotting the output of Bomberman 
+(encoded in `.json` files). The notebooks are located in the `circuits/plots`
+directory. These can be used to reproduce plots from the technical paper 
+(linked above).
 
 # Distribution Statement
 
