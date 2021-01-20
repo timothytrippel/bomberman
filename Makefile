@@ -25,18 +25,9 @@
 
 SHELL := /bin/bash
 
-REPO_PATH := /Users/ttrippel/repos/bomberman
+REPO_PATH := $(shell pwd)
 
 .PHONY: build-infra clean-infra all dev clean
-
-build-infra:
-	docker build -t bomberman/sim . 
-
-clean-infra:
-	docker rmi -f bomberman/sim && \
-	docker ps -a -q | xargs -I {} docker rm {} && \
-	docker images -q -f dangling=true | xargs -I {} docker rmi -f {} && \
-	docker volume ls -qf dangling=true | xargs -I {} docker volume rm {}
 
 all:
 	docker run -it --rm \
@@ -55,6 +46,15 @@ dev:
 		-v $(REPO_PATH)/tgt-dfg:/src/bomberman/tgt-dfg \
 		-v $(REPO_PATH)/third_party:/src/bomberman/third_party \
 		-t bomberman/sim /bin/bash
+
+build-infra:
+	docker build -t bomberman/sim . 
+
+clean-infra:
+	docker rmi -f bomberman/sim && \
+	docker ps -a -q | xargs -I {} docker rm {} && \
+	docker images -q -f dangling=true | xargs -I {} docker rmi -f {} && \
+	docker volume ls -qf dangling=true | xargs -I {} docker volume rm {}
 
 clean:
 	$(MAKE) -C circuits/aes clean

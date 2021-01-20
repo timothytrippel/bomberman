@@ -1,4 +1,9 @@
 # Bomberman
+<figure>
+  <p align="center">
+    <img src="/figures/bomberman-logo.png" data-canonical-src="/figures/bomberman-logo.png" width="50%"/>
+  </p>
+</figure>
 
 Bomberman is a **ticking timebomb Trojan** (TTT) specific verification tool that
 identifies suspicious state-saving components (SSCs) in a hardware design
@@ -40,9 +45,9 @@ scrutinized.
 
 # Technical Paper
 
-A technical paper describing Bomberman has been accepted to appear at the **2021
-IEEE Symposium on Security and Privacy**. A link to the official paper will be
-added soon.
+A [technical paper](https://rtcl.eecs.umich.edu/rtclweb/assets/publications/2021/bomberman-oakland-21.pdf)
+describing Bomberman has been accepted to appear at the **2021
+IEEE Symposium on Security and Privacy**.
 
 # Quickstart
 
